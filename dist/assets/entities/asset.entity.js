@@ -12,12 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Asset = void 0;
 const typeorm_1 = require("typeorm");
 const asset_type_enum_1 = require("../enums/asset-type.enum");
+const timeframe_enum_1 = require("../enums/timeframe.enum");
 let Asset = class Asset {
     id;
     symbol;
     name;
     type;
     isActive;
+    timeframe;
 };
 exports.Asset = Asset;
 __decorate([
@@ -43,6 +45,14 @@ __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], Asset.prototype, "isActive", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: timeframe_enum_1.Timeframe,
+        default: timeframe_enum_1.Timeframe.ONE_HOUR,
+    }),
+    __metadata("design:type", String)
+], Asset.prototype, "timeframe", void 0);
 exports.Asset = Asset = __decorate([
     (0, typeorm_1.Entity)()
 ], Asset);

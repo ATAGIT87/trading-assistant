@@ -10,4 +10,5 @@ export declare class AssetsService {
     create(symbol: string, name: string, type: AssetType, isActive?: boolean): Promise<Asset>;
     update(id: number, data: UpdateAssetDto): Promise<Asset | null>;
     remove(id: number): Promise<void>;
+    findActive(): Promise<Asset[]>;
 }

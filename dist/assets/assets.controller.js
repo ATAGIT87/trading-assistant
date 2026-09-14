@@ -25,6 +25,9 @@ let AssetsController = class AssetsController {
     findAll() {
         return this.assetsService.findAll();
     }
+    findActive() {
+        return this.assetsService.findActive();
+    }
     findOne(id) {
         return this.assetsService.findOne(Number(id));
     }
@@ -45,6 +48,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AssetsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('active'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AssetsController.prototype, "findActive", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id")),

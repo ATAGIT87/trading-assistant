@@ -59,6 +59,13 @@ let AssetsService = class AssetsService {
             throw new common_1.NotFoundException("Asset not found");
         }
     }
+    findActive() {
+        return this.assetRepository.find({
+            where: {
+                isActive: true,
+            },
+        });
+    }
 };
 exports.AssetsService = AssetsService;
 exports.AssetsService = AssetsService = __decorate([

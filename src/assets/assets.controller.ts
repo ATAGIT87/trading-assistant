@@ -19,6 +19,11 @@ export class AssetsController {
   findAll() {
     return this.assetsService.findAll();
   }
+
+  @Get('active')
+  findActive() {
+  return this.assetsService.findActive();
+}
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.assetsService.findOne(Number(id));

@@ -50,4 +50,12 @@ export class AssetsService {
       throw new NotFoundException("Asset not found");
     }
   }
+
+  findActive(): Promise<Asset[]> {
+  return this.assetRepository.find({
+    where: {
+      isActive: true,
+    },
+  });
+}
 }
