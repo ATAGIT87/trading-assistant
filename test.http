@@ -1,0 +1,108 @@
+### Get Assets
+GET http://localhost:3000/assets
+
+
+### Create Asset
+POST http://localhost:3000/assets
+Content-Type: application/json
+
+{
+  "symbol": "EURUSD",
+  "name": "Euro / US Dollar",
+  "type": "FOREX"
+}
+
+### Get Asset by ID
+GET http://localhost:3000/assets/3
+### Update timeframe
+PATCH http://localhost:3000/assets/1
+Content-Type: application/json
+
+{
+  "timeframe": "15m"
+}
+
+### Delete Asset
+DELETE http://localhost:3000/assets/123
+
+
+###
+
+POST http://localhost:3000/assets
+Content-Type: application/json
+
+{
+  "symbol": "ETHUSD",
+  "name": "Ethereum / US Dollar",
+  "type": "CRYPTO",
+  "timeframe": "4h"
+}
+
+### Get active assets
+GET http://localhost:3000/assets/active
+
+### Create market candle
+POST http://localhost:3000/market-data/candles
+Content-Type: application/json
+
+{
+  "symbol": "BTCUSD",
+  "timeframe": "1h",
+  "time": "2026-09-14T10:00:00Z",
+  "open": 115000,
+  "high": 116000,
+  "low": 114500,
+  "close": 115500,
+  "volume": 123.45
+}
+
+### Get all market candles
+GET http://localhost:3000/market-data/candles
+
+### Get BTCUSD candles
+GET http://localhost:3000/market-data/candles/BTCUSD
+
+### Get BTCUSD 1h candles
+GET http://localhost:3000/market-data/candles/BTCUSD/1h
+
+### Get latest BTCUSD 1h candle
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/latest
+
+
+### Seed market data
+POST http://localhost:3000/market-data/seed
+
+### Get BTCUSD candles
+GET http://localhost:3000/market-data/candles/BTCUSD/1h
+
+
+### Get latest RSI
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/rsi
+
+
+### Get latest SMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/sma/14
+
+### Get latest EMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/ema/14
+
+### Compare latest price to SMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/price-vs-sma/14
+
+### Compare latest price to EMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/price-vs-ema/14
+
+### Compare SMA vs EMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/sma-vs-ema/14
+
+### Get trend
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/trend/14
+
+### Get RSI status
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/rsi-status/14
+
+### Get market condition
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/market-condition/14
+
+### Generate trading signal
+GET http://localhost:3000/signals/BTCUSD/1h/14
