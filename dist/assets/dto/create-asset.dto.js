@@ -16,6 +16,7 @@ class CreateAssetDto {
     symbol;
     name;
     type;
+    isActive;
 }
 exports.CreateAssetDto = CreateAssetDto;
 __decorate([
@@ -32,4 +33,9 @@ __decorate([
     (0, class_validator_1.IsEnum)(asset_type_enum_1.AssetType),
     __metadata("design:type", String)
 ], CreateAssetDto.prototype, "type", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateAssetDto.prototype, "isActive", void 0);
 //# sourceMappingURL=create-asset.dto.js.map

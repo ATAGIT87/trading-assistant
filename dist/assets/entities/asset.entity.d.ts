@@ -4,4 +4,5 @@ export declare class Asset {
     symbol: string;
     name: string;
     type: AssetType;
+    isActive: boolean;
 }

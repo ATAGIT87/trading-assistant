@@ -16,4 +16,7 @@ export class Asset {
     enum: AssetType,
   })
   type!: AssetType;
+
+  @Column({ default: true })
+  isActive!: boolean;
 }

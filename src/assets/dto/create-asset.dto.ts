@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString } from "class-validator";
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsBoolean,
+} from "class-validator";
 import { AssetType } from "../enums/asset-type.enum";
 
 export class CreateAssetDto {
@@ -12,4 +18,8 @@ export class CreateAssetDto {
 
   @IsEnum(AssetType)
   type!: AssetType;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

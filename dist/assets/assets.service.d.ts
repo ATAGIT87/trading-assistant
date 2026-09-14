@@ -7,7 +7,7 @@ export declare class AssetsService {
     constructor(assetRepository: Repository<Asset>);
     findAll(): Promise<Asset[]>;
     findOne(id: number): Promise<Asset | null>;
-    create(symbol: string, name: string, type: AssetType): Promise<Asset>;
+    create(symbol: string, name: string, type: AssetType, isActive?: boolean): Promise<Asset>;
     update(id: number, data: UpdateAssetDto): Promise<Asset | null>;
     remove(id: number): Promise<void>;
 }

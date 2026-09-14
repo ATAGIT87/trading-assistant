@@ -29,7 +29,7 @@ let AssetsController = class AssetsController {
         return this.assetsService.findOne(Number(id));
     }
     create(dto) {
-        return this.assetsService.create(dto.symbol, dto.name, dto.type);
+        return this.assetsService.create(dto.symbol, dto.name, dto.type, dto.isActive);
     }
     update(id, dto) {
         return this.assetsService.update(Number(id), dto);

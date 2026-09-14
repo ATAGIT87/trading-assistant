@@ -25,16 +25,21 @@ let AssetsService = class AssetsService {
     findAll() {
         return this.assetRepository.find();
     }
-    findOne(id) {
-        return this.assetRepository.findOne({
+    async findOne(id) {
+        const asset = await this.assetRepository.findOne({
             where: { id },
         });
+        if (!asset) {
+            throw new common_1.NotFoundException("Asset not found");
+        }
+        return asset;
     }
-    create(symbol, name, type) {
+    create(symbol, name, type, isActive) {
         const asset = this.assetRepository.create({
             symbol,
             name,
             type,
+            ...(isActive !== undefined && { isActive }),
         });
         return this.assetRepository.save(asset);
     }
@@ -49,7 +54,10 @@ let AssetsService = class AssetsService {
         return this.assetRepository.save(asset);
     }
     async remove(id) {
-        await this.assetRepository.delete(id);
+        const result = await this.assetRepository.delete(id);
+        if (result.affected === 0) {
+            throw new common_1.NotFoundException("Asset not found");
+        }
     }
 };
 exports.AssetsService = AssetsService;

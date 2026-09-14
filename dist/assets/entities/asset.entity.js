@@ -17,6 +17,7 @@ let Asset = class Asset {
     symbol;
     name;
     type;
+    isActive;
 };
 exports.Asset = Asset;
 __decorate([
@@ -38,6 +39,10 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Asset.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: true }),
+    __metadata("design:type", Boolean)
+], Asset.prototype, "isActive", void 0);
 exports.Asset = Asset = __decorate([
     (0, typeorm_1.Entity)()
 ], Asset);
