@@ -14,15 +14,12 @@ Content-Type: application/json
 
 ### Get Asset by ID
 GET http://localhost:3000/assets/3
-### Get all assets
-GET http://localhost:3000/assets
-
-### Update Asset
-PATCH http://localhost:3000/assets/66
+### Update timeframe
+PATCH http://localhost:3000/assets/1
 Content-Type: application/json
 
 {
-  "name": "Euro / US Dollar Updated"
+  "timeframe": "15m"
 }
 
 ### Delete Asset
@@ -31,15 +28,14 @@ DELETE http://localhost:3000/assets/123
 
 ###
 
-### Create inactive Asset
 POST http://localhost:3000/assets
 Content-Type: application/json
 
 {
-  "symbol": "TEST",
-  "name": "Test Asset",
-  "type": "STOCK",
-  "isActive": false
+  "symbol": "ETHUSD",
+  "name": "Ethereum / US Dollar",
+  "type": "CRYPTO",
+  "timeframe": "4h"
 }
 
 ### Get active assets

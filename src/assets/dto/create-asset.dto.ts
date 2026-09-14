@@ -6,6 +6,7 @@ import {
   IsBoolean,
 } from "class-validator";
 import { AssetType } from "../enums/asset-type.enum";
+import { Timeframe } from "../enums/timeframe.enum";
 
 export class CreateAssetDto {
   @IsString()
@@ -22,4 +23,8 @@ export class CreateAssetDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsEnum(Timeframe)
+  timeframe?: Timeframe;
 }

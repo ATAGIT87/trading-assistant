@@ -34,12 +34,13 @@ let AssetsService = class AssetsService {
         }
         return asset;
     }
-    create(symbol, name, type, isActive) {
+    create(symbol, name, type, isActive, timeframe) {
         const asset = this.assetRepository.create({
             symbol,
             name,
             type,
             ...(isActive !== undefined && { isActive }),
+            ...(timeframe !== undefined && { timeframe }),
         });
         return this.assetRepository.save(asset);
     }

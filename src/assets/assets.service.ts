@@ -4,6 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Asset } from "./entities/asset.entity";
 import { AssetType } from "./enums/asset-type.enum";
 import { UpdateAssetDto } from "./dto/update-asset.dto";
+import { Timeframe } from './enums/timeframe.enum';
 @Injectable()
 export class AssetsService {
   constructor(
@@ -23,12 +24,13 @@ export class AssetsService {
     }
     return asset;
   }
-  create(symbol: string, name: string, type: AssetType, isActive?: boolean): Promise<Asset> {
+  create(symbol: string, name: string, type: AssetType, isActive?: boolean, timeframe?: Timeframe): Promise<Asset> {
     const asset = this.assetRepository.create({
       symbol,
       name,
       type,
       ...(isActive !== undefined && { isActive }),
+      ...(timeframe !== undefined && { timeframe }),
     });
 
     return this.assetRepository.save(asset);

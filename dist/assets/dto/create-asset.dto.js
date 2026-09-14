@@ -12,11 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateAssetDto = void 0;
 const class_validator_1 = require("class-validator");
 const asset_type_enum_1 = require("../enums/asset-type.enum");
+const timeframe_enum_1 = require("../enums/timeframe.enum");
 class CreateAssetDto {
     symbol;
     name;
     type;
     isActive;
+    timeframe;
 }
 exports.CreateAssetDto = CreateAssetDto;
 __decorate([
@@ -38,4 +40,9 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateAssetDto.prototype, "isActive", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(timeframe_enum_1.Timeframe),
+    __metadata("design:type", String)
+], CreateAssetDto.prototype, "timeframe", void 0);
 //# sourceMappingURL=create-asset.dto.js.map

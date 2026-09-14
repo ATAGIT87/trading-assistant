@@ -31,7 +31,7 @@ export class AssetsController {
 
   @Post()
   create(@Body() dto: CreateAssetDto) {
-    return this.assetsService.create(dto.symbol, dto.name, dto.type, dto.isActive);
+    return this.assetsService.create(dto.symbol, dto.name, dto.type, dto.isActive, dto.timeframe,);
   }
 
   @Patch(":id")

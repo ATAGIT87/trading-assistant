@@ -9,37 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateAssetDto = void 0;
+exports.CreateMarketCandleDto = void 0;
 const class_validator_1 = require("class-validator");
-const asset_type_enum_1 = require("../enums/asset-type.enum");
-const timeframe_enum_1 = require("../enums/timeframe.enum");
-class UpdateAssetDto {
+class CreateMarketCandleDto {
     symbol;
-    name;
-    type;
-    timeframe;
 }
-exports.UpdateAssetDto = UpdateAssetDto;
+exports.CreateMarketCandleDto = CreateMarketCandleDto;
 __decorate([
-    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], UpdateAssetDto.prototype, "symbol", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], UpdateAssetDto.prototype, "name", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(asset_type_enum_1.AssetType),
-    __metadata("design:type", String)
-], UpdateAssetDto.prototype, "type", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(timeframe_enum_1.Timeframe),
-    __metadata("design:type", String)
-], UpdateAssetDto.prototype, "timeframe", void 0);
-//# sourceMappingURL=update-asset.dto.js.map
+], CreateMarketCandleDto.prototype, "symbol", void 0);
+//# sourceMappingURL=create-market-candle.dto.js.map
