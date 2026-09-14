@@ -210,52 +210,38 @@ export class MarketDataService {
     return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
   }
   async getRsiStatus(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL' | null> {
-  const rsi = await this.getLatestRsi(
-    symbol,
-    timeframe,
-  );
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<"OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" | null> {
+    const rsi = await this.getLatestRsi(symbol, timeframe);
 
-  if (rsi === null) {
-    return null;
+    if (rsi === null) {
+      return null;
+    }
+
+    return this.indicatorsService.classifyRsi(rsi);
   }
 
-  return this.indicatorsService.classifyRsi(rsi);
-}
+  async getMarketCondition(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<
+    | "POSSIBLE_REVERSAL"
+    | "BEARISH_CONTINUATION"
+    | "BULLISH_CONTINUATION"
+    | "NEUTRAL"
+    | null
+  > {
+    const trend = await this.getTrend(symbol, timeframe, period);
 
-async getMarketCondition(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<
-  | 'POSSIBLE_REVERSAL'
-  | 'BEARISH_CONTINUATION'
-  | 'BULLISH_CONTINUATION'
-  | 'NEUTRAL'
-  | null
-> {
-  const trend = await this.getTrend(
-    symbol,
-    timeframe,
-    period,
-  );
+    const rsiStatus = await this.getRsiStatus(symbol, timeframe, period);
 
-  const rsiStatus = await this.getRsiStatus(
-    symbol,
-    timeframe,
-    period,
-  );
+    if (trend === null || rsiStatus === null) {
+      return null;
+    }
 
-  if (trend === null || rsiStatus === null) {
-    return null;
+    return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
   }
-
-  return this.indicatorsService.determineMarketCondition(
-    trend,
-    rsiStatus,
-  );
-}
 }

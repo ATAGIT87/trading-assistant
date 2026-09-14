@@ -113,27 +113,51 @@ let IndicatorsService = class IndicatorsService {
     }
     classifyRsi(rsi) {
         if (rsi < 30) {
-            return 'OVERSOLD';
+            return "OVERSOLD";
         }
         if (rsi > 70) {
-            return 'OVERBOUGHT';
+            return "OVERBOUGHT";
         }
-        return 'NEUTRAL';
+        return "NEUTRAL";
     }
     determineMarketCondition(trend, rsiStatus) {
-        if (trend === 'BEARISH' && rsiStatus === 'OVERSOLD') {
-            return 'POSSIBLE_REVERSAL';
+        if (trend === "BEARISH" && rsiStatus === "OVERSOLD") {
+            return "POSSIBLE_REVERSAL";
         }
-        if (trend === 'BEARISH' && rsiStatus === 'NEUTRAL') {
-            return 'BEARISH_CONTINUATION';
+        if (trend === "BEARISH" && rsiStatus === "NEUTRAL") {
+            return "BEARISH_CONTINUATION";
         }
-        if (trend === 'BULLISH' && rsiStatus === 'OVERBOUGHT') {
-            return 'POSSIBLE_REVERSAL';
+        if (trend === "BULLISH" && rsiStatus === "OVERBOUGHT") {
+            return "POSSIBLE_REVERSAL";
         }
-        if (trend === 'BULLISH' && rsiStatus === 'NEUTRAL') {
-            return 'BULLISH_CONTINUATION';
+        if (trend === "BULLISH" && rsiStatus === "NEUTRAL") {
+            return "BULLISH_CONTINUATION";
         }
-        return 'NEUTRAL';
+        return "NEUTRAL";
+    }
+    calculateTrendScore(trend) {
+        if (trend === "BULLISH" || trend === "BEARISH") {
+            return 40;
+        }
+        return 0;
+    }
+    calculateAverageAlignmentScore(priceVsSma, priceVsEma) {
+        if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
+            return 40;
+        }
+        if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
+            return 40;
+        }
+        if (priceVsSma === "EQUAL" || priceVsEma === "EQUAL") {
+            return 20;
+        }
+        return 0;
+    }
+    calculateRsiScore(rsiStatus) {
+        if (rsiStatus === "NEUTRAL") {
+            return 20;
+        }
+        return 10;
     }
 };
 exports.IndicatorsService = IndicatorsService;

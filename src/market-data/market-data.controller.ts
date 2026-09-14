@@ -125,29 +125,29 @@ export class MarketDataController {
   ) {
     return this.marketDataService.getTrend(symbol, timeframe, Number(period));
   }
-  @Get('candles/:symbol/:timeframe/rsi-status/:period')
-getRsiStatus(
-  @Param('symbol') symbol: string,
-  @Param('timeframe') timeframe: Timeframe,
-  @Param('period') period: string,
-) {
-  return this.marketDataService.getRsiStatus(
-    symbol,
-    timeframe,
-    Number(period),
-  );
-}
+  @Get("candles/:symbol/:timeframe/rsi-status/:period")
+  getRsiStatus(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+    @Param("period") period: string,
+  ) {
+    return this.marketDataService.getRsiStatus(
+      symbol,
+      timeframe,
+      Number(period),
+    );
+  }
 
-@Get('candles/:symbol/:timeframe/market-condition/:period')
-getMarketCondition(
-  @Param('symbol') symbol: string,
-  @Param('timeframe') timeframe: Timeframe,
-  @Param('period') period: string,
-) {
-  return this.marketDataService.getMarketCondition(
-    symbol,
-    timeframe,
-    Number(period),
-  );
-}
+  @Get("candles/:symbol/:timeframe/market-condition/:period")
+  getMarketCondition(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+    @Param("period") period: string,
+  ) {
+    return this.marketDataService.getMarketCondition(
+      symbol,
+      timeframe,
+      Number(period),
+    );
+  }
 }

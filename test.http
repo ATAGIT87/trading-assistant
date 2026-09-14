@@ -103,3 +103,6 @@ GET http://localhost:3000/market-data/candles/BTCUSD/1h/rsi-status/14
 
 ### Get market condition
 GET http://localhost:3000/market-data/candles/BTCUSD/1h/market-condition/14
+
+### Generate trading signal
+GET http://localhost:3000/signals/BTCUSD/1h/14

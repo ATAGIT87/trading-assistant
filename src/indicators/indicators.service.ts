@@ -163,44 +163,76 @@ export class IndicatorsService {
     return "NEUTRAL";
   }
 
-  classifyRsi(
-  rsi: number,
-): 'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL' {
-  if (rsi < 30) {
-    return 'OVERSOLD';
+  classifyRsi(rsi: number): "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" {
+    if (rsi < 30) {
+      return "OVERSOLD";
+    }
+
+    if (rsi > 70) {
+      return "OVERBOUGHT";
+    }
+
+    return "NEUTRAL";
+  }
+  determineMarketCondition(
+    trend: "BULLISH" | "BEARISH" | "NEUTRAL",
+    rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL",
+  ):
+    | "POSSIBLE_REVERSAL"
+    | "BEARISH_CONTINUATION"
+    | "BULLISH_CONTINUATION"
+    | "NEUTRAL" {
+    if (trend === "BEARISH" && rsiStatus === "OVERSOLD") {
+      return "POSSIBLE_REVERSAL";
+    }
+
+    if (trend === "BEARISH" && rsiStatus === "NEUTRAL") {
+      return "BEARISH_CONTINUATION";
+    }
+
+    if (trend === "BULLISH" && rsiStatus === "OVERBOUGHT") {
+      return "POSSIBLE_REVERSAL";
+    }
+
+    if (trend === "BULLISH" && rsiStatus === "NEUTRAL") {
+      return "BULLISH_CONTINUATION";
+    }
+
+    return "NEUTRAL";
   }
 
-  if (rsi > 70) {
-    return 'OVERBOUGHT';
+  calculateTrendScore(trend: "BULLISH" | "BEARISH" | "NEUTRAL"): number {
+    if (trend === "BULLISH" || trend === "BEARISH") {
+      return 40;
+    }
+
+    return 0;
   }
 
-  return 'NEUTRAL';
-}
-determineMarketCondition(
-  trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL',
-  rsiStatus: 'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL',
-):
-  | 'POSSIBLE_REVERSAL'
-  | 'BEARISH_CONTINUATION'
-  | 'BULLISH_CONTINUATION'
-  | 'NEUTRAL' {
-  if (trend === 'BEARISH' && rsiStatus === 'OVERSOLD') {
-    return 'POSSIBLE_REVERSAL';
+  calculateAverageAlignmentScore(
+    priceVsSma: "ABOVE" | "BELOW" | "EQUAL",
+    priceVsEma: "ABOVE" | "BELOW" | "EQUAL",
+  ): number {
+    if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
+      return 40;
+    }
+
+    if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
+      return 40;
+    }
+
+    if (priceVsSma === "EQUAL" || priceVsEma === "EQUAL") {
+      return 20;
+    }
+
+    return 0;
   }
 
-  if (trend === 'BEARISH' && rsiStatus === 'NEUTRAL') {
-    return 'BEARISH_CONTINUATION';
+  calculateRsiScore(rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): number {
+    if (rsiStatus === "NEUTRAL") {
+      return 20;
+    }
+
+    return 10;
   }
-
-  if (trend === 'BULLISH' && rsiStatus === 'OVERBOUGHT') {
-    return 'POSSIBLE_REVERSAL';
-  }
-
-  if (trend === 'BULLISH' && rsiStatus === 'NEUTRAL') {
-    return 'BULLISH_CONTINUATION';
-  }
-
-  return 'NEUTRAL';
-}
-
 }

@@ -15,6 +15,9 @@ export declare class IndicatorsService {
     comparePriceToAverage(price: number, average: number): "ABOVE" | "BELOW" | "EQUAL";
     compareSmaToEma(sma: number, ema: number): "SMA_ABOVE_EMA" | "SMA_BELOW_EMA" | "SMA_EQUAL_EMA";
     determineTrend(priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL"): "BULLISH" | "BEARISH" | "NEUTRAL";
-    classifyRsi(rsi: number): 'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL';
-    determineMarketCondition(trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL', rsiStatus: 'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL'): 'POSSIBLE_REVERSAL' | 'BEARISH_CONTINUATION' | 'BULLISH_CONTINUATION' | 'NEUTRAL';
+    classifyRsi(rsi: number): "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL";
+    determineMarketCondition(trend: "BULLISH" | "BEARISH" | "NEUTRAL", rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL";
+    calculateTrendScore(trend: "BULLISH" | "BEARISH" | "NEUTRAL"): number;
+    calculateAverageAlignmentScore(priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL"): number;
+    calculateRsiScore(rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): number;
 }
