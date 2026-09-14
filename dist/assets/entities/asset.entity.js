@@ -47,7 +47,7 @@ __decorate([
 ], Asset.prototype, "isActive", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: 'enum',
+        type: "enum",
         enum: timeframe_enum_1.Timeframe,
         default: timeframe_enum_1.Timeframe.ONE_HOUR,
     }),

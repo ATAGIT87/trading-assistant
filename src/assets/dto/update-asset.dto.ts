@@ -18,6 +18,6 @@ export class UpdateAssetDto {
   type?: AssetType;
 
   @IsOptional()
-@IsEnum(Timeframe)
-timeframe?: Timeframe;
+  @IsEnum(Timeframe)
+  timeframe?: Timeframe;
 }

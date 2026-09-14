@@ -34,33 +34,33 @@ __decorate([
 ], MarketCandle.prototype, "symbol", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: 'enum',
+        type: "enum",
         enum: timeframe_enum_1.Timeframe,
     }),
     __metadata("design:type", String)
 ], MarketCandle.prototype, "timeframe", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamptz' }),
+    (0, typeorm_1.Column)({ type: "timestamptz" }),
     __metadata("design:type", Date)
 ], MarketCandle.prototype, "time", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 20, scale: 8 }),
+    (0, typeorm_1.Column)({ type: "decimal", precision: 20, scale: 8 }),
     __metadata("design:type", String)
 ], MarketCandle.prototype, "open", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 20, scale: 8 }),
+    (0, typeorm_1.Column)({ type: "decimal", precision: 20, scale: 8 }),
     __metadata("design:type", String)
 ], MarketCandle.prototype, "high", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 20, scale: 8 }),
+    (0, typeorm_1.Column)({ type: "decimal", precision: 20, scale: 8 }),
     __metadata("design:type", String)
 ], MarketCandle.prototype, "low", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 20, scale: 8 }),
+    (0, typeorm_1.Column)({ type: "decimal", precision: 20, scale: 8 }),
     __metadata("design:type", String)
 ], MarketCandle.prototype, "close", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'decimal', precision: 30, scale: 8 }),
+    (0, typeorm_1.Column)({ type: "decimal", precision: 30, scale: 8 }),
     __metadata("design:type", String)
 ], MarketCandle.prototype, "volume", void 0);
 exports.MarketCandle = MarketCandle = __decorate([

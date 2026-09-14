@@ -1,4 +1,4 @@
-import { Timeframe } from '../../assets/enums/timeframe.enum';
+import { Timeframe } from "../../assets/enums/timeframe.enum";
 export declare class MarketCandle {
     id: number;
     symbol: string;

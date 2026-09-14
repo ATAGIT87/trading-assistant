@@ -20,10 +20,10 @@ export class AssetsController {
     return this.assetsService.findAll();
   }
 
-  @Get('active')
+  @Get("active")
   findActive() {
-  return this.assetsService.findActive();
-}
+    return this.assetsService.findActive();
+  }
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.assetsService.findOne(Number(id));
@@ -31,7 +31,13 @@ export class AssetsController {
 
   @Post()
   create(@Body() dto: CreateAssetDto) {
-    return this.assetsService.create(dto.symbol, dto.name, dto.type, dto.isActive, dto.timeframe,);
+    return this.assetsService.create(
+      dto.symbol,
+      dto.name,
+      dto.type,
+      dto.isActive,
+      dto.timeframe,
+    );
   }
 
   @Patch(":id")

@@ -22,9 +22,9 @@ export class Asset {
   isActive!: boolean;
 
   @Column({
-  type: 'enum',
-  enum: Timeframe,
-  default: Timeframe.ONE_HOUR,
-})
-timeframe!: Timeframe;
+    type: "enum",
+    enum: Timeframe,
+    default: Timeframe.ONE_HOUR,
+  })
+  timeframe!: Timeframe;
 }
