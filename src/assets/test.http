@@ -1,0 +1,30 @@
+### Get Assets
+GET http://localhost:3000/assets
+
+
+### Create Asset
+POST http://localhost:3000/assets
+Content-Type: application/json
+
+{
+  "symbol": "",
+  "name": "Euro / US Dollar",
+  "type": "FOREX"
+}
+
+### Get Asset by ID
+GET http://localhost:3000/assets/3
+### Get all assets
+GET http://localhost:3000/assets
+
+### Update Asset
+PATCH http://localhost:3000/assets/1
+Content-Type: application/json
+
+{
+  "name": "Euro / US Dollar Updated"
+}
+
+### Delete Asset
+DELETE http://localhost:3000/assets/1
+

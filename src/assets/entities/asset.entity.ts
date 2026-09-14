@@ -1,5 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { AssetType } from "../enums/asset-type.enum";
 @Entity()
 export class Asset {
   @PrimaryGeneratedColumn()
@@ -11,6 +11,9 @@ export class Asset {
   @Column()
   name!: string;
 
-  @Column()
-  type!: string;
+  @Column({
+    type: "enum",
+    enum: AssetType,
+  })
+  type!: AssetType;
 }

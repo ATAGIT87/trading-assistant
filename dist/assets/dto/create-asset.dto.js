@@ -9,36 +9,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Asset = void 0;
-const typeorm_1 = require("typeorm");
+exports.CreateAssetDto = void 0;
+const class_validator_1 = require("class-validator");
 const asset_type_enum_1 = require("../enums/asset-type.enum");
-let Asset = class Asset {
-    id;
+class CreateAssetDto {
     symbol;
     name;
     type;
-};
-exports.Asset = Asset;
+}
+exports.CreateAssetDto = CreateAssetDto;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)(),
-    __metadata("design:type", Number)
-], Asset.prototype, "id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ unique: true }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], Asset.prototype, "symbol", void 0);
+], CreateAssetDto.prototype, "symbol", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], Asset.prototype, "name", void 0);
+], CreateAssetDto.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        type: "enum",
-        enum: asset_type_enum_1.AssetType,
-    }),
+    (0, class_validator_1.IsEnum)(asset_type_enum_1.AssetType),
     __metadata("design:type", String)
-], Asset.prototype, "type", void 0);
-exports.Asset = Asset = __decorate([
-    (0, typeorm_1.Entity)()
-], Asset);
-//# sourceMappingURL=asset.entity.js.map
+], CreateAssetDto.prototype, "type", void 0);
+//# sourceMappingURL=create-asset.dto.js.map
