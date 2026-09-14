@@ -17,10 +17,13 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
+const indicators_service_1 = require("../indicators/indicators.service");
 let MarketDataService = class MarketDataService {
     marketCandleRepository;
-    constructor(marketCandleRepository) {
+    indicatorsService;
+    constructor(marketCandleRepository, indicatorsService) {
         this.marketCandleRepository = marketCandleRepository;
+        this.indicatorsService = indicatorsService;
     }
     async createCandle(dto) {
         try {
@@ -84,14 +87,60 @@ let MarketDataService = class MarketDataService {
         }
         return candle.close;
     }
-    getCandlesForAnalysis(symbol, timeframe) {
-        return this.findCandlesBySymbolAndTimeframe(symbol, timeframe);
+    async getCandlesForAnalysis(symbol, timeframe) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                time: 'ASC',
+            },
+            take: 100,
+        });
+    }
+    async getLatestRsi(symbol, timeframe) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        return this.indicatorsService.calculateRsiFromCandles(candles, 14);
+    }
+    async getLatestSma(symbol, timeframe, period) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        return this.indicatorsService.calculateSmaFromCandles(candles, period);
+    }
+    async getLatestEma(symbol, timeframe, period) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        return this.indicatorsService.calculateEma(candles.map((candle) => Number(candle.close)), period);
+    }
+    async compareLatestPriceToSma(symbol, timeframe, period) {
+        const price = await this.getLatestPrice(symbol, timeframe);
+        const sma = await this.getLatestSma(symbol, timeframe, period);
+        if (price === null || sma === null) {
+            return null;
+        }
+        return this.indicatorsService.comparePriceToAverage(Number(price), sma);
+    }
+    async compareLatestPriceToEma(symbol, timeframe, period) {
+        const price = await this.getLatestPrice(symbol, timeframe);
+        const ema = await this.getLatestEma(symbol, timeframe, period);
+        if (price === null || ema === null) {
+            return null;
+        }
+        return this.indicatorsService.comparePriceToAverage(Number(price), ema);
+    }
+    async compareSmaToEma(symbol, timeframe, period) {
+        const sma = await this.getLatestSma(symbol, timeframe, period);
+        const ema = await this.getLatestEma(symbol, timeframe, period);
+        if (sma === null || ema === null) {
+            return null;
+        }
+        return this.indicatorsService.compareSmaToEma(sma, ema);
     }
 };
 exports.MarketDataService = MarketDataService;
 exports.MarketDataService = MarketDataService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(market_candle_entity_1.MarketCandle)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        indicators_service_1.IndicatorsService])
 ], MarketDataService);
 //# sourceMappingURL=market-data.service.js.map

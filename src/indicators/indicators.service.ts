@@ -126,4 +126,35 @@ calculateRsiFromCandles(
 
   return this.calculateRsiFromPrices(closes, period);
 }
+
+comparePriceToAverage(
+  price: number,
+  average: number,
+): 'ABOVE' | 'BELOW' | 'EQUAL' {
+  if (price > average) {
+    return 'ABOVE';
+  }
+
+  if (price < average) {
+    return 'BELOW';
+  }
+
+  return 'EQUAL';
+}
+
+compareSmaToEma(
+  sma: number,
+  ema: number,
+): 'SMA_ABOVE_EMA' | 'SMA_BELOW_EMA' | 'SMA_EQUAL_EMA' {
+  if (sma > ema) {
+    return 'SMA_ABOVE_EMA';
+  }
+
+  if (sma < ema) {
+    return 'SMA_BELOW_EMA';
+  }
+
+  return 'SMA_EQUAL_EMA';
+}
+
 }

@@ -67,3 +67,30 @@ GET http://localhost:3000/market-data/candles/BTCUSD/1h
 
 ### Get latest BTCUSD 1h candle
 GET http://localhost:3000/market-data/candles/BTCUSD/1h/latest
+
+
+### Seed market data
+POST http://localhost:3000/market-data/seed
+
+### Get BTCUSD candles
+GET http://localhost:3000/market-data/candles/BTCUSD/1h
+
+
+### Get latest RSI
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/rsi
+
+
+### Get latest SMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/sma/14
+
+### Get latest EMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/ema/14
+
+### Compare latest price to SMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/price-vs-sma/14
+
+### Compare latest price to EMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/price-vs-ema/14
+
+### Compare SMA vs EMA
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/sma-vs-ema/14

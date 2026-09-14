@@ -12,13 +12,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
 const market_data_service_1 = require("./market-data.service");
 const market_data_controller_1 = require("./market-data.controller");
+const indicators_module_1 = require("../indicators/indicators.module");
+const market_data_seed_1 = require("./market-data.seed");
 let MarketDataModule = class MarketDataModule {
 };
 exports.MarketDataModule = MarketDataModule;
 exports.MarketDataModule = MarketDataModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([market_candle_entity_1.MarketCandle])],
-        providers: [market_data_service_1.MarketDataService],
+        imports: [typeorm_1.TypeOrmModule.forFeature([market_candle_entity_1.MarketCandle]), indicators_module_1.IndicatorsModule],
+        providers: [market_data_service_1.MarketDataService, market_data_seed_1.MarketDataSeed],
         exports: [market_data_service_1.MarketDataService],
         controllers: [market_data_controller_1.MarketDataController],
     })

@@ -17,10 +17,13 @@ const common_1 = require("@nestjs/common");
 const create_market_candle_dto_1 = require("./dto/create-market-candle.dto");
 const market_data_service_1 = require("./market-data.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const market_data_seed_1 = require("./market-data.seed");
 let MarketDataController = class MarketDataController {
     marketDataService;
-    constructor(marketDataService) {
+    marketDataSeed;
+    constructor(marketDataService, marketDataSeed) {
         this.marketDataService = marketDataService;
+        this.marketDataSeed = marketDataSeed;
     }
     createCandle(dto) {
         return this.marketDataService.createCandle(dto);
@@ -36,6 +39,27 @@ let MarketDataController = class MarketDataController {
     }
     findLatestCandle(symbol, timeframe) {
         return this.marketDataService.findLatestCandle(symbol, timeframe);
+    }
+    seed() {
+        return this.marketDataSeed.seed();
+    }
+    getLatestRsi(symbol, timeframe) {
+        return this.marketDataService.getLatestRsi(symbol, timeframe);
+    }
+    getLatestSma(symbol, timeframe, period) {
+        return this.marketDataService.getLatestSma(symbol, timeframe, Number(period));
+    }
+    getLatestEma(symbol, period, timeframe) {
+        return this.marketDataService.getLatestEma(symbol, timeframe, Number(period));
+    }
+    compareLatestPriceToSma(symbol, timeframe, period) {
+        return this.marketDataService.compareLatestPriceToSma(symbol, timeframe, Number(period));
+    }
+    compareLatestPriceToEma(symbol, timeframe, period) {
+        return this.marketDataService.compareLatestPriceToEma(symbol, timeframe, Number(period));
+    }
+    compareSmaToEma(symbol, timeframe, period) {
+        return this.marketDataService.compareSmaToEma(symbol, timeframe, Number(period));
     }
 };
 exports.MarketDataController = MarketDataController;
@@ -75,8 +99,68 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "findLatestCandle", null);
+__decorate([
+    (0, common_1.Post)('seed'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "seed", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/rsi'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestRsi", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/sma/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestSma", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/ema/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('period')),
+    __param(2, (0, common_1.Param)('timeframe')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestEma", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/price-vs-sma/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "compareLatestPriceToSma", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/price-vs-ema/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "compareLatestPriceToEma", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/sma-vs-ema/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "compareSmaToEma", null);
 exports.MarketDataController = MarketDataController = __decorate([
     (0, common_1.Controller)("market-data"),
-    __metadata("design:paramtypes", [market_data_service_1.MarketDataService])
+    __metadata("design:paramtypes", [market_data_service_1.MarketDataService,
+        market_data_seed_1.MarketDataSeed])
 ], MarketDataController);
 //# sourceMappingURL=market-data.controller.js.map

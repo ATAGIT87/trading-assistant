@@ -84,6 +84,24 @@ let IndicatorsService = class IndicatorsService {
         const closes = candles.map((candle) => Number(candle.close));
         return this.calculateRsiFromPrices(closes, period);
     }
+    comparePriceToAverage(price, average) {
+        if (price > average) {
+            return 'ABOVE';
+        }
+        if (price < average) {
+            return 'BELOW';
+        }
+        return 'EQUAL';
+    }
+    compareSmaToEma(sma, ema) {
+        if (sma > ema) {
+            return 'SMA_ABOVE_EMA';
+        }
+        if (sma < ema) {
+            return 'SMA_BELOW_EMA';
+        }
+        return 'SMA_EQUAL_EMA';
+    }
 };
 exports.IndicatorsService = IndicatorsService;
 exports.IndicatorsService = IndicatorsService = __decorate([

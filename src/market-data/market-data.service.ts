@@ -4,11 +4,13 @@ import { Repository, QueryFailedError } from "typeorm";
 import { MarketCandle } from "./entities/market-candle.entity";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { IndicatorsService } from "../indicators/indicators.service";
 @Injectable()
 export class MarketDataService {
   constructor(
     @InjectRepository(MarketCandle)
     private readonly marketCandleRepository: Repository<MarketCandle>,
+    private readonly indicatorsService: IndicatorsService,
   ) {}
 
   async createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle> {
@@ -90,10 +92,121 @@ export class MarketDataService {
 
     return candle.close;
   }
-  getCandlesForAnalysis(
-    symbol: string,
-    timeframe: Timeframe,
-  ): Promise<MarketCandle[]> {
-    return this.findCandlesBySymbolAndTimeframe(symbol, timeframe);
+async getCandlesForAnalysis(
+  symbol: string,
+  timeframe: Timeframe,
+): Promise<MarketCandle[]> {
+  return this.marketCandleRepository.find({
+    where: {
+      symbol,
+      timeframe,
+    },
+    order: {
+      time: 'ASC',
+    },
+    take: 100,
+  });
+}
+
+  async getLatestRsi(
+  symbol: string,
+  timeframe: Timeframe,
+): Promise<number | null> {
+  const candles =
+    await this.getCandlesForAnalysis(symbol, timeframe);
+
+  return this.indicatorsService.calculateRsiFromCandles(
+    candles,
+    14,
+  );
+}
+
+async getLatestSma(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<number | null> {
+  const candles = await this.getCandlesForAnalysis(
+    symbol,
+    timeframe,
+  );
+
+  return this.indicatorsService.calculateSmaFromCandles(
+    candles,
+    period,
+  );
+}
+
+async getLatestEma(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<number | null> {
+  const candles = await this.getCandlesForAnalysis(
+    symbol,
+    timeframe,
+  );
+
+  return this.indicatorsService.calculateEma(
+    candles.map((candle) => Number(candle.close)),
+    period,
+  );
+}
+
+async compareLatestPriceToSma(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<'ABOVE' | 'BELOW' | 'EQUAL' | null> {
+  const price = await this.getLatestPrice(symbol, timeframe);
+  const sma = await this.getLatestSma(symbol, timeframe, period);
+
+  if (price === null || sma === null) {
+    return null;
   }
+
+  return this.indicatorsService.comparePriceToAverage(
+    Number(price),
+    sma,
+  );
+}
+
+async compareLatestPriceToEma(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<'ABOVE' | 'BELOW' | 'EQUAL' | null> {
+  const price = await this.getLatestPrice(symbol, timeframe);
+  const ema = await this.getLatestEma(symbol, timeframe, period);
+
+  if (price === null || ema === null) {
+    return null;
+  }
+
+  return this.indicatorsService.comparePriceToAverage(
+    Number(price),
+    ema,
+  );
+}
+
+async compareSmaToEma(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<
+  'SMA_ABOVE_EMA' | 'SMA_BELOW_EMA' | 'SMA_EQUAL_EMA' | null
+> {
+  const sma = await this.getLatestSma(symbol, timeframe, period);
+  const ema = await this.getLatestEma(symbol, timeframe, period);
+
+  if (sma === null || ema === null) {
+    return null;
+  }
+
+  return this.indicatorsService.compareSmaToEma(
+    sma,
+    ema,
+  );
+}
+
 }
