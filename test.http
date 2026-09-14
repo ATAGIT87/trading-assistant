@@ -41,3 +41,29 @@ Content-Type: application/json
 ### Get active assets
 GET http://localhost:3000/assets/active
 
+### Create market candle
+POST http://localhost:3000/market-data/candles
+Content-Type: application/json
+
+{
+  "symbol": "BTCUSD",
+  "timeframe": "1h",
+  "time": "2026-09-14T10:00:00Z",
+  "open": 115000,
+  "high": 116000,
+  "low": 114500,
+  "close": 115500,
+  "volume": 123.45
+}
+
+### Get all market candles
+GET http://localhost:3000/market-data/candles
+
+### Get BTCUSD candles
+GET http://localhost:3000/market-data/candles/BTCUSD
+
+### Get BTCUSD 1h candles
+GET http://localhost:3000/market-data/candles/BTCUSD/1h
+
+### Get latest BTCUSD 1h candle
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/latest

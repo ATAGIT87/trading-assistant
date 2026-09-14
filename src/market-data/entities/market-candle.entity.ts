@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { Timeframe } from "../../assets/enums/timeframe.enum";
 
+@Unique(["symbol", "timeframe", "time"])
 @Entity()
 export class MarketCandle {
   @PrimaryGeneratedColumn()

@@ -22,18 +22,70 @@ let MarketDataService = class MarketDataService {
     constructor(marketCandleRepository) {
         this.marketCandleRepository = marketCandleRepository;
     }
-    createCandle(dto) {
-        const candle = this.marketCandleRepository.create({
-            symbol: dto.symbol,
-            timeframe: dto.timeframe,
-            time: new Date(dto.time),
-            open: dto.open.toString(),
-            high: dto.high.toString(),
-            low: dto.low.toString(),
-            close: dto.close.toString(),
-            volume: dto.volume.toString(),
+    async createCandle(dto) {
+        try {
+            const candle = this.marketCandleRepository.create({
+                symbol: dto.symbol,
+                timeframe: dto.timeframe,
+                time: new Date(dto.time),
+                open: dto.open.toString(),
+                high: dto.high.toString(),
+                low: dto.low.toString(),
+                close: dto.close.toString(),
+                volume: dto.volume.toString(),
+            });
+            return await this.marketCandleRepository.save(candle);
+        }
+        catch (error) {
+            if (error instanceof typeorm_2.QueryFailedError &&
+                error.driverError?.code === "23505") {
+                throw new common_1.ConflictException("Candle already exists");
+            }
+            throw error;
+        }
+    }
+    findAllCandles() {
+        return this.marketCandleRepository.find();
+    }
+    findCandlesBySymbol(symbol) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+            },
         });
-        return this.marketCandleRepository.save(candle);
+    }
+    findCandlesBySymbolAndTimeframe(symbol, timeframe) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                time: "DESC",
+            },
+            take: 100,
+        });
+    }
+    async findLatestCandle(symbol, timeframe) {
+        return this.marketCandleRepository.findOne({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                time: "DESC",
+            },
+        });
+    }
+    async getLatestPrice(symbol, timeframe) {
+        const candle = await this.findLatestCandle(symbol, timeframe);
+        if (!candle) {
+            return null;
+        }
+        return candle.close;
+    }
+    getCandlesForAnalysis(symbol, timeframe) {
+        return this.findCandlesBySymbolAndTimeframe(symbol, timeframe);
     }
 };
 exports.MarketDataService = MarketDataService;

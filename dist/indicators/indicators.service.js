@@ -1,0 +1,92 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.IndicatorsService = void 0;
+const common_1 = require("@nestjs/common");
+let IndicatorsService = class IndicatorsService {
+    calculateSma(values, period) {
+        if (values.length < period) {
+            return null;
+        }
+        const recentValues = values.slice(-period);
+        const sum = recentValues.reduce((total, value) => total + value, 0);
+        return sum / period;
+    }
+    calculateSmaFromCandles(candles, period) {
+        const closes = candles.map((candle) => Number(candle.close));
+        return this.calculateSma(closes, period);
+    }
+    calculateEma(values, period) {
+        if (values.length < period) {
+            return null;
+        }
+        const initialValues = values.slice(0, period);
+        let ema = initialValues.reduce((sum, value) => sum + value, 0) / period;
+        const multiplier = 2 / (period + 1);
+        for (let i = period; i < values.length; i++) {
+            ema = (values[i] - ema) * multiplier + ema;
+        }
+        return ema;
+    }
+    calculatePriceChanges(values) {
+        const changes = [];
+        for (let i = 1; i < values.length; i++) {
+            changes.push(values[i] - values[i - 1]);
+        }
+        return changes;
+    }
+    calculateGainsAndLosses(changes) {
+        const gains = [];
+        const losses = [];
+        for (const change of changes) {
+            gains.push(change > 0 ? change : 0);
+            losses.push(change < 0 ? Math.abs(change) : 0);
+        }
+        return {
+            gains,
+            losses,
+        };
+    }
+    calculateAverage(values, period) {
+        if (values.length < period) {
+            return null;
+        }
+        const recentValues = values.slice(-period);
+        const sum = recentValues.reduce((total, value) => total + value, 0);
+        return sum / period;
+    }
+    calculateRsi(averageGain, averageLoss) {
+        if (averageLoss === 0) {
+            return 100;
+        }
+        const rs = averageGain / averageLoss;
+        return 100 - 100 / (1 + rs);
+    }
+    calculateRsiFromPrices(values, period) {
+        if (values.length <= period) {
+            return null;
+        }
+        const changes = this.calculatePriceChanges(values);
+        const { gains, losses } = this.calculateGainsAndLosses(changes);
+        const averageGain = this.calculateAverage(gains, period);
+        const averageLoss = this.calculateAverage(losses, period);
+        if (averageGain === null || averageLoss === null) {
+            return null;
+        }
+        return this.calculateRsi(averageGain, averageLoss);
+    }
+    calculateRsiFromCandles(candles, period) {
+        const closes = candles.map((candle) => Number(candle.close));
+        return this.calculateRsiFromPrices(closes, period);
+    }
+};
+exports.IndicatorsService = IndicatorsService;
+exports.IndicatorsService = IndicatorsService = __decorate([
+    (0, common_1.Injectable)()
+], IndicatorsService);
+//# sourceMappingURL=indicators.service.js.map

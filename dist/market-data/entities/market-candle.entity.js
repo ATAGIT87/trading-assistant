@@ -64,6 +64,7 @@ __decorate([
     __metadata("design:type", String)
 ], MarketCandle.prototype, "volume", void 0);
 exports.MarketCandle = MarketCandle = __decorate([
+    (0, typeorm_1.Unique)(["symbol", "timeframe", "time"]),
     (0, typeorm_1.Entity)()
 ], MarketCandle);
 //# sourceMappingURL=market-candle.entity.js.map
