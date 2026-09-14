@@ -92,121 +92,170 @@ export class MarketDataService {
 
     return candle.close;
   }
-async getCandlesForAnalysis(
-  symbol: string,
-  timeframe: Timeframe,
-): Promise<MarketCandle[]> {
-  return this.marketCandleRepository.find({
-    where: {
-      symbol,
-      timeframe,
-    },
-    order: {
-      time: 'ASC',
-    },
-    take: 100,
-  });
-}
+  async getCandlesForAnalysis(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<MarketCandle[]> {
+    return this.marketCandleRepository.find({
+      where: {
+        symbol,
+        timeframe,
+      },
+      order: {
+        time: "ASC",
+      },
+      take: 100,
+    });
+  }
 
   async getLatestRsi(
-  symbol: string,
-  timeframe: Timeframe,
-): Promise<number | null> {
-  const candles =
-    await this.getCandlesForAnalysis(symbol, timeframe);
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<number | null> {
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-  return this.indicatorsService.calculateRsiFromCandles(
-    candles,
-    14,
-  );
-}
+    return this.indicatorsService.calculateRsiFromCandles(candles, 14);
+  }
 
-async getLatestSma(
+  async getLatestSma(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<number | null> {
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+
+    return this.indicatorsService.calculateSmaFromCandles(candles, period);
+  }
+
+  async getLatestEma(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<number | null> {
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+
+    return this.indicatorsService.calculateEma(
+      candles.map((candle) => Number(candle.close)),
+      period,
+    );
+  }
+
+  async compareLatestPriceToSma(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<"ABOVE" | "BELOW" | "EQUAL" | null> {
+    const price = await this.getLatestPrice(symbol, timeframe);
+    const sma = await this.getLatestSma(symbol, timeframe, period);
+
+    if (price === null || sma === null) {
+      return null;
+    }
+
+    return this.indicatorsService.comparePriceToAverage(Number(price), sma);
+  }
+
+  async compareLatestPriceToEma(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<"ABOVE" | "BELOW" | "EQUAL" | null> {
+    const price = await this.getLatestPrice(symbol, timeframe);
+    const ema = await this.getLatestEma(symbol, timeframe, period);
+
+    if (price === null || ema === null) {
+      return null;
+    }
+
+    return this.indicatorsService.comparePriceToAverage(Number(price), ema);
+  }
+
+  async compareSmaToEma(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<"SMA_ABOVE_EMA" | "SMA_BELOW_EMA" | "SMA_EQUAL_EMA" | null> {
+    const sma = await this.getLatestSma(symbol, timeframe, period);
+    const ema = await this.getLatestEma(symbol, timeframe, period);
+
+    if (sma === null || ema === null) {
+      return null;
+    }
+
+    return this.indicatorsService.compareSmaToEma(sma, ema);
+  }
+  async getTrend(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
+    const price = await this.getLatestPrice(symbol, timeframe);
+    const sma = await this.getLatestSma(symbol, timeframe, period);
+    const ema = await this.getLatestEma(symbol, timeframe, period);
+
+    if (price === null || sma === null || ema === null) {
+      return null;
+    }
+
+    const priceVsSma = this.indicatorsService.comparePriceToAverage(
+      Number(price),
+      sma,
+    );
+
+    const priceVsEma = this.indicatorsService.comparePriceToAverage(
+      Number(price),
+      ema,
+    );
+
+    return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+  }
+  async getRsiStatus(
   symbol: string,
   timeframe: Timeframe,
   period: number,
-): Promise<number | null> {
-  const candles = await this.getCandlesForAnalysis(
+): Promise<'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL' | null> {
+  const rsi = await this.getLatestRsi(
     symbol,
     timeframe,
   );
 
-  return this.indicatorsService.calculateSmaFromCandles(
-    candles,
-    period,
-  );
-}
-
-async getLatestEma(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<number | null> {
-  const candles = await this.getCandlesForAnalysis(
-    symbol,
-    timeframe,
-  );
-
-  return this.indicatorsService.calculateEma(
-    candles.map((candle) => Number(candle.close)),
-    period,
-  );
-}
-
-async compareLatestPriceToSma(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<'ABOVE' | 'BELOW' | 'EQUAL' | null> {
-  const price = await this.getLatestPrice(symbol, timeframe);
-  const sma = await this.getLatestSma(symbol, timeframe, period);
-
-  if (price === null || sma === null) {
+  if (rsi === null) {
     return null;
   }
 
-  return this.indicatorsService.comparePriceToAverage(
-    Number(price),
-    sma,
-  );
+  return this.indicatorsService.classifyRsi(rsi);
 }
 
-async compareLatestPriceToEma(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<'ABOVE' | 'BELOW' | 'EQUAL' | null> {
-  const price = await this.getLatestPrice(symbol, timeframe);
-  const ema = await this.getLatestEma(symbol, timeframe, period);
-
-  if (price === null || ema === null) {
-    return null;
-  }
-
-  return this.indicatorsService.comparePriceToAverage(
-    Number(price),
-    ema,
-  );
-}
-
-async compareSmaToEma(
+async getMarketCondition(
   symbol: string,
   timeframe: Timeframe,
   period: number,
 ): Promise<
-  'SMA_ABOVE_EMA' | 'SMA_BELOW_EMA' | 'SMA_EQUAL_EMA' | null
+  | 'POSSIBLE_REVERSAL'
+  | 'BEARISH_CONTINUATION'
+  | 'BULLISH_CONTINUATION'
+  | 'NEUTRAL'
+  | null
 > {
-  const sma = await this.getLatestSma(symbol, timeframe, period);
-  const ema = await this.getLatestEma(symbol, timeframe, period);
+  const trend = await this.getTrend(
+    symbol,
+    timeframe,
+    period,
+  );
 
-  if (sma === null || ema === null) {
+  const rsiStatus = await this.getRsiStatus(
+    symbol,
+    timeframe,
+    period,
+  );
+
+  if (trend === null || rsiStatus === null) {
     return null;
   }
 
-  return this.indicatorsService.compareSmaToEma(
-    sma,
-    ema,
+  return this.indicatorsService.determineMarketCondition(
+    trend,
+    rsiStatus,
   );
 }
-
 }

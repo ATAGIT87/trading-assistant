@@ -94,3 +94,12 @@ GET http://localhost:3000/market-data/candles/BTCUSD/1h/price-vs-ema/14
 
 ### Compare SMA vs EMA
 GET http://localhost:3000/market-data/candles/BTCUSD/1h/sma-vs-ema/14
+
+### Get trend
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/trend/14
+
+### Get RSI status
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/rsi-status/14
+
+### Get market condition
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/market-condition/14

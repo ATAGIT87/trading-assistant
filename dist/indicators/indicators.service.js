@@ -86,21 +86,54 @@ let IndicatorsService = class IndicatorsService {
     }
     comparePriceToAverage(price, average) {
         if (price > average) {
-            return 'ABOVE';
+            return "ABOVE";
         }
         if (price < average) {
-            return 'BELOW';
+            return "BELOW";
         }
-        return 'EQUAL';
+        return "EQUAL";
     }
     compareSmaToEma(sma, ema) {
         if (sma > ema) {
-            return 'SMA_ABOVE_EMA';
+            return "SMA_ABOVE_EMA";
         }
         if (sma < ema) {
-            return 'SMA_BELOW_EMA';
+            return "SMA_BELOW_EMA";
         }
-        return 'SMA_EQUAL_EMA';
+        return "SMA_EQUAL_EMA";
+    }
+    determineTrend(priceVsSma, priceVsEma) {
+        if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
+            return "BULLISH";
+        }
+        if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
+            return "BEARISH";
+        }
+        return "NEUTRAL";
+    }
+    classifyRsi(rsi) {
+        if (rsi < 30) {
+            return 'OVERSOLD';
+        }
+        if (rsi > 70) {
+            return 'OVERBOUGHT';
+        }
+        return 'NEUTRAL';
+    }
+    determineMarketCondition(trend, rsiStatus) {
+        if (trend === 'BEARISH' && rsiStatus === 'OVERSOLD') {
+            return 'POSSIBLE_REVERSAL';
+        }
+        if (trend === 'BEARISH' && rsiStatus === 'NEUTRAL') {
+            return 'BEARISH_CONTINUATION';
+        }
+        if (trend === 'BULLISH' && rsiStatus === 'OVERBOUGHT') {
+            return 'POSSIBLE_REVERSAL';
+        }
+        if (trend === 'BULLISH' && rsiStatus === 'NEUTRAL') {
+            return 'BULLISH_CONTINUATION';
+        }
+        return 'NEUTRAL';
     }
 };
 exports.IndicatorsService = IndicatorsService;

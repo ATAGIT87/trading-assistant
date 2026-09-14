@@ -17,7 +17,10 @@ export declare class MarketDataService {
     getLatestRsi(symbol: string, timeframe: Timeframe): Promise<number | null>;
     getLatestSma(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
     getLatestEma(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
-    compareLatestPriceToSma(symbol: string, timeframe: Timeframe, period: number): Promise<'ABOVE' | 'BELOW' | 'EQUAL' | null>;
-    compareLatestPriceToEma(symbol: string, timeframe: Timeframe, period: number): Promise<'ABOVE' | 'BELOW' | 'EQUAL' | null>;
-    compareSmaToEma(symbol: string, timeframe: Timeframe, period: number): Promise<'SMA_ABOVE_EMA' | 'SMA_BELOW_EMA' | 'SMA_EQUAL_EMA' | null>;
+    compareLatestPriceToSma(symbol: string, timeframe: Timeframe, period: number): Promise<"ABOVE" | "BELOW" | "EQUAL" | null>;
+    compareLatestPriceToEma(symbol: string, timeframe: Timeframe, period: number): Promise<"ABOVE" | "BELOW" | "EQUAL" | null>;
+    compareSmaToEma(symbol: string, timeframe: Timeframe, period: number): Promise<"SMA_ABOVE_EMA" | "SMA_BELOW_EMA" | "SMA_EQUAL_EMA" | null>;
+    getTrend(symbol: string, timeframe: Timeframe, period: number): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null>;
+    getRsiStatus(symbol: string, timeframe: Timeframe, period: number): Promise<'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL' | null>;
+    getMarketCondition(symbol: string, timeframe: Timeframe, period: number): Promise<'POSSIBLE_REVERSAL' | 'BEARISH_CONTINUATION' | 'BULLISH_CONTINUATION' | 'NEUTRAL' | null>;
 }

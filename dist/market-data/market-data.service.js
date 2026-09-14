@@ -94,7 +94,7 @@ let MarketDataService = class MarketDataService {
                 timeframe,
             },
             order: {
-                time: 'ASC',
+                time: "ASC",
             },
             take: 100,
         });
@@ -134,6 +134,32 @@ let MarketDataService = class MarketDataService {
             return null;
         }
         return this.indicatorsService.compareSmaToEma(sma, ema);
+    }
+    async getTrend(symbol, timeframe, period) {
+        const price = await this.getLatestPrice(symbol, timeframe);
+        const sma = await this.getLatestSma(symbol, timeframe, period);
+        const ema = await this.getLatestEma(symbol, timeframe, period);
+        if (price === null || sma === null || ema === null) {
+            return null;
+        }
+        const priceVsSma = this.indicatorsService.comparePriceToAverage(Number(price), sma);
+        const priceVsEma = this.indicatorsService.comparePriceToAverage(Number(price), ema);
+        return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+    }
+    async getRsiStatus(symbol, timeframe, period) {
+        const rsi = await this.getLatestRsi(symbol, timeframe);
+        if (rsi === null) {
+            return null;
+        }
+        return this.indicatorsService.classifyRsi(rsi);
+    }
+    async getMarketCondition(symbol, timeframe, period) {
+        const trend = await this.getTrend(symbol, timeframe, period);
+        const rsiStatus = await this.getRsiStatus(symbol, timeframe, period);
+        if (trend === null || rsiStatus === null) {
+            return null;
+        }
+        return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
     }
 };
 exports.MarketDataService = MarketDataService;

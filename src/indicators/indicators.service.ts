@@ -90,71 +90,117 @@ export class IndicatorsService {
     return 100 - 100 / (1 + rs);
   }
 
-  calculateRsiFromPrices(
-  values: number[],
-  period: number,
-): number | null {
-  if (values.length <= period) {
-    return null;
+  calculateRsiFromPrices(values: number[], period: number): number | null {
+    if (values.length <= period) {
+      return null;
+    }
+
+    const changes = this.calculatePriceChanges(values);
+
+    const { gains, losses } = this.calculateGainsAndLosses(changes);
+
+    const averageGain = this.calculateAverage(gains, period);
+
+    const averageLoss = this.calculateAverage(losses, period);
+
+    if (averageGain === null || averageLoss === null) {
+      return null;
+    }
+
+    return this.calculateRsi(averageGain, averageLoss);
+  }
+  calculateRsiFromCandles(
+    candles: MarketCandle[],
+    period: number,
+  ): number | null {
+    const closes = candles.map((candle) => Number(candle.close));
+
+    return this.calculateRsiFromPrices(closes, period);
   }
 
-  const changes = this.calculatePriceChanges(values);
+  comparePriceToAverage(
+    price: number,
+    average: number,
+  ): "ABOVE" | "BELOW" | "EQUAL" {
+    if (price > average) {
+      return "ABOVE";
+    }
 
-  const { gains, losses } =
-    this.calculateGainsAndLosses(changes);
+    if (price < average) {
+      return "BELOW";
+    }
 
-  const averageGain =
-    this.calculateAverage(gains, period);
-
-  const averageLoss =
-    this.calculateAverage(losses, period);
-
-  if (averageGain === null || averageLoss === null) {
-    return null;
+    return "EQUAL";
   }
 
-  return this.calculateRsi(
-    averageGain,
-    averageLoss,
-  );
+  compareSmaToEma(
+    sma: number,
+    ema: number,
+  ): "SMA_ABOVE_EMA" | "SMA_BELOW_EMA" | "SMA_EQUAL_EMA" {
+    if (sma > ema) {
+      return "SMA_ABOVE_EMA";
+    }
+
+    if (sma < ema) {
+      return "SMA_BELOW_EMA";
+    }
+
+    return "SMA_EQUAL_EMA";
+  }
+
+  determineTrend(
+    priceVsSma: "ABOVE" | "BELOW" | "EQUAL",
+    priceVsEma: "ABOVE" | "BELOW" | "EQUAL",
+  ): "BULLISH" | "BEARISH" | "NEUTRAL" {
+    if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
+      return "BULLISH";
+    }
+
+    if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
+      return "BEARISH";
+    }
+
+    return "NEUTRAL";
+  }
+
+  classifyRsi(
+  rsi: number,
+): 'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL' {
+  if (rsi < 30) {
+    return 'OVERSOLD';
+  }
+
+  if (rsi > 70) {
+    return 'OVERBOUGHT';
+  }
+
+  return 'NEUTRAL';
 }
-calculateRsiFromCandles(
-  candles: MarketCandle[],
-  period: number,
-): number | null {
-  const closes = candles.map((candle) => Number(candle.close));
-
-  return this.calculateRsiFromPrices(closes, period);
-}
-
-comparePriceToAverage(
-  price: number,
-  average: number,
-): 'ABOVE' | 'BELOW' | 'EQUAL' {
-  if (price > average) {
-    return 'ABOVE';
+determineMarketCondition(
+  trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL',
+  rsiStatus: 'OVERSOLD' | 'OVERBOUGHT' | 'NEUTRAL',
+):
+  | 'POSSIBLE_REVERSAL'
+  | 'BEARISH_CONTINUATION'
+  | 'BULLISH_CONTINUATION'
+  | 'NEUTRAL' {
+  if (trend === 'BEARISH' && rsiStatus === 'OVERSOLD') {
+    return 'POSSIBLE_REVERSAL';
   }
 
-  if (price < average) {
-    return 'BELOW';
+  if (trend === 'BEARISH' && rsiStatus === 'NEUTRAL') {
+    return 'BEARISH_CONTINUATION';
   }
 
-  return 'EQUAL';
-}
-
-compareSmaToEma(
-  sma: number,
-  ema: number,
-): 'SMA_ABOVE_EMA' | 'SMA_BELOW_EMA' | 'SMA_EQUAL_EMA' {
-  if (sma > ema) {
-    return 'SMA_ABOVE_EMA';
+  if (trend === 'BULLISH' && rsiStatus === 'OVERBOUGHT') {
+    return 'POSSIBLE_REVERSAL';
   }
 
-  if (sma < ema) {
-    return 'SMA_BELOW_EMA';
+  if (trend === 'BULLISH' && rsiStatus === 'NEUTRAL') {
+    return 'BULLISH_CONTINUATION';
   }
 
-  return 'SMA_EQUAL_EMA';
+  return 'NEUTRAL';
 }
 
 }

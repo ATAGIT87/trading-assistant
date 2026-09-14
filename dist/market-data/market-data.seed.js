@@ -28,14 +28,14 @@ let MarketDataSeed = class MarketDataSeed {
         let price = 115000;
         for (let i = 0; i < 20; i++) {
             candles.push({
-                symbol: 'BTCUSD',
+                symbol: "BTCUSD",
                 timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
                 time: new Date(Date.UTC(2026, 8, 14, 0, i)),
                 open: price.toString(),
                 high: (price + 500).toString(),
                 low: (price - 500).toString(),
                 close: (price + 100).toString(),
-                volume: '100',
+                volume: "100",
             });
             price += 100;
         }

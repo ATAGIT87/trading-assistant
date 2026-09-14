@@ -61,6 +61,15 @@ let MarketDataController = class MarketDataController {
     compareSmaToEma(symbol, timeframe, period) {
         return this.marketDataService.compareSmaToEma(symbol, timeframe, Number(period));
     }
+    getTrend(symbol, timeframe, period) {
+        return this.marketDataService.getTrend(symbol, timeframe, Number(period));
+    }
+    getRsiStatus(symbol, timeframe, period) {
+        return this.marketDataService.getRsiStatus(symbol, timeframe, Number(period));
+    }
+    getMarketCondition(symbol, timeframe, period) {
+        return this.marketDataService.getMarketCondition(symbol, timeframe, Number(period));
+    }
 };
 exports.MarketDataController = MarketDataController;
 __decorate([
@@ -100,64 +109,91 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "findLatestCandle", null);
 __decorate([
-    (0, common_1.Post)('seed'),
+    (0, common_1.Post)("seed"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "seed", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/rsi'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('timeframe')),
+    (0, common_1.Get)("candles/:symbol/:timeframe/rsi"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getLatestRsi", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/sma/:period'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('timeframe')),
-    __param(2, (0, common_1.Param)('period')),
+    (0, common_1.Get)("candles/:symbol/:timeframe/sma/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getLatestSma", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/ema/:period'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('period')),
-    __param(2, (0, common_1.Param)('timeframe')),
+    (0, common_1.Get)("candles/:symbol/:timeframe/ema/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("period")),
+    __param(2, (0, common_1.Param)("timeframe")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getLatestEma", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/price-vs-sma/:period'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('timeframe')),
-    __param(2, (0, common_1.Param)('period')),
+    (0, common_1.Get)("candles/:symbol/:timeframe/price-vs-sma/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "compareLatestPriceToSma", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/price-vs-ema/:period'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('timeframe')),
-    __param(2, (0, common_1.Param)('period')),
+    (0, common_1.Get)("candles/:symbol/:timeframe/price-vs-ema/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "compareLatestPriceToEma", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/sma-vs-ema/:period'),
+    (0, common_1.Get)("candles/:symbol/:timeframe/sma-vs-ema/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "compareSmaToEma", null);
+__decorate([
+    (0, common_1.Get)("candles/:symbol/:timeframe/trend/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getTrend", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/rsi-status/:period'),
     __param(0, (0, common_1.Param)('symbol')),
     __param(1, (0, common_1.Param)('timeframe')),
     __param(2, (0, common_1.Param)('period')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
-], MarketDataController.prototype, "compareSmaToEma", null);
+], MarketDataController.prototype, "getRsiStatus", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/market-condition/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getMarketCondition", null);
 exports.MarketDataController = MarketDataController = __decorate([
     (0, common_1.Controller)("market-data"),
     __metadata("design:paramtypes", [market_data_service_1.MarketDataService,
