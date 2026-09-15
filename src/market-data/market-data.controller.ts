@@ -150,16 +150,16 @@ export class MarketDataController {
       Number(period),
     );
   }
-  @Get('candles/:symbol/:timeframe/atr/:period')
-getLatestAtr(
-  @Param('symbol') symbol: string,
-  @Param('timeframe') timeframe: Timeframe,
-  @Param('period') period: string,
-) {
-  return this.marketDataService.getLatestAtr(
-    symbol,
-    timeframe,
-    Number(period),
-  );
-}
+  @Get("candles/:symbol/:timeframe/atr/:period")
+  getLatestAtr(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+    @Param("period") period: string,
+  ) {
+    return this.marketDataService.getLatestAtr(
+      symbol,
+      timeframe,
+      Number(period),
+    );
+  }
 }

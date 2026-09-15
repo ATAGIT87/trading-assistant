@@ -19,7 +19,7 @@ export declare class IndicatorsService {
     determineMarketCondition(trend: "BULLISH" | "BEARISH" | "NEUTRAL", rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL";
     calculateTrendScore(trend: "BULLISH" | "BEARISH" | "NEUTRAL"): number;
     calculateAverageAlignmentScore(priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL"): number;
-    calculateRsiScore(rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): number;
+    calculateRsiScore(trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL', rsi: number): number;
     calculateTrueRange(currentHigh: number, currentLow: number, previousClose: number): number;
     calculateAtr(trueRanges: number[], period: number): number | null;
     calculateTrueRangesFromCandles(candles: {
@@ -27,4 +27,9 @@ export declare class IndicatorsService {
         low: number;
         close: number;
     }[]): number[];
+    calculateMarketConditionScore(trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL', marketCondition: 'POSSIBLE_REVERSAL' | 'BEARISH_CONTINUATION' | 'BULLISH_CONTINUATION' | 'NEUTRAL'): number;
+    calculateDirectionalMovement(currentHigh: number, currentLow: number, previousHigh: number, previousLow: number): {
+        plusDm: number;
+        minusDm: number;
+    };
 }

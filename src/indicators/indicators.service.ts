@@ -214,78 +214,149 @@ export class IndicatorsService {
     priceVsEma: "ABOVE" | "BELOW" | "EQUAL",
   ): number {
     if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
-      return 40;
+      return 30;
     }
 
     if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
-      return 40;
+      return 30;
     }
 
     if (priceVsSma === "EQUAL" || priceVsEma === "EQUAL") {
-      return 20;
+      return 15;
     }
 
     return 0;
   }
 
-  calculateRsiScore(rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): number {
-    if (rsiStatus === "NEUTRAL") {
-      return 20;
-    }
-
+  calculateRsiScore(
+  trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL',
+  rsi: number,
+): number {
+  if (trend === 'NEUTRAL') {
     return 10;
   }
 
-  calculateTrueRange(
-  currentHigh: number,
-  currentLow: number,
-  previousClose: number,
-): number {
-  return Math.max(
-    currentHigh - currentLow,
-    Math.abs(currentHigh - previousClose),
-    Math.abs(currentLow - previousClose),
-  );
-}
+  if (trend === 'BULLISH') {
+    if (rsi > 50) {
+      return 20;
+    }
 
-calculateAtr(trueRanges: number[], period: number): number | null {
-  if (trueRanges.length < period || period <= 0) {
-    return null;
+    if (rsi >= 30) {
+      return 10;
+    }
+
+    return 0;
   }
 
-  const recentTrueRanges = trueRanges.slice(-period);
+  if (rsi < 50) {
+    return 20;
+  }
 
-  const sum = recentTrueRanges.reduce(
-    (total, trueRange) => total + trueRange,
-    0,
-  );
+  if (rsi <= 70) {
+    return 10;
+  }
 
-  return sum / period;
+  return 0;
 }
 
-calculateTrueRangesFromCandles(
-  candles: {
-    high: number;
-    low: number;
-    close: number;
-  }[],
-): number[] {
-  const trueRanges: number[] = [];
+  calculateTrueRange(
+    currentHigh: number,
+    currentLow: number,
+    previousClose: number,
+  ): number {
+    return Math.max(
+      currentHigh - currentLow,
+      Math.abs(currentHigh - previousClose),
+      Math.abs(currentLow - previousClose),
+    );
+  }
 
-  for (let i = 1; i < candles.length; i++) {
-    const currentCandle = candles[i];
-    const previousCandle = candles[i - 1];
+  calculateAtr(trueRanges: number[], period: number): number | null {
+    if (trueRanges.length < period || period <= 0) {
+      return null;
+    }
 
-    const trueRange = this.calculateTrueRange(
-      currentCandle.high,
-      currentCandle.low,
-      previousCandle.close,
+    const recentTrueRanges = trueRanges.slice(-period);
+
+    const sum = recentTrueRanges.reduce(
+      (total, trueRange) => total + trueRange,
+      0,
     );
 
-    trueRanges.push(trueRange);
+    return sum / period;
   }
 
-  return trueRanges;
+  calculateTrueRangesFromCandles(
+    candles: {
+      high: number;
+      low: number;
+      close: number;
+    }[],
+  ): number[] {
+    const trueRanges: number[] = [];
+
+    for (let i = 1; i < candles.length; i++) {
+      const currentCandle = candles[i];
+      const previousCandle = candles[i - 1];
+
+      const trueRange = this.calculateTrueRange(
+        currentCandle.high,
+        currentCandle.low,
+        previousCandle.close,
+      );
+
+      trueRanges.push(trueRange);
+    }
+
+    return trueRanges;
+  }
+calculateMarketConditionScore(
+  trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL',
+  marketCondition:
+    | 'POSSIBLE_REVERSAL'
+    | 'BEARISH_CONTINUATION'
+    | 'BULLISH_CONTINUATION'
+    | 'NEUTRAL',
+): number {
+  if (
+    trend === 'BULLISH' &&
+    marketCondition === 'BULLISH_CONTINUATION'
+  ) {
+    return 10;
+  }
+
+  if (
+    trend === 'BEARISH' &&
+    marketCondition === 'BEARISH_CONTINUATION'
+  ) {
+    return 10;
+  }
+
+  return 0;
 }
 
+calculateDirectionalMovement(
+  currentHigh: number,
+  currentLow: number,
+  previousHigh: number,
+  previousLow: number,
+): { plusDm: number; minusDm: number } {
+  const upwardMove = currentHigh - previousHigh;
+  const downwardMove = previousLow - currentLow;
+
+  const plusDm =
+    upwardMove > downwardMove && upwardMove > 0
+      ? upwardMove
+      : 0;
+
+  const minusDm =
+    downwardMove > upwardMove && downwardMove > 0
+      ? downwardMove
+      : 0;
+
+  return {
+    plusDm,
+    minusDm,
+  };
+}
 }

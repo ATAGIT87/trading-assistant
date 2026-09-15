@@ -3,7 +3,8 @@ export interface TradingSignal {
     action: SignalAction;
     confidence: number;
     entryPrice: number;
-    stopLoss: number;
+    stopLoss: number | null;
+    takeProfit: number | null;
     isStrongSetup: boolean;
     trend: "BULLISH" | "BEARISH" | "NEUTRAL";
     rsi: number;

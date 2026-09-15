@@ -8,11 +8,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsService = void 0;
-const common_1 = require("@nestjs/common");
-const market_data_service_1 = require("../market-data/market-data.service");
 const indicators_service_1 = require("../indicators/indicators.service");
+const common_1 = require("@nestjs/common");
+const market_data_token_1 = require("./market-data.token");
 const STRONG_SETUP_THRESHOLD = 75;
 let SignalsService = class SignalsService {
     marketDataService;
@@ -36,16 +39,23 @@ let SignalsService = class SignalsService {
     createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition) {
         const trendScore = this.indicatorsService.calculateTrendScore(trend);
         const averageAlignmentScore = this.indicatorsService.calculateAverageAlignmentScore(priceVsSma, priceVsEma);
-        const rsiScore = this.indicatorsService.calculateRsiScore(rsiStatus);
-        const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore);
+        const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
+        const marketConditionScore = this.indicatorsService.calculateMarketConditionScore(trend, marketCondition);
+        const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore);
         const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
         const action = this.determineAction(marketCondition, isStrongSetup);
-        const stopLoss = this.calculateStopLoss(action === "BUY" ? "BUY" : "SELL", entryPrice, atr);
+        let stopLoss = null;
+        let takeProfit = null;
+        if (action === "BUY" || action === "SELL") {
+            stopLoss = this.calculateStopLoss(action, entryPrice, atr);
+            takeProfit = this.calculateTakeProfit(action, entryPrice, stopLoss, 2);
+        }
         return {
             action,
             confidence,
             entryPrice,
             stopLoss,
+            takeProfit,
             isStrongSetup,
             trend,
             rsi,
@@ -75,21 +85,32 @@ let SignalsService = class SignalsService {
         }
         return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition);
     }
-    calculateConfidence(trendScore, averageAlignmentScore, rsiScore) {
-        return trendScore + averageAlignmentScore + rsiScore;
+    calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore) {
+        return (trendScore +
+            averageAlignmentScore +
+            rsiScore +
+            marketConditionScore);
     }
     calculateStopLoss(action, entryPrice, atr) {
         const stopDistance = 1.5 * atr;
-        if (action === 'BUY') {
+        if (action === "BUY") {
             return entryPrice - stopDistance;
         }
         return entryPrice + stopDistance;
+    }
+    calculateTakeProfit(action, entryPrice, stopLoss, riskRewardRatio) {
+        const risk = Math.abs(entryPrice - stopLoss);
+        const reward = risk * riskRewardRatio;
+        if (action === "BUY") {
+            return entryPrice + reward;
+        }
+        return entryPrice - reward;
     }
 };
 exports.SignalsService = SignalsService;
 exports.SignalsService = SignalsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [market_data_service_1.MarketDataService,
-        indicators_service_1.IndicatorsService])
+    __param(0, (0, common_1.Inject)(market_data_token_1.MARKET_DATA_SERVICE)),
+    __metadata("design:paramtypes", [Object, indicators_service_1.IndicatorsService])
 ], SignalsService);
 //# sourceMappingURL=signals.service.js.map

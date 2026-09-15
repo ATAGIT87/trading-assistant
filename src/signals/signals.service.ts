@@ -1,15 +1,16 @@
-import { Injectable } from "@nestjs/common";
 import { TradingSignal } from "./signal.types";
-import { MarketDataService } from "../market-data/market-data.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
+import { Inject, Injectable } from "@nestjs/common";
+import { MARKET_DATA_SERVICE } from "./market-data.token";
+import type { MarketDataPort } from "./market-data.port";
 
 const STRONG_SETUP_THRESHOLD = 75;
 @Injectable()
 export class SignalsService {
   constructor(
-    private readonly marketDataService: MarketDataService,
-
+    @Inject(MARKET_DATA_SERVICE)
+    private readonly marketDataService: MarketDataPort,
     private readonly indicatorsService: IndicatorsService,
   ) {}
 
@@ -48,24 +49,38 @@ export class SignalsService {
         priceVsSma,
         priceVsEma,
       );
-    const rsiScore = this.indicatorsService.calculateRsiScore(rsiStatus);
+    const rsiScore = this.indicatorsService.calculateRsiScore(
+  trend,
+  rsi,
+);
+const marketConditionScore =
+  this.indicatorsService.calculateMarketConditionScore(
+    trend,
+    marketCondition,
+  );
     const confidence = this.calculateConfidence(
-      trendScore,
-      averageAlignmentScore,
-      rsiScore,
-    );
+  trendScore,
+  averageAlignmentScore,
+  rsiScore,
+  marketConditionScore,
+);
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
     const action = this.determineAction(marketCondition, isStrongSetup);
-const stopLoss = this.calculateStopLoss(
-  action === "BUY" ? "BUY" : "SELL",
-  entryPrice,
-  atr,
-);
+    let stopLoss: number | null = null;
+    let takeProfit: number | null = null;
+
+    if (action === "BUY" || action === "SELL") {
+      stopLoss = this.calculateStopLoss(action, entryPrice, atr);
+
+      takeProfit = this.calculateTakeProfit(action, entryPrice, stopLoss, 2);
+    }
+
     return {
       action,
       confidence,
       entryPrice,
       stopLoss,
+      takeProfit,
       isStrongSetup,
       trend,
       rsi,
@@ -110,23 +125,22 @@ const stopLoss = this.calculateStopLoss(
       timeframe,
       period,
     );
-const entryPrice =
-  await this.marketDataService.getLatestPrice(
-    symbol,
-    timeframe,
-  );
-  const atr = await this.marketDataService.getLatestAtr(
-  symbol,
-  timeframe,
-  period,
-);
+    const entryPrice = await this.marketDataService.getLatestPrice(
+      symbol,
+      timeframe,
+    );
+    const atr = await this.marketDataService.getLatestAtr(
+      symbol,
+      timeframe,
+      period,
+    );
     if (
       trend === null ||
       priceVsSma === null ||
       priceVsEma === null ||
       rsi === null ||
       rsiStatus === null ||
-      marketCondition === null||
+      marketCondition === null ||
       entryPrice === null ||
       atr === null
     ) {
@@ -142,29 +156,50 @@ const entryPrice =
       rsi,
       rsiStatus,
       marketCondition,
-    ); 
+    );
   }
 
   calculateConfidence(
-    trendScore: number,
-    averageAlignmentScore: number,
-    rsiScore: number,
-  ): number {
-    return trendScore + averageAlignmentScore + rsiScore;
-  }
-
-  calculateStopLoss(
-  action: 'BUY' | 'SELL',
-  entryPrice: number,
-  atr: number,
+  trendScore: number,
+  averageAlignmentScore: number,
+  rsiScore: number,
+  marketConditionScore: number,
 ): number {
-  const stopDistance = 1.5 * atr;
-
-  if (action === 'BUY') {
-    return entryPrice - stopDistance;
-  }
-
-  return entryPrice + stopDistance;
+  return (
+    trendScore +
+    averageAlignmentScore +
+    rsiScore +
+    marketConditionScore
+  );
 }
 
+  calculateStopLoss(
+    action: "BUY" | "SELL",
+    entryPrice: number,
+    atr: number,
+  ): number {
+    const stopDistance = 1.5 * atr;
+
+    if (action === "BUY") {
+      return entryPrice - stopDistance;
+    }
+
+    return entryPrice + stopDistance;
+  }
+
+  calculateTakeProfit(
+    action: "BUY" | "SELL",
+    entryPrice: number,
+    stopLoss: number,
+    riskRewardRatio: number,
+  ): number {
+    const risk = Math.abs(entryPrice - stopLoss);
+    const reward = risk * riskRewardRatio;
+
+    if (action === "BUY") {
+      return entryPrice + reward;
+    }
+
+    return entryPrice - reward;
+  }
 }

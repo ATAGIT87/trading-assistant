@@ -143,21 +143,36 @@ let IndicatorsService = class IndicatorsService {
     }
     calculateAverageAlignmentScore(priceVsSma, priceVsEma) {
         if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
-            return 40;
+            return 30;
         }
         if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
-            return 40;
+            return 30;
         }
         if (priceVsSma === "EQUAL" || priceVsEma === "EQUAL") {
-            return 20;
+            return 15;
         }
         return 0;
     }
-    calculateRsiScore(rsiStatus) {
-        if (rsiStatus === "NEUTRAL") {
+    calculateRsiScore(trend, rsi) {
+        if (trend === 'NEUTRAL') {
+            return 10;
+        }
+        if (trend === 'BULLISH') {
+            if (rsi > 50) {
+                return 20;
+            }
+            if (rsi >= 30) {
+                return 10;
+            }
+            return 0;
+        }
+        if (rsi < 50) {
             return 20;
         }
-        return 10;
+        if (rsi <= 70) {
+            return 10;
+        }
+        return 0;
     }
     calculateTrueRange(currentHigh, currentLow, previousClose) {
         return Math.max(currentHigh - currentLow, Math.abs(currentHigh - previousClose), Math.abs(currentLow - previousClose));
@@ -179,6 +194,31 @@ let IndicatorsService = class IndicatorsService {
             trueRanges.push(trueRange);
         }
         return trueRanges;
+    }
+    calculateMarketConditionScore(trend, marketCondition) {
+        if (trend === 'BULLISH' &&
+            marketCondition === 'BULLISH_CONTINUATION') {
+            return 10;
+        }
+        if (trend === 'BEARISH' &&
+            marketCondition === 'BEARISH_CONTINUATION') {
+            return 10;
+        }
+        return 0;
+    }
+    calculateDirectionalMovement(currentHigh, currentLow, previousHigh, previousLow) {
+        const upwardMove = currentHigh - previousHigh;
+        const downwardMove = previousLow - currentLow;
+        const plusDm = upwardMove > downwardMove && upwardMove > 0
+            ? upwardMove
+            : 0;
+        const minusDm = downwardMove > upwardMove && downwardMove > 0
+            ? downwardMove
+            : 0;
+        return {
+            plusDm,
+            minusDm,
+        };
     }
 };
 exports.IndicatorsService = IndicatorsService;

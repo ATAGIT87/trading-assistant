@@ -3,10 +3,18 @@ import { SignalsService } from "./signals.service";
 import { MarketDataModule } from "../market-data/market-data.module";
 import { SignalsController } from "./signals.controller";
 import { IndicatorsModule } from "../indicators/indicators.module";
+import { MARKET_DATA_SERVICE } from "./market-data.token";
+import { MarketDataService } from "../market-data/market-data.service";
 
 @Module({
   imports: [MarketDataModule, IndicatorsModule],
-  providers: [SignalsService],
+  providers: [
+    SignalsService,
+    {
+      provide: MARKET_DATA_SERVICE,
+      useExisting: MarketDataService,
+    },
+  ],
   exports: [SignalsService],
   controllers: [SignalsController],
 })
