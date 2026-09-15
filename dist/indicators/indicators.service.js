@@ -220,6 +220,88 @@ let IndicatorsService = class IndicatorsService {
             minusDm,
         };
     }
+    calculateDirectionalMovements(candles) {
+        const plusDm = [];
+        const minusDm = [];
+        for (let i = 1; i < candles.length; i++) {
+            const movement = this.calculateDirectionalMovement(candles[i].high, candles[i].low, candles[i - 1].high, candles[i - 1].low);
+            plusDm.push(movement.plusDm);
+            minusDm.push(movement.minusDm);
+        }
+        return {
+            plusDm,
+            minusDm,
+        };
+    }
+    calculateDirectionalIndicators(trueRanges, plusDm, minusDm, period) {
+        if (period <= 0 ||
+            trueRanges.length < period ||
+            plusDm.length < period ||
+            minusDm.length < period) {
+            return null;
+        }
+        const recentTrueRanges = trueRanges.slice(-period);
+        const recentPlusDm = plusDm.slice(-period);
+        const recentMinusDm = minusDm.slice(-period);
+        const trAverage = recentTrueRanges.reduce((sum, value) => sum + value, 0) / period;
+        if (trAverage === 0) {
+            return null;
+        }
+        const plusDmAverage = recentPlusDm.reduce((sum, value) => sum + value, 0) / period;
+        const minusDmAverage = recentMinusDm.reduce((sum, value) => sum + value, 0) / period;
+        return {
+            plusDi: (plusDmAverage / trAverage) * 100,
+            minusDi: (minusDmAverage / trAverage) * 100,
+        };
+    }
+    calculateDirectionalIndex(plusDi, minusDi) {
+        const sum = plusDi + minusDi;
+        if (sum === 0) {
+            return null;
+        }
+        return ((Math.abs(plusDi - minusDi) / sum) * 100);
+    }
+    calculateAdx(dxValues, period) {
+        if (period <= 0 || dxValues.length < period) {
+            return null;
+        }
+        let adx = dxValues
+            .slice(0, period)
+            .reduce((sum, value) => sum + value, 0) / period;
+        for (let i = period; i < dxValues.length; i++) {
+            adx =
+                ((adx * (period - 1)) + dxValues[i]) / period;
+        }
+        return adx;
+    }
+    calculateAdxFromCandles(candles, period) {
+        if (candles.length < period * 2) {
+            return null;
+        }
+        const trueRanges = this.calculateTrueRangesFromCandles(candles);
+        const directionalMovements = this.calculateDirectionalMovements(candles);
+        const dxValues = [];
+        for (let i = period; i <= trueRanges.length; i++) {
+            const trSlice = trueRanges.slice(i - period, i);
+            const plusDmSlice = directionalMovements.plusDm.slice(i - period, i);
+            const minusDmSlice = directionalMovements.minusDm.slice(i - period, i);
+            const di = this.calculateDirectionalIndicators(trSlice, plusDmSlice, minusDmSlice, period);
+            if (!di) {
+                continue;
+            }
+            const dx = this.calculateDirectionalIndex(di.plusDi, di.minusDi);
+            if (dx !== null) {
+                dxValues.push(dx);
+            }
+        }
+        return this.calculateAdx(dxValues, period);
+    }
+    calculateAdxScore(adx) {
+        if (adx >= 25) {
+            return 10;
+        }
+        return 0;
+    }
 };
 exports.IndicatorsService = IndicatorsService;
 exports.IndicatorsService = IndicatorsService = __decorate([

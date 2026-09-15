@@ -36,12 +36,13 @@ let SignalsService = class SignalsService {
         }
         return "WAIT";
     }
-    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition) {
+    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition) {
         const trendScore = this.indicatorsService.calculateTrendScore(trend);
         const averageAlignmentScore = this.indicatorsService.calculateAverageAlignmentScore(priceVsSma, priceVsEma);
         const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
         const marketConditionScore = this.indicatorsService.calculateMarketConditionScore(trend, marketCondition);
-        const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore);
+        const adxScore = this.indicatorsService.calculateAdxScore(adx);
+        const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore);
         const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
         const action = this.determineAction(marketCondition, isStrongSetup);
         let stopLoss = null;
@@ -59,6 +60,7 @@ let SignalsService = class SignalsService {
             isStrongSetup,
             trend,
             rsi,
+            adx,
             rsiStatus,
             marketCondition,
             reason: `Trend is ${trend} and RSI status is ${rsiStatus}.`,
@@ -73,6 +75,7 @@ let SignalsService = class SignalsService {
         const marketCondition = await this.marketDataService.getMarketCondition(symbol, timeframe, period);
         const entryPrice = await this.marketDataService.getLatestPrice(symbol, timeframe);
         const atr = await this.marketDataService.getLatestAtr(symbol, timeframe, period);
+        const adx = await this.marketDataService.getLatestAdx(symbol, timeframe, period);
         if (trend === null ||
             priceVsSma === null ||
             priceVsEma === null ||
@@ -80,16 +83,18 @@ let SignalsService = class SignalsService {
             rsiStatus === null ||
             marketCondition === null ||
             entryPrice === null ||
-            atr === null) {
+            atr === null ||
+            adx === null) {
             return null;
         }
-        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition);
+        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition);
     }
-    calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore) {
+    calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore) {
         return (trendScore +
             averageAlignmentScore +
             rsiScore +
-            marketConditionScore);
+            marketConditionScore +
+            adxScore);
     }
     calculateStopLoss(action, entryPrice, atr) {
         const stopDistance = 1.5 * atr;

@@ -40,6 +40,7 @@ export class SignalsService {
     priceVsSma: "ABOVE" | "BELOW" | "EQUAL",
     priceVsEma: "ABOVE" | "BELOW" | "EQUAL",
     rsi: number,
+    adx: number,
     rsiStatus: TradingSignal["rsiStatus"],
     marketCondition: TradingSignal["marketCondition"],
   ): TradingSignal {
@@ -58,11 +59,13 @@ const marketConditionScore =
     trend,
     marketCondition,
   );
+  const adxScore = this.indicatorsService.calculateAdxScore(adx);
     const confidence = this.calculateConfidence(
   trendScore,
   averageAlignmentScore,
   rsiScore,
   marketConditionScore,
+  adxScore,
 );
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
     const action = this.determineAction(marketCondition, isStrongSetup);
@@ -84,6 +87,7 @@ const marketConditionScore =
       isStrongSetup,
       trend,
       rsi,
+      adx,
       rsiStatus,
       marketCondition,
       reason: `Trend is ${trend} and RSI status is ${rsiStatus}.`,
@@ -134,6 +138,11 @@ const marketConditionScore =
       timeframe,
       period,
     );
+    const adx = await this.marketDataService.getLatestAdx(
+      symbol,
+      timeframe,
+      period,
+    );
     if (
       trend === null ||
       priceVsSma === null ||
@@ -142,7 +151,8 @@ const marketConditionScore =
       rsiStatus === null ||
       marketCondition === null ||
       entryPrice === null ||
-      atr === null
+      atr === null ||
+      adx === null
     ) {
       return null;
     }
@@ -154,22 +164,24 @@ const marketConditionScore =
       priceVsSma,
       priceVsEma,
       rsi,
+      adx,
       rsiStatus,
       marketCondition,
     );
   }
-
   calculateConfidence(
   trendScore: number,
   averageAlignmentScore: number,
   rsiScore: number,
   marketConditionScore: number,
+  adxScore: number,
 ): number {
   return (
     trendScore +
     averageAlignmentScore +
     rsiScore +
-    marketConditionScore
+    marketConditionScore +
+    adxScore
   );
 }
 

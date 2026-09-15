@@ -6,12 +6,17 @@ describe("SignalsService", () => {
   let indicatorsServiceMock: any;
 
   beforeEach(() => {
-    const marketDataServiceMock = {};
+    jest.clearAllMocks();
+   const marketDataServiceMock = {
+    getLatestAdx: jest.fn().mockResolvedValue(30),
+  };
     indicatorsServiceMock = {
       calculateTrendScore: jest.fn().mockReturnValue(0),
       calculateAverageAlignmentScore: jest.fn().mockReturnValue(0),
       calculateRsiScore: jest.fn().mockReturnValue(20),
       calculateMarketConditionScore: jest.fn().mockReturnValue(0),
+      calculateAdxScore: jest.fn().mockReturnValue(0),
+
     };
 
     service = new SignalsService(
@@ -32,6 +37,7 @@ describe("SignalsService", () => {
   "BELOW",
   "BELOW",
   50,
+  30,
   "NEUTRAL",
   "BEARISH_CONTINUATION",
 );
@@ -44,59 +50,68 @@ describe("SignalsService", () => {
   });
 
   it("should return SELL for a strong bearish setup", () => {
-    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
-      40,
-    );
-    (
-      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
-    ).mockReturnValue(40);
-    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
-    const signal = service.createSignal(
-      "BEARISH",
-      10000,
-      1000,
-      "BELOW",
-      "BELOW",
-      50,
-      "NEUTRAL",
-      "BEARISH_CONTINUATION",
-    );
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
 
-    expect(signal.confidence).toBe(100);
-    expect(signal.isStrongSetup).toBe(true);
-    expect(signal.action).toBe("SELL");
-  });
-  it("should return BUY for a strong bullish setup", () => {
-    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
-      40,
-    );
-    (
-      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
-    ).mockReturnValue(40);
-    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  const signal = service.createSignal(
+    "BEARISH",
+    10000,
+    1000,
+    "BELOW",
+    "BELOW",
+    50,
+    30,
+    "NEUTRAL",
+    "BEARISH_CONTINUATION",
+  );
 
-    const signal = service.createSignal(
-      "BULLISH",
-      10000,
-      1000,
-      "ABOVE",
-      "ABOVE",
-      50,
-      "NEUTRAL",
-      "BULLISH_CONTINUATION",
-    );
+  expect(signal.confidence).toBe(100);
+  expect(signal.isStrongSetup).toBe(true);
+  expect(signal.action).toBe("SELL");
+});
 
-    expect(signal.confidence).toBe(100);
-    expect(signal.isStrongSetup).toBe(true);
-    expect(signal.action).toBe("BUY");
-  });
+
+it("should return BUY for a strong bullish setup", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "ABOVE",
+    50,
+    30,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.confidence).toBe(100);
+  expect(signal.isStrongSetup).toBe(true);
+  expect(signal.action).toBe("BUY");
+});
+
+
   it("should return WAIT for a strong possible reversal", () => {
     (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
       40,
     );
     (
       indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
-    ).mockReturnValue(40);
+    ).mockReturnValue(30);
     (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
 
     const signal = service.createSignal(
@@ -106,40 +121,50 @@ describe("SignalsService", () => {
       "ABOVE",
       "ABOVE",
       50,
+      30,
       "NEUTRAL",
       "POSSIBLE_REVERSAL",
     );
 
-    expect(signal.confidence).toBe(100);
-    expect(signal.isStrongSetup).toBe(true);
+   expect(signal.confidence).toBe(90);
+expect(signal.isStrongSetup).toBe(true);
     expect(signal.action).toBe("WAIT");
     expect(signal.stopLoss).toBeNull();
     expect(signal.takeProfit).toBeNull();
   });
+ 
+
   it("should treat confidence 75 as a strong setup", () => {
-    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
-      40,
-    );
-    (
-      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
-    ).mockReturnValue(20);
-    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(15);
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
+    40,
+  );
 
-    const signal = service.createSignal(
-      "BULLISH",
-      10000,
-      1000,
-      "ABOVE",
-      "EQUAL",
-      50,
-      "NEUTRAL",
-      "BULLISH_CONTINUATION",
-    );
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(20);
 
-    expect(signal.confidence).toBe(75);
-    expect(signal.isStrongSetup).toBe(true);
-    expect(signal.action).toBe("BUY");
-  });
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(5);
+
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "EQUAL",
+    50,
+    30,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.confidence).toBe(75);
+  expect(signal.isStrongSetup).toBe(true);
+  expect(signal.action).toBe("BUY");
+});
 
   it("should include the latest price as entry price", async () => {
     const marketDataServiceMock = {
@@ -151,6 +176,7 @@ describe("SignalsService", () => {
       getMarketCondition: jest.fn().mockResolvedValue("BULLISH_CONTINUATION"),
       getLatestPrice: jest.fn().mockResolvedValue(100000),
       getLatestAtr: jest.fn().mockResolvedValue(1000),
+      getLatestAdx: jest.fn().mockResolvedValue(30),
     };
 
     service = new SignalsService(
@@ -182,4 +208,5 @@ describe("SignalsService", () => {
 
     expect(result).toBe(9700);
   });
+
 });

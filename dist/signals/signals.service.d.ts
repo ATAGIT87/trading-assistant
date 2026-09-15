@@ -7,9 +7,9 @@ export declare class SignalsService {
     private readonly indicatorsService;
     constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService);
     determineAction(marketCondition: TradingSignal["marketCondition"], isStrongSetup: boolean): TradingSignal["action"];
-    createSignal(trend: TradingSignal["trend"], entryPrice: number, atr: number, priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL", rsi: number, rsiStatus: TradingSignal["rsiStatus"], marketCondition: TradingSignal["marketCondition"]): TradingSignal;
+    createSignal(trend: TradingSignal["trend"], entryPrice: number, atr: number, priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL", rsi: number, adx: number, rsiStatus: TradingSignal["rsiStatus"], marketCondition: TradingSignal["marketCondition"]): TradingSignal;
     generateSignal(symbol: string, timeframe: Timeframe, period: number): Promise<TradingSignal | null>;
-    calculateConfidence(trendScore: number, averageAlignmentScore: number, rsiScore: number, marketConditionScore: number): number;
+    calculateConfidence(trendScore: number, averageAlignmentScore: number, rsiScore: number, marketConditionScore: number, adxScore: number): number;
     calculateStopLoss(action: "BUY" | "SELL", entryPrice: number, atr: number): number;
     calculateTakeProfit(action: "BUY" | "SELL", entryPrice: number, stopLoss: number, riskRewardRatio: number): number;
 }

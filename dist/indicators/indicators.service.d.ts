@@ -32,4 +32,23 @@ export declare class IndicatorsService {
         plusDm: number;
         minusDm: number;
     };
+    calculateDirectionalMovements(candles: {
+        high: number;
+        low: number;
+    }[]): {
+        plusDm: number[];
+        minusDm: number[];
+    };
+    calculateDirectionalIndicators(trueRanges: number[], plusDm: number[], minusDm: number[], period: number): {
+        plusDi: number;
+        minusDi: number;
+    } | null;
+    calculateDirectionalIndex(plusDi: number, minusDi: number): number | null;
+    calculateAdx(dxValues: number[], period: number): number | null;
+    calculateAdxFromCandles(candles: {
+        high: number;
+        low: number;
+        close: number;
+    }[], period: number): number | null;
+    calculateAdxScore(adx: number): number;
 }

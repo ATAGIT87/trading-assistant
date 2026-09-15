@@ -8,4 +8,5 @@ export interface MarketDataPort {
     getMarketCondition(symbol: string, timeframe: Timeframe, period: number): Promise<"POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL" | null>;
     getLatestPrice(symbol: string, timeframe: Timeframe): Promise<number | null>;
     getLatestAtr(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
+    getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
 }

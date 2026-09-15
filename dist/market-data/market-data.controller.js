@@ -18,6 +18,7 @@ const create_market_candle_dto_1 = require("./dto/create-market-candle.dto");
 const market_data_service_1 = require("./market-data.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const market_data_seed_1 = require("./market-data.seed");
+const common_2 = require("@nestjs/common");
 let MarketDataController = class MarketDataController {
     marketDataService;
     marketDataSeed;
@@ -72,6 +73,9 @@ let MarketDataController = class MarketDataController {
     }
     getLatestAtr(symbol, timeframe, period) {
         return this.marketDataService.getLatestAtr(symbol, timeframe, Number(period));
+    }
+    getLatestAdx(symbol, timeframe, period) {
+        return this.marketDataService.getLatestAdx(symbol, timeframe, period);
     }
 };
 exports.MarketDataController = MarketDataController;
@@ -206,6 +210,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getLatestAtr", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/adx/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period', common_2.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Number]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestAdx", null);
 exports.MarketDataController = MarketDataController = __decorate([
     (0, common_1.Controller)("market-data"),
     __metadata("design:paramtypes", [market_data_service_1.MarketDataService,

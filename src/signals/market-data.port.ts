@@ -46,4 +46,10 @@ export interface MarketDataPort {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null>;
+
+  getLatestAdx(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<number | null>;
 }

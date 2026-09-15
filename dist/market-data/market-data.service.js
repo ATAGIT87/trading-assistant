@@ -173,6 +173,14 @@ let MarketDataService = class MarketDataService {
         })));
         return this.indicatorsService.calculateAtr(trueRanges, period);
     }
+    async getLatestAdx(symbol, timeframe, period) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        return this.indicatorsService.calculateAdxFromCandles(candles.map((candle) => ({
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+        })), period);
+    }
 };
 exports.MarketDataService = MarketDataService;
 exports.MarketDataService = MarketDataService = __decorate([

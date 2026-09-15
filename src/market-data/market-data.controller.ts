@@ -3,6 +3,7 @@ import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketDataService } from "./market-data.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { MarketDataSeed } from "./market-data.seed";
+import { ParseIntPipe } from "@nestjs/common";
 
 @Controller("market-data")
 export class MarketDataController {
@@ -162,4 +163,16 @@ export class MarketDataController {
       Number(period),
     );
   }
+  @Get('candles/:symbol/:timeframe/adx/:period')
+getLatestAdx(
+  @Param('symbol') symbol: string,
+  @Param('timeframe') timeframe: Timeframe,
+  @Param('period', ParseIntPipe) period: number,
+) {
+  return this.marketDataService.getLatestAdx(
+    symbol,
+    timeframe,
+    period,
+  );
+}
 }

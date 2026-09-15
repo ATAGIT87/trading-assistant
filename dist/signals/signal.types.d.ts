@@ -8,6 +8,7 @@ export interface TradingSignal {
     isStrongSetup: boolean;
     trend: "BULLISH" | "BEARISH" | "NEUTRAL";
     rsi: number;
+    adx: number;
     rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL";
     marketCondition: "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL";
     reason: string;
