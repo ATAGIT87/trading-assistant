@@ -509,7 +509,7 @@ calculateAdxFromCandles(
 
 calculateAdxScore(adx: number): number {
   if (adx >= 25) {
-    return 10;
+    return 5;
   }
 
   return 0;

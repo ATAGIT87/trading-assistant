@@ -298,7 +298,7 @@ let IndicatorsService = class IndicatorsService {
     }
     calculateAdxScore(adx) {
         if (adx >= 25) {
-            return 10;
+            return 5;
         }
         return 0;
     }

@@ -6,7 +6,7 @@ export declare class SignalsService {
     private readonly marketDataService;
     private readonly indicatorsService;
     constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService);
-    determineAction(marketCondition: TradingSignal["marketCondition"], isStrongSetup: boolean): TradingSignal["action"];
+    determineAction(trend: TradingSignal["trend"], marketCondition: TradingSignal["marketCondition"], isStrongSetup: boolean, adx: number, atr: number): TradingSignal["action"];
     createSignal(trend: TradingSignal["trend"], entryPrice: number, atr: number, priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL", rsi: number, adx: number, rsiStatus: TradingSignal["rsiStatus"], marketCondition: TradingSignal["marketCondition"]): TradingSignal;
     generateSignal(symbol: string, timeframe: Timeframe, period: number): Promise<TradingSignal | null>;
     calculateConfidence(trendScore: number, averageAlignmentScore: number, rsiScore: number, marketConditionScore: number, adxScore: number): number;

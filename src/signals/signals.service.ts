@@ -15,23 +15,39 @@ export class SignalsService {
   ) {}
 
   determineAction(
-    marketCondition: TradingSignal["marketCondition"],
-    isStrongSetup: boolean,
-  ): TradingSignal["action"] {
-    if (!isStrongSetup) {
-      return "NO_TRADE";
-    }
-
-    if (marketCondition === "BULLISH_CONTINUATION") {
-      return "BUY";
-    }
-
-    if (marketCondition === "BEARISH_CONTINUATION") {
-      return "SELL";
-    }
-
-    return "WAIT";
+      trend: TradingSignal["trend"],
+  marketCondition: TradingSignal["marketCondition"],
+  isStrongSetup: boolean,
+  adx: number,
+  atr: number,
+): TradingSignal["action"] {
+  if (!isStrongSetup) {
+    return "NO_TRADE";
   }
+
+  if (adx < 25) {
+    return "NO_TRADE";
+  }
+
+  if (atr <= 0) {
+    return "NO_TRADE";
+  }
+if (
+  (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
+  (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
+) {
+  return "NO_TRADE";
+}
+  if (marketCondition === "BULLISH_CONTINUATION") {
+    return "BUY";
+  }
+
+  if (marketCondition === "BEARISH_CONTINUATION") {
+    return "SELL";
+  }
+
+  return "WAIT";
+}
 
   createSignal(
     trend: TradingSignal["trend"],
@@ -68,7 +84,7 @@ const marketConditionScore =
   adxScore,
 );
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
-    const action = this.determineAction(marketCondition, isStrongSetup);
+    const action = this.determineAction(trend, marketCondition, isStrongSetup, adx, atr);
     let stopLoss: number | null = null;
     let takeProfit: number | null = null;
 
@@ -176,13 +192,14 @@ const marketConditionScore =
   marketConditionScore: number,
   adxScore: number,
 ): number {
-  return (
-    trendScore +
+  return Math.min(
+  trendScore +
     averageAlignmentScore +
     rsiScore +
     marketConditionScore +
-    adxScore
-  );
+    adxScore,
+  100,
+);
 }
 
   calculateStopLoss(

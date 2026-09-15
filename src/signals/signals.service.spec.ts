@@ -165,7 +165,31 @@ expect(signal.isStrongSetup).toBe(true);
   expect(signal.isStrongSetup).toBe(true);
   expect(signal.action).toBe("BUY");
 });
+it("should add ADX score to confidence", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
 
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "ABOVE",
+    50,
+    30,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.confidence).toBe(100);
+});
   it("should include the latest price as entry price", async () => {
     const marketDataServiceMock = {
       getTrend: jest.fn().mockResolvedValue("BULLISH"),
@@ -208,5 +232,160 @@ expect(signal.isStrongSetup).toBe(true);
 
     expect(result).toBe(9700);
   });
+
+it("should return NO_TRADE when ADX is weak", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(0);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "ABOVE",
+    50,
+    20,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.action).toBe("NO_TRADE");
+});
+
+it("should return NO_TRADE when confidence is below strong setup threshold", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(0);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(10);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(0);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(0);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "BELOW",
+    40,
+    20,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.confidence).toBe(50);
+  expect(signal.action).toBe("NO_TRADE");
+});
+
+it("should return WAIT when setup is strong but market condition is neutral", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "ABOVE",
+    55,
+    30,
+    "NEUTRAL",
+    "NEUTRAL",
+  );
+
+  expect(signal.confidence).toBe(100);
+  expect(signal.action).toBe("WAIT");
+});
+it("should return NO_TRADE when ATR is too low", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    0,
+    "ABOVE",
+    "ABOVE",
+    55,
+    30,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.action).toBe("NO_TRADE");
+});
+it("should not return BUY when trend and market condition disagree", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+  const signal = service.createSignal(
+    "BULLISH",
+    10000,
+    1000,
+    "ABOVE",
+    "ABOVE",
+    55,
+    30,
+    "NEUTRAL",
+    "BEARISH_CONTINUATION",
+  );
+
+  expect(signal.action).toBe("NO_TRADE");
+});
+it("should not return SELL when trend and market condition disagree", () => {
+  (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(40);
+  (
+    indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+  ).mockReturnValue(30);
+  (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+  (
+    indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+  ).mockReturnValue(10);
+  (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+  const signal = service.createSignal(
+    "BEARISH",
+    10000,
+    1000,
+    "BELOW",
+    "BELOW",
+    45,
+    30,
+    "NEUTRAL",
+    "BULLISH_CONTINUATION",
+  );
+
+  expect(signal.action).toBe("NO_TRADE");
+});
 
 });

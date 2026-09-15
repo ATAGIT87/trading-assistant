@@ -100,4 +100,17 @@ it('should calculate ADX from candles', () => {
 
   expect(result).not.toBeNull();
 });
+
+it("should return 0 ADX score for a weak trend", () => {
+  const result = service.calculateAdxScore(20);
+
+  expect(result).toBe(0);
+});
+
+it("should return 5 ADX score for a strong trend", () => {
+  const result = service.calculateAdxScore(25);
+
+  expect(result).toBe(5);
+});
+
 });

@@ -24,8 +24,18 @@ let SignalsService = class SignalsService {
         this.marketDataService = marketDataService;
         this.indicatorsService = indicatorsService;
     }
-    determineAction(marketCondition, isStrongSetup) {
+    determineAction(trend, marketCondition, isStrongSetup, adx, atr) {
         if (!isStrongSetup) {
+            return "NO_TRADE";
+        }
+        if (adx < 25) {
+            return "NO_TRADE";
+        }
+        if (atr <= 0) {
+            return "NO_TRADE";
+        }
+        if ((trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
+            (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")) {
             return "NO_TRADE";
         }
         if (marketCondition === "BULLISH_CONTINUATION") {
@@ -44,7 +54,7 @@ let SignalsService = class SignalsService {
         const adxScore = this.indicatorsService.calculateAdxScore(adx);
         const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore);
         const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
-        const action = this.determineAction(marketCondition, isStrongSetup);
+        const action = this.determineAction(trend, marketCondition, isStrongSetup, adx, atr);
         let stopLoss = null;
         let takeProfit = null;
         if (action === "BUY" || action === "SELL") {
@@ -90,11 +100,11 @@ let SignalsService = class SignalsService {
         return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition);
     }
     calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore) {
-        return (trendScore +
+        return Math.min(trendScore +
             averageAlignmentScore +
             rsiScore +
             marketConditionScore +
-            adxScore);
+            adxScore, 100);
     }
     calculateStopLoss(action, entryPrice, atr) {
         const stopDistance = 1.5 * atr;
