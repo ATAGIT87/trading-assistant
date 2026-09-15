@@ -13,6 +13,7 @@ exports.SignalsService = void 0;
 const common_1 = require("@nestjs/common");
 const market_data_service_1 = require("../market-data/market-data.service");
 const indicators_service_1 = require("../indicators/indicators.service");
+const STRONG_SETUP_THRESHOLD = 75;
 let SignalsService = class SignalsService {
     marketDataService;
     indicatorsService;
@@ -20,7 +21,10 @@ let SignalsService = class SignalsService {
         this.marketDataService = marketDataService;
         this.indicatorsService = indicatorsService;
     }
-    determineAction(marketCondition) {
+    determineAction(marketCondition, isStrongSetup) {
+        if (!isStrongSetup) {
+            return "NO_TRADE";
+        }
         if (marketCondition === "BULLISH_CONTINUATION") {
             return "BUY";
         }
@@ -29,15 +33,20 @@ let SignalsService = class SignalsService {
         }
         return "WAIT";
     }
-    createSignal(trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition) {
-        const action = this.determineAction(marketCondition);
+    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition) {
         const trendScore = this.indicatorsService.calculateTrendScore(trend);
         const averageAlignmentScore = this.indicatorsService.calculateAverageAlignmentScore(priceVsSma, priceVsEma);
         const rsiScore = this.indicatorsService.calculateRsiScore(rsiStatus);
         const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore);
+        const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
+        const action = this.determineAction(marketCondition, isStrongSetup);
+        const stopLoss = this.calculateStopLoss(action === "BUY" ? "BUY" : "SELL", entryPrice, atr);
         return {
             action,
             confidence,
+            entryPrice,
+            stopLoss,
+            isStrongSetup,
             trend,
             rsi,
             rsiStatus,
@@ -52,18 +61,29 @@ let SignalsService = class SignalsService {
         const rsi = await this.marketDataService.getLatestRsi(symbol, timeframe);
         const rsiStatus = await this.marketDataService.getRsiStatus(symbol, timeframe, period);
         const marketCondition = await this.marketDataService.getMarketCondition(symbol, timeframe, period);
+        const entryPrice = await this.marketDataService.getLatestPrice(symbol, timeframe);
+        const atr = await this.marketDataService.getLatestAtr(symbol, timeframe, period);
         if (trend === null ||
             priceVsSma === null ||
             priceVsEma === null ||
             rsi === null ||
             rsiStatus === null ||
-            marketCondition === null) {
+            marketCondition === null ||
+            entryPrice === null ||
+            atr === null) {
             return null;
         }
-        return this.createSignal(trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition);
+        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition);
     }
     calculateConfidence(trendScore, averageAlignmentScore, rsiScore) {
         return trendScore + averageAlignmentScore + rsiScore;
+    }
+    calculateStopLoss(action, entryPrice, atr) {
+        const stopDistance = 1.5 * atr;
+        if (action === 'BUY') {
+            return entryPrice - stopDistance;
+        }
+        return entryPrice + stopDistance;
     }
 };
 exports.SignalsService = SignalsService;

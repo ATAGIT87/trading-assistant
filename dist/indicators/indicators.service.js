@@ -159,6 +159,27 @@ let IndicatorsService = class IndicatorsService {
         }
         return 10;
     }
+    calculateTrueRange(currentHigh, currentLow, previousClose) {
+        return Math.max(currentHigh - currentLow, Math.abs(currentHigh - previousClose), Math.abs(currentLow - previousClose));
+    }
+    calculateAtr(trueRanges, period) {
+        if (trueRanges.length < period || period <= 0) {
+            return null;
+        }
+        const recentTrueRanges = trueRanges.slice(-period);
+        const sum = recentTrueRanges.reduce((total, trueRange) => total + trueRange, 0);
+        return sum / period;
+    }
+    calculateTrueRangesFromCandles(candles) {
+        const trueRanges = [];
+        for (let i = 1; i < candles.length; i++) {
+            const currentCandle = candles[i];
+            const previousCandle = candles[i - 1];
+            const trueRange = this.calculateTrueRange(currentCandle.high, currentCandle.low, previousCandle.close);
+            trueRanges.push(trueRange);
+        }
+        return trueRanges;
+    }
 };
 exports.IndicatorsService = IndicatorsService;
 exports.IndicatorsService = IndicatorsService = __decorate([

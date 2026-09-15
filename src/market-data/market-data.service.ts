@@ -81,17 +81,17 @@ export class MarketDataService {
   }
 
   async getLatestPrice(
-    symbol: string,
-    timeframe: Timeframe,
-  ): Promise<string | null> {
-    const candle = await this.findLatestCandle(symbol, timeframe);
+  symbol: string,
+  timeframe: Timeframe,
+): Promise<number | null> {
+  const candle = await this.findLatestCandle(symbol, timeframe);
 
-    if (!candle) {
-      return null;
-    }
-
-    return candle.close;
+  if (!candle) {
+    return null;
   }
+
+  return Number(candle.close);
+}
   async getCandlesForAnalysis(
     symbol: string,
     timeframe: Timeframe,
@@ -244,4 +244,30 @@ export class MarketDataService {
 
     return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
   }
+
+  async getLatestAtr(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<number | null> {
+  const candles = await this.getCandlesForAnalysis(
+    symbol,
+    timeframe,
+  );
+
+  if (candles.length < period + 1) {
+    return null;
+  }
+
+  const trueRanges = this.indicatorsService.calculateTrueRangesFromCandles(
+    candles.map((candle) => ({
+      high: Number(candle.high),
+      low: Number(candle.low),
+      close: Number(candle.close),
+    })),
+  );
+
+  return this.indicatorsService.calculateAtr(trueRanges, period);
+}
+
 }

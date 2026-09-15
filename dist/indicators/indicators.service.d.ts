@@ -20,4 +20,11 @@ export declare class IndicatorsService {
     calculateTrendScore(trend: "BULLISH" | "BEARISH" | "NEUTRAL"): number;
     calculateAverageAlignmentScore(priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL"): number;
     calculateRsiScore(rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL"): number;
+    calculateTrueRange(currentHigh: number, currentLow: number, previousClose: number): number;
+    calculateAtr(trueRanges: number[], period: number): number | null;
+    calculateTrueRangesFromCandles(candles: {
+        high: number;
+        low: number;
+        close: number;
+    }[]): number[];
 }

@@ -106,3 +106,10 @@ GET http://localhost:3000/market-data/candles/BTCUSD/1h/market-condition/14
 
 ### Generate trading signal
 GET http://localhost:3000/signals/BTCUSD/1h/14
+
+### Weak setup test
+
+GET http://localhost:3000/signals/BTCUSD/1h/20
+
+### Get latest ATR
+GET http://localhost:3000/market-data/candles/BTCUSD/1h/atr/14

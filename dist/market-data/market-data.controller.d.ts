@@ -21,4 +21,5 @@ export declare class MarketDataController {
     getTrend(symbol: string, timeframe: Timeframe, period: string): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null>;
     getRsiStatus(symbol: string, timeframe: Timeframe, period: string): Promise<"NEUTRAL" | "OVERSOLD" | "OVERBOUGHT" | null>;
     getMarketCondition(symbol: string, timeframe: Timeframe, period: string): Promise<"NEUTRAL" | "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | null>;
+    getLatestAtr(symbol: string, timeframe: Timeframe, period: string): Promise<number | null>;
 }

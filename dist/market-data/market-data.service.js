@@ -85,7 +85,7 @@ let MarketDataService = class MarketDataService {
         if (!candle) {
             return null;
         }
-        return candle.close;
+        return Number(candle.close);
     }
     async getCandlesForAnalysis(symbol, timeframe) {
         return this.marketCandleRepository.find({
@@ -160,6 +160,18 @@ let MarketDataService = class MarketDataService {
             return null;
         }
         return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
+    }
+    async getLatestAtr(symbol, timeframe, period) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        if (candles.length < period + 1) {
+            return null;
+        }
+        const trueRanges = this.indicatorsService.calculateTrueRangesFromCandles(candles.map((candle) => ({
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+        })));
+        return this.indicatorsService.calculateAtr(trueRanges, period);
     }
 };
 exports.MarketDataService = MarketDataService;

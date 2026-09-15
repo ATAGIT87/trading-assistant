@@ -235,4 +235,57 @@ export class IndicatorsService {
 
     return 10;
   }
+
+  calculateTrueRange(
+  currentHigh: number,
+  currentLow: number,
+  previousClose: number,
+): number {
+  return Math.max(
+    currentHigh - currentLow,
+    Math.abs(currentHigh - previousClose),
+    Math.abs(currentLow - previousClose),
+  );
+}
+
+calculateAtr(trueRanges: number[], period: number): number | null {
+  if (trueRanges.length < period || period <= 0) {
+    return null;
+  }
+
+  const recentTrueRanges = trueRanges.slice(-period);
+
+  const sum = recentTrueRanges.reduce(
+    (total, trueRange) => total + trueRange,
+    0,
+  );
+
+  return sum / period;
+}
+
+calculateTrueRangesFromCandles(
+  candles: {
+    high: number;
+    low: number;
+    close: number;
+  }[],
+): number[] {
+  const trueRanges: number[] = [];
+
+  for (let i = 1; i < candles.length; i++) {
+    const currentCandle = candles[i];
+    const previousCandle = candles[i - 1];
+
+    const trueRange = this.calculateTrueRange(
+      currentCandle.high,
+      currentCandle.low,
+      previousCandle.close,
+    );
+
+    trueRanges.push(trueRange);
+  }
+
+  return trueRanges;
+}
+
 }

@@ -70,6 +70,9 @@ let MarketDataController = class MarketDataController {
     getMarketCondition(symbol, timeframe, period) {
         return this.marketDataService.getMarketCondition(symbol, timeframe, Number(period));
     }
+    getLatestAtr(symbol, timeframe, period) {
+        return this.marketDataService.getLatestAtr(symbol, timeframe, Number(period));
+    }
 };
 exports.MarketDataController = MarketDataController;
 __decorate([
@@ -194,6 +197,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getMarketCondition", null);
+__decorate([
+    (0, common_1.Get)('candles/:symbol/:timeframe/atr/:period'),
+    __param(0, (0, common_1.Param)('symbol')),
+    __param(1, (0, common_1.Param)('timeframe')),
+    __param(2, (0, common_1.Param)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestAtr", null);
 exports.MarketDataController = MarketDataController = __decorate([
     (0, common_1.Controller)("market-data"),
     __metadata("design:paramtypes", [market_data_service_1.MarketDataService,

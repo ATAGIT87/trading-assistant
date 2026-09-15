@@ -12,7 +12,7 @@ export declare class MarketDataService {
     findCandlesBySymbol(symbol: string): Promise<MarketCandle[]>;
     findCandlesBySymbolAndTimeframe(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     findLatestCandle(symbol: string, timeframe: Timeframe): Promise<MarketCandle | null>;
-    getLatestPrice(symbol: string, timeframe: Timeframe): Promise<string | null>;
+    getLatestPrice(symbol: string, timeframe: Timeframe): Promise<number | null>;
     getCandlesForAnalysis(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     getLatestRsi(symbol: string, timeframe: Timeframe): Promise<number | null>;
     getLatestSma(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
@@ -23,4 +23,5 @@ export declare class MarketDataService {
     getTrend(symbol: string, timeframe: Timeframe, period: number): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null>;
     getRsiStatus(symbol: string, timeframe: Timeframe, period: number): Promise<"OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" | null>;
     getMarketCondition(symbol: string, timeframe: Timeframe, period: number): Promise<"POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL" | null>;
+    getLatestAtr(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
 }
