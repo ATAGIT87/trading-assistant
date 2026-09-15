@@ -9,6 +9,7 @@ describe("SignalsService", () => {
     jest.clearAllMocks();
     const marketDataServiceMock = {
       getLatestAdx: jest.fn().mockResolvedValue(30),
+      getTrend: jest.fn(),
     };
     indicatorsServiceMock = {
       calculateTrendScore: jest.fn().mockReturnValue(0),
@@ -39,6 +40,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BEARISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(20);
@@ -70,6 +72,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BEARISH_CONTINUATION",
+      "BEARISH",
     );
 
     expect(signal.confidence).toBe(100);
@@ -99,6 +102,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(100);
@@ -125,6 +129,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "POSSIBLE_REVERSAL",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(90);
@@ -159,6 +164,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(75);
@@ -188,6 +194,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(100);
@@ -202,7 +209,7 @@ describe("SignalsService", () => {
       getMarketCondition: jest.fn().mockResolvedValue("BULLISH_CONTINUATION"),
       getLatestPrice: jest.fn().mockResolvedValue(100000),
       getLatestAtr: jest.fn().mockResolvedValue(1000),
-      getLatestAdx: jest.fn().mockResolvedValue(30),
+      getLatestAdx: jest.fn().mockResolvedValue(30)
     };
 
     service = new SignalsService(
@@ -258,6 +265,7 @@ describe("SignalsService", () => {
       20,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.action).toBe("NO_TRADE");
@@ -286,6 +294,7 @@ describe("SignalsService", () => {
       20,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(50);
@@ -315,6 +324,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "NEUTRAL",
+      "BULLISH",
     );
 
     expect(signal.confidence).toBe(100);
@@ -343,6 +353,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.action).toBe("NO_TRADE");
@@ -370,6 +381,7 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BEARISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.action).toBe("NO_TRADE");
@@ -397,8 +409,31 @@ describe("SignalsService", () => {
       30,
       "NEUTRAL",
       "BULLISH_CONTINUATION",
+      "BULLISH",
     );
 
     expect(signal.action).toBe("NO_TRADE");
   });
+
+  it("should get the trend from the higher timeframe", async () => {
+  const marketDataServiceMock = service["marketDataService"] as any;
+
+  marketDataServiceMock.getTrend.mockResolvedValue("BULLISH");
+
+  const trend = await service.getHigherTimeframeTrend(
+    "BTCUSD",
+    Timeframe.ONE_HOUR,
+    14,
+  );
+
+  expect(trend).toBe("BULLISH");
+
+  expect(marketDataServiceMock.getTrend).toHaveBeenCalledWith(
+    "BTCUSD",
+    Timeframe.FOUR_HOURS,
+    14,
+  );
+});
+
+
 });

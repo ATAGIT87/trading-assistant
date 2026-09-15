@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsService = void 0;
+const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const indicators_service_1 = require("../indicators/indicators.service");
 const common_1 = require("@nestjs/common");
 const market_data_token_1 = require("./market-data.token");
@@ -24,7 +25,7 @@ let SignalsService = class SignalsService {
         this.marketDataService = marketDataService;
         this.indicatorsService = indicatorsService;
     }
-    determineAction(trend, marketCondition, isStrongSetup, adx, atr) {
+    determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr) {
         if (!isStrongSetup) {
             return "NO_TRADE";
         }
@@ -46,7 +47,7 @@ let SignalsService = class SignalsService {
         }
         return "WAIT";
     }
-    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition) {
+    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend) {
         const trendScore = this.indicatorsService.calculateTrendScore(trend);
         const averageAlignmentScore = this.indicatorsService.calculateAverageAlignmentScore(priceVsSma, priceVsEma);
         const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
@@ -54,7 +55,7 @@ let SignalsService = class SignalsService {
         const adxScore = this.indicatorsService.calculateAdxScore(adx);
         const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore);
         const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
-        const action = this.determineAction(trend, marketCondition, isStrongSetup, adx, atr);
+        const action = this.determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr);
         let stopLoss = null;
         let takeProfit = null;
         if (action === "BUY" || action === "SELL") {
@@ -78,6 +79,7 @@ let SignalsService = class SignalsService {
     }
     async generateSignal(symbol, timeframe, period) {
         const trend = await this.marketDataService.getTrend(symbol, timeframe, period);
+        const higherTimeframeTrend = await this.getHigherTimeframeTrend(symbol, timeframe, period);
         const priceVsSma = await this.marketDataService.compareLatestPriceToSma(symbol, timeframe, period);
         const priceVsEma = await this.marketDataService.compareLatestPriceToEma(symbol, timeframe, period);
         const rsi = await this.marketDataService.getLatestRsi(symbol, timeframe);
@@ -86,7 +88,8 @@ let SignalsService = class SignalsService {
         const entryPrice = await this.marketDataService.getLatestPrice(symbol, timeframe);
         const atr = await this.marketDataService.getLatestAtr(symbol, timeframe, period);
         const adx = await this.marketDataService.getLatestAdx(symbol, timeframe, period);
-        if (trend === null ||
+        if (higherTimeframeTrend === null ||
+            trend === null ||
             priceVsSma === null ||
             priceVsEma === null ||
             rsi === null ||
@@ -97,7 +100,7 @@ let SignalsService = class SignalsService {
             adx === null) {
             return null;
         }
-        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition);
+        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
     }
     calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore) {
         return Math.min(trendScore +
@@ -120,6 +123,19 @@ let SignalsService = class SignalsService {
             return entryPrice + reward;
         }
         return entryPrice - reward;
+    }
+    async getHigherTimeframeTrend(symbol, timeframe, period) {
+        const higherTimeframe = timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES
+            ? timeframe_enum_1.Timeframe.ONE_HOUR
+            : timeframe === timeframe_enum_1.Timeframe.ONE_HOUR
+                ? timeframe_enum_1.Timeframe.FOUR_HOURS
+                : timeframe === timeframe_enum_1.Timeframe.FOUR_HOURS
+                    ? timeframe_enum_1.Timeframe.ONE_DAY
+                    : null;
+        if (higherTimeframe === null) {
+            return null;
+        }
+        return this.marketDataService.getTrend(symbol, higherTimeframe, period);
     }
 };
 exports.SignalsService = SignalsService;

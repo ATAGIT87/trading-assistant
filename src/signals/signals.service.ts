@@ -15,6 +15,7 @@ export class SignalsService {
   ) {}
 
   determineAction(
+    higherTimeframeTrend: TradingSignal["trend"],
     trend: TradingSignal["trend"],
     marketCondition: TradingSignal["marketCondition"],
     isStrongSetup: boolean,
@@ -59,6 +60,7 @@ export class SignalsService {
     adx: number,
     rsiStatus: TradingSignal["rsiStatus"],
     marketCondition: TradingSignal["marketCondition"],
+    higherTimeframeTrend: TradingSignal["trend"],
   ): TradingSignal {
     const trendScore = this.indicatorsService.calculateTrendScore(trend);
     const averageAlignmentScore =
@@ -82,6 +84,7 @@ export class SignalsService {
     );
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
     const action = this.determineAction(
+      higherTimeframeTrend,
       trend,
       marketCondition,
       isStrongSetup,
@@ -123,6 +126,12 @@ export class SignalsService {
       timeframe,
       period,
     );
+    const higherTimeframeTrend =
+  await this.getHigherTimeframeTrend(
+    symbol,
+    timeframe,
+    period,
+  );
     const priceVsSma = await this.marketDataService.compareLatestPriceToSma(
       symbol,
       timeframe,
@@ -163,6 +172,7 @@ export class SignalsService {
       period,
     );
     if (
+      higherTimeframeTrend === null ||
       trend === null ||
       priceVsSma === null ||
       priceVsEma === null ||
@@ -186,6 +196,7 @@ export class SignalsService {
       adx,
       rsiStatus,
       marketCondition,
+      higherTimeframeTrend,
     );
   }
   calculateConfidence(
@@ -234,4 +245,29 @@ export class SignalsService {
 
     return entryPrice - reward;
   }
+
+  async getHigherTimeframeTrend(
+  symbol: string,
+  timeframe: Timeframe,
+  period: number,
+): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
+  const higherTimeframe =
+    timeframe === Timeframe.FIFTEEN_MINUTES
+      ? Timeframe.ONE_HOUR
+      : timeframe === Timeframe.ONE_HOUR
+        ? Timeframe.FOUR_HOURS
+        : timeframe === Timeframe.FOUR_HOURS
+          ? Timeframe.ONE_DAY
+          : null;
+
+  if (higherTimeframe === null) {
+    return null;
+  }
+
+  return this.marketDataService.getTrend(
+    symbol,
+    higherTimeframe,
+    period,
+  );
+}
 }
