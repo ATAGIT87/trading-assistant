@@ -163,16 +163,12 @@ export class MarketDataController {
       Number(period),
     );
   }
-  @Get('candles/:symbol/:timeframe/adx/:period')
-getLatestAdx(
-  @Param('symbol') symbol: string,
-  @Param('timeframe') timeframe: Timeframe,
-  @Param('period', ParseIntPipe) period: number,
-) {
-  return this.marketDataService.getLatestAdx(
-    symbol,
-    timeframe,
-    period,
-  );
-}
+  @Get("candles/:symbol/:timeframe/adx/:period")
+  getLatestAdx(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+    @Param("period", ParseIntPipe) period: number,
+  ) {
+    return this.marketDataService.getLatestAdx(symbol, timeframe, period);
+  }
 }

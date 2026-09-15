@@ -211,10 +211,10 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getLatestAtr", null);
 __decorate([
-    (0, common_1.Get)('candles/:symbol/:timeframe/adx/:period'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('timeframe')),
-    __param(2, (0, common_1.Param)('period', common_2.ParseIntPipe)),
+    (0, common_1.Get)("candles/:symbol/:timeframe/adx/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period", common_2.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Number]),
     __metadata("design:returntype", void 0)

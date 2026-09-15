@@ -268,23 +268,19 @@ export class MarketDataService {
   }
 
   async getLatestAdx(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<number | null> {
-  const candles = await this.getCandlesForAnalysis(
-    symbol,
-    timeframe,
-  );
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<number | null> {
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-  return this.indicatorsService.calculateAdxFromCandles(
-    candles.map((candle) => ({
-      high: Number(candle.high),
-      low: Number(candle.low),
-      close: Number(candle.close),
-    })),
-    period,
-  );
-}
-
+    return this.indicatorsService.calculateAdxFromCandles(
+      candles.map((candle) => ({
+        high: Number(candle.high),
+        low: Number(candle.low),
+        close: Number(candle.close),
+      })),
+      period,
+    );
+  }
 }

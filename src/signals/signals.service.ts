@@ -15,39 +15,39 @@ export class SignalsService {
   ) {}
 
   determineAction(
-      trend: TradingSignal["trend"],
-  marketCondition: TradingSignal["marketCondition"],
-  isStrongSetup: boolean,
-  adx: number,
-  atr: number,
-): TradingSignal["action"] {
-  if (!isStrongSetup) {
-    return "NO_TRADE";
-  }
+    trend: TradingSignal["trend"],
+    marketCondition: TradingSignal["marketCondition"],
+    isStrongSetup: boolean,
+    adx: number,
+    atr: number,
+  ): TradingSignal["action"] {
+    if (!isStrongSetup) {
+      return "NO_TRADE";
+    }
 
-  if (adx < 25) {
-    return "NO_TRADE";
-  }
+    if (adx < 25) {
+      return "NO_TRADE";
+    }
 
-  if (atr <= 0) {
-    return "NO_TRADE";
-  }
-if (
-  (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
-  (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
-) {
-  return "NO_TRADE";
-}
-  if (marketCondition === "BULLISH_CONTINUATION") {
-    return "BUY";
-  }
+    if (atr <= 0) {
+      return "NO_TRADE";
+    }
+    if (
+      (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
+      (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
+    ) {
+      return "NO_TRADE";
+    }
+    if (marketCondition === "BULLISH_CONTINUATION") {
+      return "BUY";
+    }
 
-  if (marketCondition === "BEARISH_CONTINUATION") {
-    return "SELL";
-  }
+    if (marketCondition === "BEARISH_CONTINUATION") {
+      return "SELL";
+    }
 
-  return "WAIT";
-}
+    return "WAIT";
+  }
 
   createSignal(
     trend: TradingSignal["trend"],
@@ -66,25 +66,28 @@ if (
         priceVsSma,
         priceVsEma,
       );
-    const rsiScore = this.indicatorsService.calculateRsiScore(
-  trend,
-  rsi,
-);
-const marketConditionScore =
-  this.indicatorsService.calculateMarketConditionScore(
-    trend,
-    marketCondition,
-  );
-  const adxScore = this.indicatorsService.calculateAdxScore(adx);
+    const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
+    const marketConditionScore =
+      this.indicatorsService.calculateMarketConditionScore(
+        trend,
+        marketCondition,
+      );
+    const adxScore = this.indicatorsService.calculateAdxScore(adx);
     const confidence = this.calculateConfidence(
-  trendScore,
-  averageAlignmentScore,
-  rsiScore,
-  marketConditionScore,
-  adxScore,
-);
+      trendScore,
+      averageAlignmentScore,
+      rsiScore,
+      marketConditionScore,
+      adxScore,
+    );
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
-    const action = this.determineAction(trend, marketCondition, isStrongSetup, adx, atr);
+    const action = this.determineAction(
+      trend,
+      marketCondition,
+      isStrongSetup,
+      adx,
+      atr,
+    );
     let stopLoss: number | null = null;
     let takeProfit: number | null = null;
 
@@ -186,21 +189,21 @@ const marketConditionScore =
     );
   }
   calculateConfidence(
-  trendScore: number,
-  averageAlignmentScore: number,
-  rsiScore: number,
-  marketConditionScore: number,
-  adxScore: number,
-): number {
-  return Math.min(
-  trendScore +
-    averageAlignmentScore +
-    rsiScore +
-    marketConditionScore +
-    adxScore,
-  100,
-);
-}
+    trendScore: number,
+    averageAlignmentScore: number,
+    rsiScore: number,
+    marketConditionScore: number,
+    adxScore: number,
+  ): number {
+    return Math.min(
+      trendScore +
+        averageAlignmentScore +
+        rsiScore +
+        marketConditionScore +
+        adxScore,
+      100,
+    );
+  }
 
   calculateStopLoss(
     action: "BUY" | "SELL",

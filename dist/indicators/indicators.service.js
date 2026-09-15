@@ -154,10 +154,10 @@ let IndicatorsService = class IndicatorsService {
         return 0;
     }
     calculateRsiScore(trend, rsi) {
-        if (trend === 'NEUTRAL') {
+        if (trend === "NEUTRAL") {
             return 10;
         }
-        if (trend === 'BULLISH') {
+        if (trend === "BULLISH") {
             if (rsi > 50) {
                 return 20;
             }
@@ -196,12 +196,10 @@ let IndicatorsService = class IndicatorsService {
         return trueRanges;
     }
     calculateMarketConditionScore(trend, marketCondition) {
-        if (trend === 'BULLISH' &&
-            marketCondition === 'BULLISH_CONTINUATION') {
+        if (trend === "BULLISH" && marketCondition === "BULLISH_CONTINUATION") {
             return 10;
         }
-        if (trend === 'BEARISH' &&
-            marketCondition === 'BEARISH_CONTINUATION') {
+        if (trend === "BEARISH" && marketCondition === "BEARISH_CONTINUATION") {
             return 10;
         }
         return 0;
@@ -209,12 +207,8 @@ let IndicatorsService = class IndicatorsService {
     calculateDirectionalMovement(currentHigh, currentLow, previousHigh, previousLow) {
         const upwardMove = currentHigh - previousHigh;
         const downwardMove = previousLow - currentLow;
-        const plusDm = upwardMove > downwardMove && upwardMove > 0
-            ? upwardMove
-            : 0;
-        const minusDm = downwardMove > upwardMove && downwardMove > 0
-            ? downwardMove
-            : 0;
+        const plusDm = upwardMove > downwardMove && upwardMove > 0 ? upwardMove : 0;
+        const minusDm = downwardMove > upwardMove && downwardMove > 0 ? downwardMove : 0;
         return {
             plusDm,
             minusDm,
@@ -259,18 +253,15 @@ let IndicatorsService = class IndicatorsService {
         if (sum === 0) {
             return null;
         }
-        return ((Math.abs(plusDi - minusDi) / sum) * 100);
+        return (Math.abs(plusDi - minusDi) / sum) * 100;
     }
     calculateAdx(dxValues, period) {
         if (period <= 0 || dxValues.length < period) {
             return null;
         }
-        let adx = dxValues
-            .slice(0, period)
-            .reduce((sum, value) => sum + value, 0) / period;
+        let adx = dxValues.slice(0, period).reduce((sum, value) => sum + value, 0) / period;
         for (let i = period; i < dxValues.length; i++) {
-            adx =
-                ((adx * (period - 1)) + dxValues[i]) / period;
+            adx = (adx * (period - 1) + dxValues[i]) / period;
         }
         return adx;
     }

@@ -48,8 +48,8 @@ export interface MarketDataPort {
   ): Promise<number | null>;
 
   getLatestAdx(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<number | null>;
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<number | null>;
 }
