@@ -14,16 +14,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketDataController = void 0;
 const common_1 = require("@nestjs/common");
+const market_data_provider_service_1 = require("./market-data-provider.service");
 const create_market_candle_dto_1 = require("./dto/create-market-candle.dto");
 const market_data_service_1 = require("./market-data.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
-const market_data_seed_1 = require("./market-data.seed");
+const common_2 = require("@nestjs/common");
 let MarketDataController = class MarketDataController {
     marketDataService;
-    marketDataSeed;
-    constructor(marketDataService, marketDataSeed) {
+    marketDataProviderService;
+    constructor(marketDataService, marketDataProviderService) {
         this.marketDataService = marketDataService;
-        this.marketDataSeed = marketDataSeed;
+        this.marketDataProviderService = marketDataProviderService;
     }
     createCandle(dto) {
         return this.marketDataService.createCandle(dto);
@@ -39,9 +40,6 @@ let MarketDataController = class MarketDataController {
     }
     findLatestCandle(symbol, timeframe) {
         return this.marketDataService.findLatestCandle(symbol, timeframe);
-    }
-    seed() {
-        return this.marketDataSeed.seed();
     }
     getLatestRsi(symbol, timeframe) {
         return this.marketDataService.getLatestRsi(symbol, timeframe);
@@ -69,6 +67,38 @@ let MarketDataController = class MarketDataController {
     }
     getMarketCondition(symbol, timeframe, period) {
         return this.marketDataService.getMarketCondition(symbol, timeframe, Number(period));
+    }
+    getLatestAtr(symbol, timeframe, period) {
+        return this.marketDataService.getLatestAtr(symbol, timeframe, Number(period));
+    }
+    getLatestAdx(symbol, timeframe, period) {
+        return this.marketDataService.getLatestAdx(symbol, timeframe, period);
+    }
+    getLatestMarketPrice(symbol) {
+        return this.marketDataProviderService.getLatestPrice(symbol);
+    }
+    getRealCandles(symbol) {
+        return this.marketDataProviderService.getHourlyCandles(symbol, 2);
+    }
+    getBinanceCandles(symbol) {
+        return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
+    }
+    async syncBinanceCandles(symbol) {
+        const candles = await this.marketDataProviderService.getBinanceHourlyCandles(symbol, 3000);
+        const savedCount = await this.marketDataService.saveCandles(symbol, candles);
+        return {
+            symbol,
+            received: candles.length,
+            saved: savedCount,
+        };
+    }
+    async buildFourHourCandles(symbol) {
+        const saved = await this.marketDataService.buildFourHourCandles(symbol);
+        return {
+            symbol,
+            timeframe: "4h",
+            saved,
+        };
     }
 };
 exports.MarketDataController = MarketDataController;
@@ -108,12 +138,6 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "findLatestCandle", null);
-__decorate([
-    (0, common_1.Post)("seed"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], MarketDataController.prototype, "seed", null);
 __decorate([
     (0, common_1.Get)("candles/:symbol/:timeframe/rsi"),
     __param(0, (0, common_1.Param)("symbol")),
@@ -194,9 +218,62 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getMarketCondition", null);
+__decorate([
+    (0, common_1.Get)("candles/:symbol/:timeframe/atr/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestAtr", null);
+__decorate([
+    (0, common_1.Get)("candles/:symbol/:timeframe/adx/:period"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __param(2, (0, common_1.Param)("period", common_2.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Number]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestAdx", null);
+__decorate([
+    (0, common_1.Get)("price/:symbol"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getLatestMarketPrice", null);
+__decorate([
+    (0, common_1.Get)("real-candles/:symbol"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getRealCandles", null);
+__decorate([
+    (0, common_1.Get)("binance-candles/:symbol"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getBinanceCandles", null);
+__decorate([
+    (0, common_1.Post)("sync-binance/:symbol"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MarketDataController.prototype, "syncBinanceCandles", null);
+__decorate([
+    (0, common_1.Post)("build-4h/:symbol"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MarketDataController.prototype, "buildFourHourCandles", null);
 exports.MarketDataController = MarketDataController = __decorate([
     (0, common_1.Controller)("market-data"),
     __metadata("design:paramtypes", [market_data_service_1.MarketDataService,
-        market_data_seed_1.MarketDataSeed])
+        market_data_provider_service_1.MarketDataProviderService])
 ], MarketDataController);
 //# sourceMappingURL=market-data.controller.js.map

@@ -5,6 +5,7 @@ import { MarketCandle } from "./entities/market-candle.entity";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
+import { LessThanOrEqual } from "typeorm";
 @Injectable()
 export class MarketDataService {
   constructor(
@@ -83,14 +84,14 @@ export class MarketDataService {
   async getLatestPrice(
     symbol: string,
     timeframe: Timeframe,
-  ): Promise<string | null> {
+  ): Promise<number | null> {
     const candle = await this.findLatestCandle(symbol, timeframe);
 
     if (!candle) {
       return null;
     }
 
-    return candle.close;
+    return Number(candle.close);
   }
   async getCandlesForAnalysis(
     symbol: string,
@@ -243,5 +244,155 @@ export class MarketDataService {
     }
 
     return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
+  }
+
+  async getLatestAtr(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<number | null> {
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+
+    if (candles.length < period + 1) {
+      return null;
+    }
+
+    const trueRanges = this.indicatorsService.calculateTrueRangesFromCandles(
+      candles.map((candle) => ({
+        high: Number(candle.high),
+        low: Number(candle.low),
+        close: Number(candle.close),
+      })),
+    );
+
+    return this.indicatorsService.calculateAtr(trueRanges, period);
+  }
+
+  async getLatestAdx(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<number | null> {
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+
+    return this.indicatorsService.calculateAdxFromCandles(
+      candles.map((candle) => ({
+        high: Number(candle.high),
+        low: Number(candle.low),
+        close: Number(candle.close),
+      })),
+      period,
+    );
+  }
+
+  async getHistoricalCandles(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<MarketCandle[]> {
+    return this.marketCandleRepository.find({
+      where: {
+        symbol,
+        timeframe,
+      },
+      order: {
+        time: "ASC",
+      },
+    });
+  }
+
+  async getHistoricalCandlesUntil(
+    symbol: string,
+    timeframe: Timeframe,
+    until: Date,
+  ): Promise<MarketCandle[]> {
+    return this.marketCandleRepository.find({
+      where: {
+        symbol,
+        timeframe,
+        time: LessThanOrEqual(until),
+      },
+      order: {
+        time: "ASC",
+      },
+    });
+  }
+
+  async saveCandles(
+    symbol: string,
+    candles: {
+      time: Date;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume: number;
+    }[],
+  ): Promise<number> {
+    let savedCount = 0;
+
+    for (const candle of candles) {
+      try {
+        await this.createCandle({
+          symbol,
+          timeframe: Timeframe.ONE_HOUR,
+          time: candle.time.toISOString(),
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+          volume: candle.volume,
+        });
+
+        savedCount++;
+      } catch (error) {
+        if (error instanceof ConflictException) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    return savedCount;
+  }
+
+  async buildFourHourCandles(symbol: string): Promise<number> {
+    const hourlyCandles = await this.getHistoricalCandles(
+      symbol,
+      Timeframe.ONE_HOUR,
+    );
+
+    const fourHourCandles: Partial<MarketCandle>[] = [];
+
+    for (let i = 0; i + 3 < hourlyCandles.length; i += 4) {
+      const group = hourlyCandles.slice(i, i + 4);
+
+      const first = group[0];
+      const last = group[3];
+
+      fourHourCandles.push({
+        symbol,
+        timeframe: Timeframe.FOUR_HOURS,
+        time: last.time,
+        open: first.open,
+        high: Math.max(
+          ...group.map((candle) => Number(candle.high)),
+        ).toString(),
+        low: Math.min(...group.map((candle) => Number(candle.low))).toString(),
+        close: last.close,
+        volume: group
+          .reduce((sum, candle) => sum + Number(candle.volume), 0)
+          .toString(),
+      });
+    }
+
+    await this.marketCandleRepository.delete({
+      symbol,
+      timeframe: Timeframe.FOUR_HOURS,
+    });
+
+    await this.marketCandleRepository.save(fourHourCandles);
+
+    return fourHourCandles.length;
   }
 }

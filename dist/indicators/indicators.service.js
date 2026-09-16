@@ -143,21 +143,225 @@ let IndicatorsService = class IndicatorsService {
     }
     calculateAverageAlignmentScore(priceVsSma, priceVsEma) {
         if (priceVsSma === "ABOVE" && priceVsEma === "ABOVE") {
-            return 40;
+            return 30;
         }
         if (priceVsSma === "BELOW" && priceVsEma === "BELOW") {
-            return 40;
+            return 30;
         }
         if (priceVsSma === "EQUAL" || priceVsEma === "EQUAL") {
-            return 20;
+            return 15;
         }
         return 0;
     }
-    calculateRsiScore(rsiStatus) {
-        if (rsiStatus === "NEUTRAL") {
+    calculateRsiScore(trend, rsi) {
+        if (trend === "NEUTRAL") {
+            return 10;
+        }
+        if (trend === "BULLISH") {
+            if (rsi > 50) {
+                return 20;
+            }
+            if (rsi >= 30) {
+                return 10;
+            }
+            return 0;
+        }
+        if (rsi < 50) {
             return 20;
         }
-        return 10;
+        if (rsi <= 70) {
+            return 10;
+        }
+        return 0;
+    }
+    calculateTrueRange(currentHigh, currentLow, previousClose) {
+        return Math.max(currentHigh - currentLow, Math.abs(currentHigh - previousClose), Math.abs(currentLow - previousClose));
+    }
+    calculateAtr(trueRanges, period) {
+        if (trueRanges.length < period || period <= 0) {
+            return null;
+        }
+        const recentTrueRanges = trueRanges.slice(-period);
+        const sum = recentTrueRanges.reduce((total, trueRange) => total + trueRange, 0);
+        return sum / period;
+    }
+    calculateTrueRangesFromCandles(candles) {
+        const trueRanges = [];
+        for (let i = 1; i < candles.length; i++) {
+            const currentCandle = candles[i];
+            const previousCandle = candles[i - 1];
+            const trueRange = this.calculateTrueRange(currentCandle.high, currentCandle.low, previousCandle.close);
+            trueRanges.push(trueRange);
+        }
+        return trueRanges;
+    }
+    calculateMarketConditionScore(trend, marketCondition) {
+        if (trend === "BULLISH" && marketCondition === "BULLISH_CONTINUATION") {
+            return 10;
+        }
+        if (trend === "BEARISH" && marketCondition === "BEARISH_CONTINUATION") {
+            return 10;
+        }
+        return 0;
+    }
+    calculateDirectionalMovement(currentHigh, currentLow, previousHigh, previousLow) {
+        const upwardMove = currentHigh - previousHigh;
+        const downwardMove = previousLow - currentLow;
+        const plusDm = upwardMove > downwardMove && upwardMove > 0 ? upwardMove : 0;
+        const minusDm = downwardMove > upwardMove && downwardMove > 0 ? downwardMove : 0;
+        return {
+            plusDm,
+            minusDm,
+        };
+    }
+    calculateDirectionalMovements(candles) {
+        const plusDm = [];
+        const minusDm = [];
+        for (let i = 1; i < candles.length; i++) {
+            const movement = this.calculateDirectionalMovement(candles[i].high, candles[i].low, candles[i - 1].high, candles[i - 1].low);
+            plusDm.push(movement.plusDm);
+            minusDm.push(movement.minusDm);
+        }
+        return {
+            plusDm,
+            minusDm,
+        };
+    }
+    calculateDirectionalIndicators(trueRanges, plusDm, minusDm, period) {
+        if (period <= 0 ||
+            trueRanges.length < period ||
+            plusDm.length < period ||
+            minusDm.length < period) {
+            return null;
+        }
+        const recentTrueRanges = trueRanges.slice(-period);
+        const recentPlusDm = plusDm.slice(-period);
+        const recentMinusDm = minusDm.slice(-period);
+        const trAverage = recentTrueRanges.reduce((sum, value) => sum + value, 0) / period;
+        if (trAverage === 0) {
+            return null;
+        }
+        const plusDmAverage = recentPlusDm.reduce((sum, value) => sum + value, 0) / period;
+        const minusDmAverage = recentMinusDm.reduce((sum, value) => sum + value, 0) / period;
+        return {
+            plusDi: (plusDmAverage / trAverage) * 100,
+            minusDi: (minusDmAverage / trAverage) * 100,
+        };
+    }
+    calculateDirectionalIndex(plusDi, minusDi) {
+        const sum = plusDi + minusDi;
+        if (sum === 0) {
+            return null;
+        }
+        return (Math.abs(plusDi - minusDi) / sum) * 100;
+    }
+    calculateAdx(dxValues, period) {
+        if (period <= 0 || dxValues.length < period) {
+            return null;
+        }
+        let adx = dxValues.slice(0, period).reduce((sum, value) => sum + value, 0) / period;
+        for (let i = period; i < dxValues.length; i++) {
+            adx = (adx * (period - 1) + dxValues[i]) / period;
+        }
+        return adx;
+    }
+    calculateAdxFromCandles(candles, period) {
+        if (period <= 0 || candles.length < period * 2) {
+            return null;
+        }
+        const trueRanges = this.calculateTrueRangesFromCandles(candles);
+        const directionalMovements = this.calculateDirectionalMovements(candles);
+        if (trueRanges.length < period ||
+            directionalMovements.plusDm.length < period ||
+            directionalMovements.minusDm.length < period) {
+            return null;
+        }
+        const smoothedTrueRanges = [];
+        const smoothedPlusDm = [];
+        const smoothedMinusDm = [];
+        let trSum = 0;
+        let plusDmSum = 0;
+        let minusDmSum = 0;
+        for (let i = 0; i < period; i++) {
+            trSum += trueRanges[i];
+            plusDmSum += directionalMovements.plusDm[i];
+            minusDmSum += directionalMovements.minusDm[i];
+        }
+        smoothedTrueRanges.push(trSum);
+        smoothedPlusDm.push(plusDmSum);
+        smoothedMinusDm.push(minusDmSum);
+        for (let i = period; i < trueRanges.length; i++) {
+            trSum = trSum - trSum / period + trueRanges[i];
+            plusDmSum =
+                plusDmSum - plusDmSum / period + directionalMovements.plusDm[i];
+            minusDmSum =
+                minusDmSum - minusDmSum / period + directionalMovements.minusDm[i];
+            smoothedTrueRanges.push(trSum);
+            smoothedPlusDm.push(plusDmSum);
+            smoothedMinusDm.push(minusDmSum);
+        }
+        const dxValues = [];
+        for (let i = 0; i < smoothedTrueRanges.length; i++) {
+            const tr = smoothedTrueRanges[i];
+            if (tr === 0) {
+                continue;
+            }
+            const plusDi = (smoothedPlusDm[i] / tr) * 100;
+            const minusDi = (smoothedMinusDm[i] / tr) * 100;
+            const dx = this.calculateDirectionalIndex(plusDi, minusDi);
+            if (dx !== null) {
+                dxValues.push(dx);
+            }
+        }
+        return this.calculateAdx(dxValues, period);
+    }
+    calculateAdxScore(adx) {
+        if (adx >= 25) {
+            return 5;
+        }
+        return 0;
+    }
+    calculateIndicatorsFromCandles(candles, period) {
+        if (candles.length < period * 2) {
+            return null;
+        }
+        const closes = candles.map((candle) => Number(candle.close));
+        const latestPrice = closes[closes.length - 1];
+        const sma = this.calculateSma(closes, period);
+        const ema = this.calculateEma(closes, period);
+        const rsi = this.calculateRsiFromPrices(closes, period);
+        const atr = this.calculateAtr(this.calculateTrueRangesFromCandles(candles.map((candle) => ({
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+        }))), period);
+        const adx = this.calculateAdxFromCandles(candles.map((candle) => ({
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+        })), period);
+        if (sma === null ||
+            ema === null ||
+            rsi === null ||
+            atr === null ||
+            adx === null) {
+            return null;
+        }
+        const priceVsSma = this.comparePriceToAverage(latestPrice, sma);
+        const priceVsEma = this.comparePriceToAverage(latestPrice, ema);
+        const trend = this.determineTrend(priceVsSma, priceVsEma);
+        const rsiStatus = this.classifyRsi(rsi);
+        const marketCondition = this.determineMarketCondition(trend, rsiStatus);
+        return {
+            trend,
+            priceVsSma,
+            priceVsEma,
+            rsi,
+            rsiStatus,
+            marketCondition,
+            atr,
+            adx,
+        };
     }
 };
 exports.IndicatorsService = IndicatorsService;

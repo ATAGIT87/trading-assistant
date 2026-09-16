@@ -17,7 +17,9 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
+const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const indicators_service_1 = require("../indicators/indicators.service");
+const typeorm_3 = require("typeorm");
 let MarketDataService = class MarketDataService {
     marketCandleRepository;
     indicatorsService;
@@ -85,7 +87,7 @@ let MarketDataService = class MarketDataService {
         if (!candle) {
             return null;
         }
-        return candle.close;
+        return Number(candle.close);
     }
     async getCandlesForAnalysis(symbol, timeframe) {
         return this.marketCandleRepository.find({
@@ -160,6 +162,101 @@ let MarketDataService = class MarketDataService {
             return null;
         }
         return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
+    }
+    async getLatestAtr(symbol, timeframe, period) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        if (candles.length < period + 1) {
+            return null;
+        }
+        const trueRanges = this.indicatorsService.calculateTrueRangesFromCandles(candles.map((candle) => ({
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+        })));
+        return this.indicatorsService.calculateAtr(trueRanges, period);
+    }
+    async getLatestAdx(symbol, timeframe, period) {
+        const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+        return this.indicatorsService.calculateAdxFromCandles(candles.map((candle) => ({
+            high: Number(candle.high),
+            low: Number(candle.low),
+            close: Number(candle.close),
+        })), period);
+    }
+    async getHistoricalCandles(symbol, timeframe) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                time: "ASC",
+            },
+        });
+    }
+    async getHistoricalCandlesUntil(symbol, timeframe, until) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+                timeframe,
+                time: (0, typeorm_3.LessThanOrEqual)(until),
+            },
+            order: {
+                time: "ASC",
+            },
+        });
+    }
+    async saveCandles(symbol, candles) {
+        let savedCount = 0;
+        for (const candle of candles) {
+            try {
+                await this.createCandle({
+                    symbol,
+                    timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
+                    time: candle.time.toISOString(),
+                    open: candle.open,
+                    high: candle.high,
+                    low: candle.low,
+                    close: candle.close,
+                    volume: candle.volume,
+                });
+                savedCount++;
+            }
+            catch (error) {
+                if (error instanceof common_1.ConflictException) {
+                    continue;
+                }
+                throw error;
+            }
+        }
+        return savedCount;
+    }
+    async buildFourHourCandles(symbol) {
+        const hourlyCandles = await this.getHistoricalCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR);
+        const fourHourCandles = [];
+        for (let i = 0; i + 3 < hourlyCandles.length; i += 4) {
+            const group = hourlyCandles.slice(i, i + 4);
+            const first = group[0];
+            const last = group[3];
+            fourHourCandles.push({
+                symbol,
+                timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+                time: last.time,
+                open: first.open,
+                high: Math.max(...group.map((candle) => Number(candle.high))).toString(),
+                low: Math.min(...group.map((candle) => Number(candle.low))).toString(),
+                close: last.close,
+                volume: group
+                    .reduce((sum, candle) => sum + Number(candle.volume), 0)
+                    .toString(),
+            });
+        }
+        await this.marketCandleRepository.delete({
+            symbol,
+            timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+        });
+        await this.marketCandleRepository.save(fourHourCandles);
+        return fourHourCandles.length;
     }
 };
 exports.MarketDataService = MarketDataService;

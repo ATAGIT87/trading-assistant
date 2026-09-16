@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { MarketDataService } from "./market-data.service";
+import { Timeframe } from "../assets/enums/timeframe.enum";
 
 describe("MarketDataService", () => {
   let service: MarketDataService;

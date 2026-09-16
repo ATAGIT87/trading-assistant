@@ -12,13 +12,21 @@ const signals_service_1 = require("./signals.service");
 const market_data_module_1 = require("../market-data/market-data.module");
 const signals_controller_1 = require("./signals.controller");
 const indicators_module_1 = require("../indicators/indicators.module");
+const market_data_token_1 = require("./market-data.token");
+const market_data_service_1 = require("../market-data/market-data.service");
 let SignalsModule = class SignalsModule {
 };
 exports.SignalsModule = SignalsModule;
 exports.SignalsModule = SignalsModule = __decorate([
     (0, common_1.Module)({
         imports: [market_data_module_1.MarketDataModule, indicators_module_1.IndicatorsModule],
-        providers: [signals_service_1.SignalsService],
+        providers: [
+            signals_service_1.SignalsService,
+            {
+                provide: market_data_token_1.MARKET_DATA_SERVICE,
+                useExisting: market_data_service_1.MarketDataService,
+            },
+        ],
         exports: [signals_service_1.SignalsService],
         controllers: [signals_controller_1.SignalsController],
     })
