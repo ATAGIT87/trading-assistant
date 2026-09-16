@@ -1,5 +1,5 @@
-import { BacktestingService } from './backtesting.service';
-import { Timeframe } from '../assets/enums/timeframe.enum';
+import { BacktestingService } from "./backtesting.service";
+import { Timeframe } from "../assets/enums/timeframe.enum";
 export declare class BacktestingController {
     private readonly backtestingService;
     constructor(backtestingService: BacktestingService);

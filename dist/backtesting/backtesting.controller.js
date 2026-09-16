@@ -27,15 +27,15 @@ let BacktestingController = class BacktestingController {
 };
 exports.BacktestingController = BacktestingController;
 __decorate([
-    (0, common_1.Get)(':symbol/:timeframe'),
-    __param(0, (0, common_1.Param)('symbol')),
-    __param(1, (0, common_1.Param)('timeframe')),
+    (0, common_1.Get)(":symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], BacktestingController.prototype, "runBacktest", null);
 exports.BacktestingController = BacktestingController = __decorate([
-    (0, common_1.Controller)('backtesting'),
+    (0, common_1.Controller)("backtesting"),
     __metadata("design:paramtypes", [backtesting_service_1.BacktestingService])
 ], BacktestingController);
 //# sourceMappingURL=backtesting.controller.js.map
