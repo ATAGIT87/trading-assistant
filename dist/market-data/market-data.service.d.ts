@@ -27,4 +27,11 @@ export declare class MarketDataService {
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
     getHistoricalCandles(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     getHistoricalCandlesUntil(symbol: string, timeframe: Timeframe, until: Date): Promise<MarketCandle[]>;
+    saveCandles(symbol: string, candles: {
+        time: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+    }[]): Promise<number>;
 }

@@ -14,13 +14,14 @@ const market_data_service_1 = require("./market-data.service");
 const market_data_controller_1 = require("./market-data.controller");
 const indicators_module_1 = require("../indicators/indicators.module");
 const market_data_seed_1 = require("./market-data.seed");
+const market_data_provider_service_1 = require("./market-data-provider.service");
 let MarketDataModule = class MarketDataModule {
 };
 exports.MarketDataModule = MarketDataModule;
 exports.MarketDataModule = MarketDataModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([market_candle_entity_1.MarketCandle]), indicators_module_1.IndicatorsModule],
-        providers: [market_data_service_1.MarketDataService, market_data_seed_1.MarketDataSeed],
+        providers: [market_data_service_1.MarketDataService, market_data_seed_1.MarketDataSeed, market_data_provider_service_1.MarketDataProviderService],
         exports: [market_data_service_1.MarketDataService],
         controllers: [market_data_controller_1.MarketDataController],
     })

@@ -1,3 +1,4 @@
+import { MarketDataProviderService } from "./market-data-provider.service";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketDataService } from "./market-data.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
@@ -5,7 +6,8 @@ import { MarketDataSeed } from "./market-data.seed";
 export declare class MarketDataController {
     private readonly marketDataService;
     private readonly marketDataSeed;
-    constructor(marketDataService: MarketDataService, marketDataSeed: MarketDataSeed);
+    private readonly marketDataProviderService;
+    constructor(marketDataService: MarketDataService, marketDataSeed: MarketDataSeed, marketDataProviderService: MarketDataProviderService);
     createCandle(dto: CreateMarketCandleDto): Promise<import("./entities/market-candle.entity").MarketCandle>;
     findAllCandles(): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
     findCandlesBySymbol(symbol: string): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
@@ -23,4 +25,17 @@ export declare class MarketDataController {
     getMarketCondition(symbol: string, timeframe: Timeframe, period: string): Promise<"NEUTRAL" | "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | null>;
     getLatestAtr(symbol: string, timeframe: Timeframe, period: string): Promise<number | null>;
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
+    getLatestMarketPrice(symbol: string): Promise<number>;
+    getRealCandles(symbol: string): Promise<{
+        time: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+    }[]>;
+    syncRealCandles(symbol: string): Promise<{
+        symbol: string;
+        received: number;
+        saved: number;
+    }>;
 }

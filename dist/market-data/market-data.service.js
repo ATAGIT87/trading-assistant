@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
+const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const indicators_service_1 = require("../indicators/indicators.service");
 const typeorm_3 = require("typeorm");
 let MarketDataService = class MarketDataService {
@@ -204,6 +205,31 @@ let MarketDataService = class MarketDataService {
                 time: "ASC",
             },
         });
+    }
+    async saveCandles(symbol, candles) {
+        let savedCount = 0;
+        for (const candle of candles) {
+            try {
+                await this.createCandle({
+                    symbol,
+                    timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
+                    time: candle.time.toISOString(),
+                    open: candle.open,
+                    high: candle.high,
+                    low: candle.low,
+                    close: candle.close,
+                    volume: 0,
+                });
+                savedCount++;
+            }
+            catch (error) {
+                if (error instanceof common_1.ConflictException) {
+                    continue;
+                }
+                throw error;
+            }
+        }
+        return savedCount;
     }
 };
 exports.MarketDataService = MarketDataService;

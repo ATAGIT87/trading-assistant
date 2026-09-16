@@ -316,4 +316,44 @@ export class MarketDataService {
       },
     });
   }
+
+  async saveCandles(
+  symbol: string,
+  candles: {
+    time: Date;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+  }[],
+): Promise<number> {
+  let savedCount = 0;
+
+  for (const candle of candles) {
+    try {
+      await this.createCandle({
+        symbol,
+        timeframe: Timeframe.ONE_HOUR,
+        time: candle.time.toISOString(),
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+        volume: 0,
+      });
+
+      savedCount++;
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  return savedCount;
+}
+
+
 }

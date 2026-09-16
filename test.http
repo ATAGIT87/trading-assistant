@@ -120,3 +120,9 @@ GET http://localhost:3000/market-data/candles/BTCUSD/1h/adx/3
 
 ### Run backtesting for BTCUSD 1h
 GET http://localhost:3000/backtesting/BTCUSD/1h
+
+### Get latest market price for BTCUSD
+GET http://localhost:3000/market-data/real-candles/BTCUSD
+
+### Sync real candles for BTCUSD
+POST http://localhost:3000/market-data/sync/BTCUSD

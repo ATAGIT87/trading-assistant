@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Get, Param } from "@nestjs/common";
+import { MarketDataProviderService } from "./market-data-provider.service";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketDataService } from "./market-data.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
@@ -10,6 +11,7 @@ export class MarketDataController {
   constructor(
     private readonly marketDataService: MarketDataService,
     private readonly marketDataSeed: MarketDataSeed,
+    private readonly marketDataProviderService: MarketDataProviderService,
   ) {}
 
   @Post("candles")
@@ -171,4 +173,44 @@ export class MarketDataController {
   ) {
     return this.marketDataService.getLatestAdx(symbol, timeframe, period);
   }
+
+  @Get("price/:symbol")
+getLatestMarketPrice(
+  @Param("symbol") symbol: string,
+) {
+  return this.marketDataProviderService.getLatestPrice(symbol);
+}
+
+@Get("real-candles/:symbol")
+getRealCandles(
+  @Param("symbol") symbol: string,
+) {
+  return this.marketDataProviderService.getHourlyCandles(
+    symbol,
+    2,
+  );
+}
+@Post("sync/:symbol")
+async syncRealCandles(
+  @Param("symbol") symbol: string,
+) {
+  const candles =
+    await this.marketDataProviderService.getHourlyCandles(
+      symbol,
+      1,
+    );
+
+  const savedCount =
+    await this.marketDataService.saveCandles(
+      symbol,
+      candles,
+    );
+
+  return {
+    symbol,
+    received: candles.length,
+    saved: savedCount,
+  };
+}
+
 }
