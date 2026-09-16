@@ -13,11 +13,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketDataSeed = void 0;
+const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
-const common_1 = require("@nestjs/common");
 let MarketDataSeed = class MarketDataSeed {
     marketCandleRepository;
     constructor(marketCandleRepository) {
@@ -29,7 +29,7 @@ let MarketDataSeed = class MarketDataSeed {
     async seed() {
         const candles = [];
         let price = 115000;
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 120; i++) {
             candles.push({
                 symbol: "BTCUSD",
                 timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
@@ -42,11 +42,35 @@ let MarketDataSeed = class MarketDataSeed {
             });
             price += i < 50 ? 500 : -500;
         }
+        const fourHourCandles = [];
+        for (let i = 0; i < candles.length; i += 4) {
+            const group = candles.slice(i, i + 4);
+            if (group.length < 4) {
+                continue;
+            }
+            fourHourCandles.push({
+                symbol: "BTCUSD",
+                timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+                time: group[0].time,
+                open: group[0].open,
+                high: Math.max(...group.map((candle) => Number(candle.high))).toString(),
+                low: Math.min(...group.map((candle) => Number(candle.low))).toString(),
+                close: group[group.length - 1].close,
+                volume: group
+                    .reduce((sum, candle) => sum + Number(candle.volume), 0)
+                    .toString(),
+            });
+        }
         await this.marketCandleRepository.delete({
             symbol: "BTCUSD",
             timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
         });
+        await this.marketCandleRepository.delete({
+            symbol: "BTCUSD",
+            timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+        });
         await this.marketCandleRepository.save(candles);
+        await this.marketCandleRepository.save(fourHourCandles);
     }
 };
 exports.MarketDataSeed = MarketDataSeed;

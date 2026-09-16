@@ -435,96 +435,83 @@ export class IndicatorsService {
     return adx;
   }
   calculateAdxFromCandles(
-  candles: {
-    high: number;
-    low: number;
-    close: number;
-  }[],
-  period: number,
-): number | null {
-  if (period <= 0 || candles.length < period * 2) {
-    return null;
-  }
+    candles: {
+      high: number;
+      low: number;
+      close: number;
+    }[],
+    period: number,
+  ): number | null {
+    if (period <= 0 || candles.length < period * 2) {
+      return null;
+    }
 
-  const trueRanges = this.calculateTrueRangesFromCandles(candles);
+    const trueRanges = this.calculateTrueRangesFromCandles(candles);
 
-  const directionalMovements =
-    this.calculateDirectionalMovements(candles);
+    const directionalMovements = this.calculateDirectionalMovements(candles);
 
-  if (
-    trueRanges.length < period ||
-    directionalMovements.plusDm.length < period ||
-    directionalMovements.minusDm.length < period
-  ) {
-    return null;
-  }
+    if (
+      trueRanges.length < period ||
+      directionalMovements.plusDm.length < period ||
+      directionalMovements.minusDm.length < period
+    ) {
+      return null;
+    }
 
-  const smoothedTrueRanges: number[] = [];
-  const smoothedPlusDm: number[] = [];
-  const smoothedMinusDm: number[] = [];
+    const smoothedTrueRanges: number[] = [];
+    const smoothedPlusDm: number[] = [];
+    const smoothedMinusDm: number[] = [];
 
-  let trSum = 0;
-  let plusDmSum = 0;
-  let minusDmSum = 0;
+    let trSum = 0;
+    let plusDmSum = 0;
+    let minusDmSum = 0;
 
-  for (let i = 0; i < period; i++) {
-    trSum += trueRanges[i];
-    plusDmSum += directionalMovements.plusDm[i];
-    minusDmSum += directionalMovements.minusDm[i];
-  }
-
-  smoothedTrueRanges.push(trSum);
-  smoothedPlusDm.push(plusDmSum);
-  smoothedMinusDm.push(minusDmSum);
-
-  for (let i = period; i < trueRanges.length; i++) {
-    trSum =
-      trSum -
-      trSum / period +
-      trueRanges[i];
-
-    plusDmSum =
-      plusDmSum -
-      plusDmSum / period +
-      directionalMovements.plusDm[i];
-
-    minusDmSum =
-      minusDmSum -
-      minusDmSum / period +
-      directionalMovements.minusDm[i];
+    for (let i = 0; i < period; i++) {
+      trSum += trueRanges[i];
+      plusDmSum += directionalMovements.plusDm[i];
+      minusDmSum += directionalMovements.minusDm[i];
+    }
 
     smoothedTrueRanges.push(trSum);
     smoothedPlusDm.push(plusDmSum);
     smoothedMinusDm.push(minusDmSum);
-  }
 
-  const dxValues: number[] = [];
+    for (let i = period; i < trueRanges.length; i++) {
+      trSum = trSum - trSum / period + trueRanges[i];
 
-  for (let i = 0; i < smoothedTrueRanges.length; i++) {
-    const tr = smoothedTrueRanges[i];
+      plusDmSum =
+        plusDmSum - plusDmSum / period + directionalMovements.plusDm[i];
 
-    if (tr === 0) {
-      continue;
+      minusDmSum =
+        minusDmSum - minusDmSum / period + directionalMovements.minusDm[i];
+
+      smoothedTrueRanges.push(trSum);
+      smoothedPlusDm.push(plusDmSum);
+      smoothedMinusDm.push(minusDmSum);
     }
 
-    const plusDi =
-      (smoothedPlusDm[i] / tr) * 100;
+    const dxValues: number[] = [];
 
-    const minusDi =
-      (smoothedMinusDm[i] / tr) * 100;
+    for (let i = 0; i < smoothedTrueRanges.length; i++) {
+      const tr = smoothedTrueRanges[i];
 
-    const dx = this.calculateDirectionalIndex(
-      plusDi,
-      minusDi,
-    );
+      if (tr === 0) {
+        continue;
+      }
 
-    if (dx !== null) {
-      dxValues.push(dx);
+      const plusDi = (smoothedPlusDm[i] / tr) * 100;
+
+      const minusDi = (smoothedMinusDm[i] / tr) * 100;
+
+      const dx = this.calculateDirectionalIndex(plusDi, minusDi);
+
+      if (dx !== null) {
+        dxValues.push(dx);
+      }
     }
-  }
 
-  return this.calculateAdx(dxValues, period);
-}
+    return this.calculateAdx(dxValues, period);
+  }
 
   calculateAdxScore(adx: number): number {
     if (adx >= 25) {

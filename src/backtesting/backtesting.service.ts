@@ -53,190 +53,181 @@ export class BacktestingService {
 
     return null;
   }
-  async run(
-  symbol: string,
-  timeframe: Timeframe,
-): Promise<BacktestResult> {
-  const candles = await this.marketDataService.getHistoricalCandles(
-    symbol,
-    timeframe,
-  );
+  async run(symbol: string, timeframe: Timeframe): Promise<BacktestResult> {
+    const candles = await this.marketDataService.getHistoricalCandles(
+      symbol,
+      timeframe,
+    );
 
-  console.log('CANDLES:', candles.length);
+    console.log("CANDLES:", candles.length);
 
-  let totalTrades = 0;
-  let winningTrades = 0;
-  let losingTrades = 0;
+    let totalTrades = 0;
+    let winningTrades = 0;
+    let losingTrades = 0;
 
-  const period = 14;
+    const period = 14;
 
-  let i = period * 2 - 1;
+    let i = period * 2 - 1;
 
-  while (i < candles.length) {
-    const historicalCandles =
-      await this.marketDataService.getHistoricalCandlesUntil(
-        symbol,
-        timeframe,
-        candles[i].time,
-      );
-
-    const signal =
-      await this.signalsService.generateSignalFromCandles(
+    while (i < candles.length) {
+      const historicalCandles =
+        await this.marketDataService.getHistoricalCandlesUntil(
+          symbol,
+          timeframe,
+          candles[i].time,
+        );
+      if (
+        historicalCandles.length === 0 ||
+        historicalCandles[historicalCandles.length - 1].time.getTime() !==
+          candles[i].time.getTime()
+      ) {
+        throw new Error(
+          `Look-ahead detected at ${candles[i].time.toISOString()}`,
+        );
+      }
+      const signal = await this.signalsService.generateSignalFromCandles(
         symbol,
         timeframe,
         historicalCandles,
       );
 
-    console.log(
-      candles[i].time,
-      signal?.action,
-      signal?.confidence,
-      signal?.trend,
-      signal?.rsi,
-      signal?.adx,
-      signal?.marketCondition,
-    );
+      console.log(
+        candles[i].time,
+        signal?.action,
+        signal?.confidence,
+        signal?.trend,
+        signal?.rsi,
+        signal?.adx,
+        signal?.marketCondition,
+      );
 
-    if (
-      signal?.action !== 'BUY' &&
-      signal?.action !== 'SELL'
-    ) {
-      i++;
-      continue;
+      if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+        i++;
+        continue;
+      }
+
+      totalTrades++;
+
+      const futureCandles = candles.slice(i + 1);
+
+      const trade = this.findTradeOutcome(signal, futureCandles);
+
+      console.log(
+        "TRADE:",
+        candles[i].time,
+        signal.action,
+        "Entry:",
+        signal.entryPrice,
+        "SL:",
+        signal.stopLoss,
+        "TP:",
+        signal.takeProfit,
+        "Result:",
+        trade.result,
+      );
+
+      if (trade.result === true) {
+        winningTrades++;
+      }
+
+      if (trade.result === false) {
+        losingTrades++;
+      }
+
+      if (trade.exitIndex === null) {
+        break;
+      }
+
+      i = i + trade.exitIndex + 2;
     }
 
-    totalTrades++;
+    const completedTrades = winningTrades + losingTrades;
 
-    const futureCandles = candles.slice(i + 1);
-
-    const trade = this.findTradeOutcome(
-      signal,
-      futureCandles,
-    );
-
-    console.log(
-      'TRADE:',
-      candles[i].time,
-      signal.action,
-      'Entry:',
-      signal.entryPrice,
-      'SL:',
-      signal.stopLoss,
-      'TP:',
-      signal.takeProfit,
-      'Result:',
-      trade.result,
-    );
-
-    if (trade.result === true) {
-      winningTrades++;
-    }
-
-    if (trade.result === false) {
-      losingTrades++;
-    }
-
-    if (trade.exitIndex === null) {
-      break;
-    }
-
-    i = i + trade.exitIndex + 2;
+    return {
+      totalTrades,
+      winningTrades,
+      losingTrades,
+      winRate:
+        completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+    };
   }
 
-  const completedTrades =
-    winningTrades + losingTrades;
+  private findTradeOutcome(
+    signal: TradingSignal,
+    futureCandles: MarketCandle[],
+  ): {
+    result: boolean | null;
+    exitIndex: number | null;
+  } {
+    if (signal.stopLoss === null || signal.takeProfit === null) {
+      return {
+        result: null,
+        exitIndex: null,
+      };
+    }
 
-  return {
-    totalTrades,
-    winningTrades,
-    losingTrades,
-    winRate:
-      completedTrades === 0
-        ? 0
-        : (winningTrades / completedTrades) * 100,
-  };
-}
+    for (let i = 0; i < futureCandles.length; i++) {
+      const candle = futureCandles[i];
 
-private findTradeOutcome(
-  signal: TradingSignal,
-  futureCandles: MarketCandle[],
-): {
-  result: boolean | null;
-  exitIndex: number | null;
-} {
-  if (
-    signal.stopLoss === null ||
-    signal.takeProfit === null
-  ) {
+      const high = Number(candle.high);
+      const low = Number(candle.low);
+
+      if (signal.action === "BUY") {
+        const hitStopLoss = low <= signal.stopLoss;
+        const hitTakeProfit = high >= signal.takeProfit;
+
+        if (hitStopLoss && hitTakeProfit) {
+          return {
+            result: false,
+            exitIndex: i,
+          };
+        }
+
+        if (hitStopLoss) {
+          return {
+            result: false,
+            exitIndex: i,
+          };
+        }
+
+        if (hitTakeProfit) {
+          return {
+            result: true,
+            exitIndex: i,
+          };
+        }
+      }
+
+      if (signal.action === "SELL") {
+        const hitStopLoss = high >= signal.stopLoss;
+        const hitTakeProfit = low <= signal.takeProfit;
+
+        if (hitStopLoss && hitTakeProfit) {
+          return {
+            result: false,
+            exitIndex: i,
+          };
+        }
+
+        if (hitStopLoss) {
+          return {
+            result: false,
+            exitIndex: i,
+          };
+        }
+
+        if (hitTakeProfit) {
+          return {
+            result: true,
+            exitIndex: i,
+          };
+        }
+      }
+    }
+
     return {
       result: null,
       exitIndex: null,
     };
   }
-
-  for (let i = 0; i < futureCandles.length; i++) {
-    const candle = futureCandles[i];
-
-    const high = Number(candle.high);
-    const low = Number(candle.low);
-
-    if (signal.action === 'BUY') {
-      const hitStopLoss = low <= signal.stopLoss;
-      const hitTakeProfit = high >= signal.takeProfit;
-
-      if (hitStopLoss && hitTakeProfit) {
-        return {
-          result: false,
-          exitIndex: i,
-        };
-      }
-
-      if (hitStopLoss) {
-        return {
-          result: false,
-          exitIndex: i,
-        };
-      }
-
-      if (hitTakeProfit) {
-        return {
-          result: true,
-          exitIndex: i,
-        };
-      }
-    }
-
-    if (signal.action === 'SELL') {
-      const hitStopLoss = high >= signal.stopLoss;
-      const hitTakeProfit = low <= signal.takeProfit;
-
-      if (hitStopLoss && hitTakeProfit) {
-        return {
-          result: false,
-          exitIndex: i,
-        };
-      }
-
-      if (hitStopLoss) {
-        return {
-          result: false,
-          exitIndex: i,
-        };
-      }
-
-      if (hitTakeProfit) {
-        return {
-          result: true,
-          exitIndex: i,
-        };
-      }
-    }
-  }
-
-  return {
-    result: null,
-    exitIndex: null,
-  };
-}
-
 }

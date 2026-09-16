@@ -282,6 +282,64 @@ export class SignalsService {
 
     return this.marketDataService.getTrend(symbol, higherTimeframe, period);
   }
+
+  private async getHigherTimeframeTrendFromCandles(
+    symbol: string,
+    timeframe: Timeframe,
+    until: Date,
+  ): Promise<TradingSignal["trend"] | null> {
+    let higherTimeframe: Timeframe | null = null;
+
+    if (timeframe === Timeframe.FIFTEEN_MINUTES) {
+      higherTimeframe = Timeframe.ONE_HOUR;
+    } else if (timeframe === Timeframe.ONE_HOUR) {
+      higherTimeframe = Timeframe.FOUR_HOURS;
+    } else if (timeframe === Timeframe.FOUR_HOURS) {
+      higherTimeframe = Timeframe.ONE_DAY;
+    }
+
+    if (higherTimeframe === null) {
+      return null;
+    }
+
+    const higherTimeframeCandles =
+      await this.marketDataService.getHistoricalCandlesUntil(
+        symbol,
+        higherTimeframe,
+        until,
+      );
+
+    if (higherTimeframeCandles.length < 28) {
+      return null;
+    }
+
+    const latestClose = Number(
+      higherTimeframeCandles[higherTimeframeCandles.length - 1].close,
+    );
+
+    const closes = higherTimeframeCandles.map((candle) => Number(candle.close));
+
+    const sma = this.indicatorsService.calculateSma(closes, 14);
+
+    const ema = this.indicatorsService.calculateEma(closes, 14);
+
+    if (sma === null || ema === null) {
+      return null;
+    }
+
+    const priceVsSma = this.indicatorsService.comparePriceToAverage(
+      latestClose,
+      sma,
+    );
+
+    const priceVsEma = this.indicatorsService.comparePriceToAverage(
+      latestClose,
+      ema,
+    );
+
+    return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+  }
+
   async generateSignalFromCandles(
     symbol: string,
     timeframe: Timeframe,
@@ -296,12 +354,14 @@ export class SignalsService {
       return null;
     }
 
-    const entryPrice = Number(candles[candles.length - 1].close);
+    const latestCandle = candles[candles.length - 1];
 
-    const higherTimeframeTrend = await this.getHigherTimeframeTrend(
+    const entryPrice = Number(latestCandle.close);
+
+    const higherTimeframeTrend = await this.getHigherTimeframeTrendFromCandles(
       symbol,
       timeframe,
-      14,
+      latestCandle.time,
     );
 
     const {

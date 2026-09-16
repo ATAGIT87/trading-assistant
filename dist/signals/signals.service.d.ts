@@ -14,5 +14,6 @@ export declare class SignalsService {
     calculateStopLoss(action: "BUY" | "SELL", entryPrice: number, atr: number): number;
     calculateTakeProfit(action: "BUY" | "SELL", entryPrice: number, stopLoss: number, riskRewardRatio: number): number;
     getHigherTimeframeTrend(symbol: string, timeframe: Timeframe, period: number): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null>;
+    private getHigherTimeframeTrendFromCandles;
     generateSignalFromCandles(symbol: string, timeframe: Timeframe, candles: MarketCandle[]): Promise<TradingSignal | null>;
 }

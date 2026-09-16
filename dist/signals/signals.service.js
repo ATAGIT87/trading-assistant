@@ -148,13 +148,43 @@ let SignalsService = class SignalsService {
         }
         return this.marketDataService.getTrend(symbol, higherTimeframe, period);
     }
+    async getHigherTimeframeTrendFromCandles(symbol, timeframe, until) {
+        let higherTimeframe = null;
+        if (timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES) {
+            higherTimeframe = timeframe_enum_1.Timeframe.ONE_HOUR;
+        }
+        else if (timeframe === timeframe_enum_1.Timeframe.ONE_HOUR) {
+            higherTimeframe = timeframe_enum_1.Timeframe.FOUR_HOURS;
+        }
+        else if (timeframe === timeframe_enum_1.Timeframe.FOUR_HOURS) {
+            higherTimeframe = timeframe_enum_1.Timeframe.ONE_DAY;
+        }
+        if (higherTimeframe === null) {
+            return null;
+        }
+        const higherTimeframeCandles = await this.marketDataService.getHistoricalCandlesUntil(symbol, higherTimeframe, until);
+        if (higherTimeframeCandles.length < 28) {
+            return null;
+        }
+        const latestClose = Number(higherTimeframeCandles[higherTimeframeCandles.length - 1].close);
+        const closes = higherTimeframeCandles.map((candle) => Number(candle.close));
+        const sma = this.indicatorsService.calculateSma(closes, 14);
+        const ema = this.indicatorsService.calculateEma(closes, 14);
+        if (sma === null || ema === null) {
+            return null;
+        }
+        const priceVsSma = this.indicatorsService.comparePriceToAverage(latestClose, sma);
+        const priceVsEma = this.indicatorsService.comparePriceToAverage(latestClose, ema);
+        return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+    }
     async generateSignalFromCandles(symbol, timeframe, candles) {
         const indicators = this.indicatorsService.calculateIndicatorsFromCandles(candles, 14);
         if (indicators === null) {
             return null;
         }
-        const entryPrice = Number(candles[candles.length - 1].close);
-        const higherTimeframeTrend = await this.getHigherTimeframeTrend(symbol, timeframe, 14);
+        const latestCandle = candles[candles.length - 1];
+        const entryPrice = Number(latestCandle.close);
+        const higherTimeframeTrend = await this.getHigherTimeframeTrendFromCandles(symbol, timeframe, latestCandle.time);
         const { trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition, atr, adx, } = indicators;
         return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
     }

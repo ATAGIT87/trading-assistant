@@ -291,18 +291,11 @@ let IndicatorsService = class IndicatorsService {
         smoothedPlusDm.push(plusDmSum);
         smoothedMinusDm.push(minusDmSum);
         for (let i = period; i < trueRanges.length; i++) {
-            trSum =
-                trSum -
-                    trSum / period +
-                    trueRanges[i];
+            trSum = trSum - trSum / period + trueRanges[i];
             plusDmSum =
-                plusDmSum -
-                    plusDmSum / period +
-                    directionalMovements.plusDm[i];
+                plusDmSum - plusDmSum / period + directionalMovements.plusDm[i];
             minusDmSum =
-                minusDmSum -
-                    minusDmSum / period +
-                    directionalMovements.minusDm[i];
+                minusDmSum - minusDmSum / period + directionalMovements.minusDm[i];
             smoothedTrueRanges.push(trSum);
             smoothedPlusDm.push(plusDmSum);
             smoothedMinusDm.push(minusDmSum);
