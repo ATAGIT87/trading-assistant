@@ -7,16 +7,13 @@ interface CoinGeckoMarketChartResponse {
 
 @Injectable()
 export class MarketDataProviderService {
-  private readonly baseUrl =
-    "https://api.coingecko.com/api/v3";
+  private readonly baseUrl = "https://api.coingecko.com/api/v3";
 
   async getLatestPrice(symbol: string): Promise<number> {
     const normalizedSymbol = symbol.toUpperCase();
 
     if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(
-        `Unsupported symbol: ${normalizedSymbol}`,
-      );
+      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
     }
 
     const response = await fetch(
@@ -24,9 +21,7 @@ export class MarketDataProviderService {
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Market data request failed: ${response.status}`,
-      );
+      throw new Error(`Market data request failed: ${response.status}`);
     }
 
     const data = (await response.json()) as {
@@ -38,9 +33,7 @@ export class MarketDataProviderService {
     const price = data.bitcoin?.usd;
 
     if (typeof price !== "number") {
-      throw new Error(
-        "Invalid BTC price returned by market data provider",
-      );
+      throw new Error("Invalid BTC price returned by market data provider");
     }
 
     return price;
@@ -59,9 +52,7 @@ export class MarketDataProviderService {
     const normalizedSymbol = symbol.toUpperCase();
 
     if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(
-        `Unsupported symbol: ${normalizedSymbol}`,
-      );
+      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
     }
 
     const response = await fetch(
@@ -69,13 +60,10 @@ export class MarketDataProviderService {
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Market data request failed: ${response.status}`,
-      );
+      throw new Error(`Market data request failed: ${response.status}`);
     }
 
-    const data =
-      (await response.json()) as CoinGeckoMarketChartResponse;
+    const data = (await response.json()) as CoinGeckoMarketChartResponse;
 
     return data.prices.map(([timestamp, price], index) => ({
       time: new Date(timestamp),
@@ -84,56 +72,142 @@ export class MarketDataProviderService {
     }));
   }
 
-  async getHourlyCandles(
-  symbol: string,
-  days = 30,
-): Promise<
-  {
-    time: Date;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-  }[]
-> {
-  const normalizedSymbol = symbol.toUpperCase();
+  async getRealCandles(
+    symbol: string,
+    days = 30,
+  ): Promise<
+    {
+      time: Date;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+    }[]
+  > {
+    const normalizedSymbol = symbol.toUpperCase();
 
-  if (normalizedSymbol !== "BTCUSD") {
-    throw new Error(
-      `Unsupported symbol: ${normalizedSymbol}`,
-    );
-  }
+    if (normalizedSymbol !== "BTCUSD") {
+      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+    }
 
-  const response = await fetch(
-  `${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=1`,
-);
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-
-    console.error(
-      "CoinGecko OHLC error:",
-      response.status,
-      errorBody,
+    const response = await fetch(
+      `${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=1`,
     );
 
-    throw new Error(
-      `Market OHLC request failed: ${response.status} ${errorBody}`,
-    );
-  }
+    if (!response.ok) {
+      const errorBody = await response.text();
 
-  const data =
-    (await response.json()) as number[][];
+      console.error("CoinGecko OHLC error:", response.status, errorBody);
 
-  return data.map(
-    ([timestamp, open, high, low, close]) => ({
+      throw new Error(
+        `Market OHLC request failed: ${response.status} ${errorBody}`,
+      );
+    }
+
+    const data = (await response.json()) as number[][];
+
+    return data.map(([timestamp, open, high, low, close]) => ({
       time: new Date(timestamp),
       open,
       high,
       low,
       close,
-    }),
-  );
-}
+    }));
+  }
+  async getHourlyCandles(
+    symbol: string,
+    days = 1,
+  ): Promise<
+    {
+      time: Date;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+    }[]
+  > {
+    const candles = await this.getRealCandles(symbol, days);
 
+    const hourlyCandles = new Map<
+      string,
+      {
+        time: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+      }
+    >();
+
+    for (const candle of candles) {
+      const hour = new Date(candle.time);
+      hour.setUTCMinutes(0, 0, 0);
+
+      const key = hour.toISOString();
+
+      const existing = hourlyCandles.get(key);
+
+      if (!existing) {
+        hourlyCandles.set(key, {
+          time: hour,
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+        });
+
+        continue;
+      }
+
+      existing.high = Math.max(existing.high, candle.high);
+      existing.low = Math.min(existing.low, candle.low);
+      existing.close = candle.close;
+    }
+
+    return Array.from(hourlyCandles.values()).sort(
+      (a, b) => a.time.getTime() - b.time.getTime(),
+    );
+  }
+  async getBinanceHourlyCandles(
+    symbol: string,
+    limit = 1000,
+  ): Promise<
+    {
+      time: Date;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume: number;
+    }[]
+  > {
+    const normalizedSymbol = symbol.toUpperCase();
+
+    if (normalizedSymbol !== "BTCUSD") {
+      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+    }
+
+    const response = await fetch(
+      `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=${limit}`,
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+
+      throw new Error(
+        `Binance market data request failed: ${response.status} ${errorBody}`,
+      );
+    }
+
+    const data = (await response.json()) as unknown[][];
+
+    return data.map((candle) => ({
+      time: new Date(Number(candle[0])),
+      open: Number(candle[1]),
+      high: Number(candle[2]),
+      low: Number(candle[3]),
+      close: Number(candle[4]),
+      volume: Number(candle[5]),
+    }));
+  }
 }

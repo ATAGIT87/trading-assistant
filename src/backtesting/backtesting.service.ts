@@ -5,11 +5,27 @@ import { Timeframe } from "../assets/enums/timeframe.enum";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { TradingSignal } from "../signals/signal.types";
 
+export interface BacktestTrade {
+  time: Date;
+  action: "BUY" | "SELL";
+  confidence: number;
+  entryPrice: number;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  trend: TradingSignal["trend"];
+  rsi: number;
+  adx: number;
+  marketCondition: TradingSignal["marketCondition"];
+  result: "WIN" | "LOSS" | "OPEN";
+  exitTime: Date | null;
+}
+
 export interface BacktestResult {
   totalTrades: number;
   winningTrades: number;
   losingTrades: number;
   winRate: number;
+  trades: BacktestTrade[];
 }
 
 @Injectable()
@@ -18,52 +34,24 @@ export class BacktestingService {
     private readonly marketDataService: MarketDataService,
     private readonly signalsService: SignalsService,
   ) {}
-  isTradeWinner(
-    signal: TradingSignal,
-    futureCandles: MarketCandle[],
-  ): boolean | null {
-    if (signal.stopLoss === null || signal.takeProfit === null) {
-      return null;
-    }
 
-    for (const candle of futureCandles) {
-      const high = Number(candle.high);
-      const low = Number(candle.low);
-
-      if (signal.action === "BUY") {
-        if (low <= signal.stopLoss) {
-          return false;
-        }
-
-        if (high >= signal.takeProfit) {
-          return true;
-        }
-      }
-
-      if (signal.action === "SELL") {
-        if (high >= signal.stopLoss) {
-          return false;
-        }
-
-        if (low <= signal.takeProfit) {
-          return true;
-        }
-      }
-    }
-
-    return null;
-  }
-  async run(symbol: string, timeframe: Timeframe): Promise<BacktestResult> {
-    const candles = await this.marketDataService.getHistoricalCandles(
-      symbol,
-      timeframe,
-    );
+  async run(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<BacktestResult> {
+    const candles =
+      await this.marketDataService.getHistoricalCandles(
+        symbol,
+        timeframe,
+      );
 
     console.log("CANDLES:", candles.length);
 
     let totalTrades = 0;
     let winningTrades = 0;
     let losingTrades = 0;
+
+    const trades: BacktestTrade[] = [];
 
     const period = 14;
 
@@ -76,32 +64,31 @@ export class BacktestingService {
           timeframe,
           candles[i].time,
         );
+
       if (
         historicalCandles.length === 0 ||
-        historicalCandles[historicalCandles.length - 1].time.getTime() !==
-          candles[i].time.getTime()
+        historicalCandles[
+          historicalCandles.length - 1
+        ].time.getTime() !== candles[i].time.getTime()
       ) {
         throw new Error(
-          `Look-ahead detected at ${candles[i].time.toISOString()}`,
+          `Look-ahead detected at ${candles[
+            i
+          ].time.toISOString()}`,
         );
       }
-      const signal = await this.signalsService.generateSignalFromCandles(
-        symbol,
-        timeframe,
-        historicalCandles,
-      );
 
-      console.log(
-        candles[i].time,
-        signal?.action,
-        signal?.confidence,
-        signal?.trend,
-        signal?.rsi,
-        signal?.adx,
-        signal?.marketCondition,
-      );
+      const signal =
+        await this.signalsService.generateSignalFromCandles(
+          symbol,
+          timeframe,
+          historicalCandles,
+        );
 
-      if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+      if (
+        signal?.action !== "BUY" &&
+        signal?.action !== "SELL"
+      ) {
         i++;
         continue;
       }
@@ -110,21 +97,18 @@ export class BacktestingService {
 
       const futureCandles = candles.slice(i + 1);
 
-      const trade = this.findTradeOutcome(signal, futureCandles);
+      const trade =
+        this.findTradeOutcome(
+          signal,
+          futureCandles,
+        );
 
-      console.log(
-        "TRADE:",
-        candles[i].time,
-        signal.action,
-        "Entry:",
-        signal.entryPrice,
-        "SL:",
-        signal.stopLoss,
-        "TP:",
-        signal.takeProfit,
-        "Result:",
-        trade.result,
-      );
+      const result =
+        trade.result === true
+          ? "WIN"
+          : trade.result === false
+            ? "LOSS"
+            : "OPEN";
 
       if (trade.result === true) {
         winningTrades++;
@@ -134,6 +118,26 @@ export class BacktestingService {
         losingTrades++;
       }
 
+      trades.push({
+        time: candles[i].time,
+        action: signal.action,
+        confidence: signal.confidence,
+        entryPrice: signal.entryPrice,
+        stopLoss: signal.stopLoss,
+        takeProfit: signal.takeProfit,
+        trend: signal.trend,
+        rsi: signal.rsi,
+        adx: signal.adx,
+        marketCondition: signal.marketCondition,
+        result,
+        exitTime:
+          trade.exitIndex === null
+            ? null
+            : futureCandles[
+                trade.exitIndex
+              ]?.time ?? null,
+      });
+
       if (trade.exitIndex === null) {
         break;
       }
@@ -141,14 +145,18 @@ export class BacktestingService {
       i = i + trade.exitIndex + 2;
     }
 
-    const completedTrades = winningTrades + losingTrades;
+    const completedTrades =
+      winningTrades + losingTrades;
 
     return {
       totalTrades,
       winningTrades,
       losingTrades,
       winRate:
-        completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+        completedTrades === 0
+          ? 0
+          : (winningTrades / completedTrades) * 100,
+      trades,
     };
   }
 
@@ -159,22 +167,32 @@ export class BacktestingService {
     result: boolean | null;
     exitIndex: number | null;
   } {
-    if (signal.stopLoss === null || signal.takeProfit === null) {
+    if (
+      signal.stopLoss === null ||
+      signal.takeProfit === null
+    ) {
       return {
         result: null,
         exitIndex: null,
       };
     }
 
-    for (let i = 0; i < futureCandles.length; i++) {
+    for (
+      let i = 0;
+      i < futureCandles.length;
+      i++
+    ) {
       const candle = futureCandles[i];
 
       const high = Number(candle.high);
       const low = Number(candle.low);
 
       if (signal.action === "BUY") {
-        const hitStopLoss = low <= signal.stopLoss;
-        const hitTakeProfit = high >= signal.takeProfit;
+        const hitStopLoss =
+          low <= signal.stopLoss;
+
+        const hitTakeProfit =
+          high >= signal.takeProfit;
 
         if (hitStopLoss && hitTakeProfit) {
           return {
@@ -199,8 +217,11 @@ export class BacktestingService {
       }
 
       if (signal.action === "SELL") {
-        const hitStopLoss = high >= signal.stopLoss;
-        const hitTakeProfit = low <= signal.takeProfit;
+        const hitStopLoss =
+          high >= signal.stopLoss;
+
+        const hitTakeProfit =
+          low <= signal.takeProfit;
 
         if (hitStopLoss && hitTakeProfit) {
           return {

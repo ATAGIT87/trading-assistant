@@ -33,5 +33,7 @@ export declare class MarketDataService {
         high: number;
         low: number;
         close: number;
+        volume: number;
     }[]): Promise<number>;
+    buildFourHourCandles(symbol: string): Promise<number>;
 }

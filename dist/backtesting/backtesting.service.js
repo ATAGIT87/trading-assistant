@@ -20,63 +20,57 @@ let BacktestingService = class BacktestingService {
         this.marketDataService = marketDataService;
         this.signalsService = signalsService;
     }
-    isTradeWinner(signal, futureCandles) {
-        if (signal.stopLoss === null || signal.takeProfit === null) {
-            return null;
-        }
-        for (const candle of futureCandles) {
-            const high = Number(candle.high);
-            const low = Number(candle.low);
-            if (signal.action === "BUY") {
-                if (low <= signal.stopLoss) {
-                    return false;
-                }
-                if (high >= signal.takeProfit) {
-                    return true;
-                }
-            }
-            if (signal.action === "SELL") {
-                if (high >= signal.stopLoss) {
-                    return false;
-                }
-                if (low <= signal.takeProfit) {
-                    return true;
-                }
-            }
-        }
-        return null;
-    }
     async run(symbol, timeframe) {
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
         console.log("CANDLES:", candles.length);
         let totalTrades = 0;
         let winningTrades = 0;
         let losingTrades = 0;
+        const trades = [];
         const period = 14;
         let i = period * 2 - 1;
         while (i < candles.length) {
             const historicalCandles = await this.marketDataService.getHistoricalCandlesUntil(symbol, timeframe, candles[i].time);
             if (historicalCandles.length === 0 ||
-                historicalCandles[historicalCandles.length - 1].time.getTime() !==
-                    candles[i].time.getTime()) {
+                historicalCandles[historicalCandles.length - 1].time.getTime() !== candles[i].time.getTime()) {
                 throw new Error(`Look-ahead detected at ${candles[i].time.toISOString()}`);
             }
             const signal = await this.signalsService.generateSignalFromCandles(symbol, timeframe, historicalCandles);
-            console.log(candles[i].time, signal?.action, signal?.confidence, signal?.trend, signal?.rsi, signal?.adx, signal?.marketCondition);
-            if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+            if (signal?.action !== "BUY" &&
+                signal?.action !== "SELL") {
                 i++;
                 continue;
             }
             totalTrades++;
             const futureCandles = candles.slice(i + 1);
             const trade = this.findTradeOutcome(signal, futureCandles);
-            console.log("TRADE:", candles[i].time, signal.action, "Entry:", signal.entryPrice, "SL:", signal.stopLoss, "TP:", signal.takeProfit, "Result:", trade.result);
+            const result = trade.result === true
+                ? "WIN"
+                : trade.result === false
+                    ? "LOSS"
+                    : "OPEN";
             if (trade.result === true) {
                 winningTrades++;
             }
             if (trade.result === false) {
                 losingTrades++;
             }
+            trades.push({
+                time: candles[i].time,
+                action: signal.action,
+                confidence: signal.confidence,
+                entryPrice: signal.entryPrice,
+                stopLoss: signal.stopLoss,
+                takeProfit: signal.takeProfit,
+                trend: signal.trend,
+                rsi: signal.rsi,
+                adx: signal.adx,
+                marketCondition: signal.marketCondition,
+                result,
+                exitTime: trade.exitIndex === null
+                    ? null
+                    : futureCandles[trade.exitIndex]?.time ?? null,
+            });
             if (trade.exitIndex === null) {
                 break;
             }
@@ -87,11 +81,15 @@ let BacktestingService = class BacktestingService {
             totalTrades,
             winningTrades,
             losingTrades,
-            winRate: completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+            winRate: completedTrades === 0
+                ? 0
+                : (winningTrades / completedTrades) * 100,
+            trades,
         };
     }
     findTradeOutcome(signal, futureCandles) {
-        if (signal.stopLoss === null || signal.takeProfit === null) {
+        if (signal.stopLoss === null ||
+            signal.takeProfit === null) {
             return {
                 result: null,
                 exitIndex: null,

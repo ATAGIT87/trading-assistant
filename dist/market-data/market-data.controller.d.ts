@@ -2,18 +2,15 @@ import { MarketDataProviderService } from "./market-data-provider.service";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketDataService } from "./market-data.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
-import { MarketDataSeed } from "./market-data.seed";
 export declare class MarketDataController {
     private readonly marketDataService;
-    private readonly marketDataSeed;
     private readonly marketDataProviderService;
-    constructor(marketDataService: MarketDataService, marketDataSeed: MarketDataSeed, marketDataProviderService: MarketDataProviderService);
+    constructor(marketDataService: MarketDataService, marketDataProviderService: MarketDataProviderService);
     createCandle(dto: CreateMarketCandleDto): Promise<import("./entities/market-candle.entity").MarketCandle>;
     findAllCandles(): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
     findCandlesBySymbol(symbol: string): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
     findCandlesBySymbolAndTimeframe(symbol: string, timeframe: Timeframe): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
     findLatestCandle(symbol: string, timeframe: Timeframe): Promise<import("./entities/market-candle.entity").MarketCandle | null>;
-    seed(): Promise<void>;
     getLatestRsi(symbol: string, timeframe: Timeframe): Promise<number | null>;
     getLatestSma(symbol: string, timeframe: Timeframe, period: string): Promise<number | null>;
     getLatestEma(symbol: string, period: string, timeframe: Timeframe): Promise<number | null>;
@@ -33,9 +30,22 @@ export declare class MarketDataController {
         low: number;
         close: number;
     }[]>;
-    syncRealCandles(symbol: string): Promise<{
+    getBinanceCandles(symbol: string): Promise<{
+        time: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+    }[]>;
+    syncBinanceCandles(symbol: string): Promise<{
         symbol: string;
         received: number;
+        saved: number;
+    }>;
+    buildFourHourCandles(symbol: string): Promise<{
+        symbol: string;
+        timeframe: string;
         saved: number;
     }>;
 }

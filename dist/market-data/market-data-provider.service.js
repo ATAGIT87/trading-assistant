@@ -42,7 +42,7 @@ let MarketDataProviderService = class MarketDataProviderService {
             volume: data.total_volumes[index]?.[1] ?? 0,
         }));
     }
-    async getHourlyCandles(symbol, days = 30) {
+    async getRealCandles(symbol, days = 30) {
         const normalizedSymbol = symbol.toUpperCase();
         if (normalizedSymbol !== "BTCUSD") {
             throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
@@ -60,6 +60,50 @@ let MarketDataProviderService = class MarketDataProviderService {
             high,
             low,
             close,
+        }));
+    }
+    async getHourlyCandles(symbol, days = 1) {
+        const candles = await this.getRealCandles(symbol, days);
+        const hourlyCandles = new Map();
+        for (const candle of candles) {
+            const hour = new Date(candle.time);
+            hour.setUTCMinutes(0, 0, 0);
+            const key = hour.toISOString();
+            const existing = hourlyCandles.get(key);
+            if (!existing) {
+                hourlyCandles.set(key, {
+                    time: hour,
+                    open: candle.open,
+                    high: candle.high,
+                    low: candle.low,
+                    close: candle.close,
+                });
+                continue;
+            }
+            existing.high = Math.max(existing.high, candle.high);
+            existing.low = Math.min(existing.low, candle.low);
+            existing.close = candle.close;
+        }
+        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
+    }
+    async getBinanceHourlyCandles(symbol, limit = 1000) {
+        const normalizedSymbol = symbol.toUpperCase();
+        if (normalizedSymbol !== "BTCUSD") {
+            throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+        }
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=${limit}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Binance market data request failed: ${response.status} ${errorBody}`);
+        }
+        const data = (await response.json());
+        return data.map((candle) => ({
+            time: new Date(Number(candle[0])),
+            open: Number(candle[1]),
+            high: Number(candle[2]),
+            low: Number(candle[3]),
+            close: Number(candle[4]),
+            volume: Number(candle[5]),
         }));
     }
 };

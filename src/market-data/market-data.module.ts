@@ -9,7 +9,7 @@ import { MarketDataProviderService } from "./market-data-provider.service";
 
 @Module({
   imports: [TypeOrmModule.forFeature([MarketCandle]), IndicatorsModule],
-  providers: [MarketDataService, MarketDataSeed, MarketDataProviderService],
+  providers: [MarketDataService, MarketDataProviderService],
   exports: [MarketDataService],
   controllers: [MarketDataController],
 })

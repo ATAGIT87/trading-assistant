@@ -3,14 +3,12 @@ import { MarketDataProviderService } from "./market-data-provider.service";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketDataService } from "./market-data.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
-import { MarketDataSeed } from "./market-data.seed";
 import { ParseIntPipe } from "@nestjs/common";
 
 @Controller("market-data")
 export class MarketDataController {
   constructor(
     private readonly marketDataService: MarketDataService,
-    private readonly marketDataSeed: MarketDataSeed,
     private readonly marketDataProviderService: MarketDataProviderService,
   ) {}
 
@@ -42,11 +40,6 @@ export class MarketDataController {
     @Param("timeframe") timeframe: Timeframe,
   ) {
     return this.marketDataService.findLatestCandle(symbol, timeframe);
-  }
-
-  @Post("seed")
-  seed() {
-    return this.marketDataSeed.seed();
   }
 
   @Get("candles/:symbol/:timeframe/rsi")
@@ -175,42 +168,47 @@ export class MarketDataController {
   }
 
   @Get("price/:symbol")
-getLatestMarketPrice(
-  @Param("symbol") symbol: string,
-) {
-  return this.marketDataProviderService.getLatestPrice(symbol);
-}
+  getLatestMarketPrice(@Param("symbol") symbol: string) {
+    return this.marketDataProviderService.getLatestPrice(symbol);
+  }
 
-@Get("real-candles/:symbol")
-getRealCandles(
-  @Param("symbol") symbol: string,
-) {
-  return this.marketDataProviderService.getHourlyCandles(
-    symbol,
-    2,
-  );
-}
-@Post("sync/:symbol")
-async syncRealCandles(
-  @Param("symbol") symbol: string,
-) {
-  const candles =
-    await this.marketDataProviderService.getHourlyCandles(
-      symbol,
-      1,
-    );
+  @Get("real-candles/:symbol")
+  getRealCandles(@Param("symbol") symbol: string) {
+    return this.marketDataProviderService.getHourlyCandles(symbol, 2);
+  }
 
-  const savedCount =
-    await this.marketDataService.saveCandles(
+  @Get("binance-candles/:symbol")
+  getBinanceCandles(@Param("symbol") symbol: string) {
+    return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
+  }
+
+  @Post("sync-binance/:symbol")
+  async syncBinanceCandles(@Param("symbol") symbol: string) {
+    const candles =
+      await this.marketDataProviderService.getBinanceHourlyCandles(
+        symbol,
+        1000,
+      );
+
+    const savedCount = await this.marketDataService.saveCandles(
       symbol,
       candles,
     );
 
-  return {
-    symbol,
-    received: candles.length,
-    saved: savedCount,
-  };
-}
+    return {
+      symbol,
+      received: candles.length,
+      saved: savedCount,
+    };
+  }
+  @Post("build-4h/:symbol")
+  async buildFourHourCandles(@Param("symbol") symbol: string) {
+    const saved = await this.marketDataService.buildFourHourCandles(symbol);
 
+    return {
+      symbol,
+      timeframe: "4h",
+      saved,
+    };
+  }
 }

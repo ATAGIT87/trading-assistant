@@ -218,7 +218,7 @@ let MarketDataService = class MarketDataService {
                     high: candle.high,
                     low: candle.low,
                     close: candle.close,
-                    volume: 0,
+                    volume: candle.volume,
                 });
                 savedCount++;
             }
@@ -230,6 +230,33 @@ let MarketDataService = class MarketDataService {
             }
         }
         return savedCount;
+    }
+    async buildFourHourCandles(symbol) {
+        const hourlyCandles = await this.getHistoricalCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR);
+        const fourHourCandles = [];
+        for (let i = 0; i + 3 < hourlyCandles.length; i += 4) {
+            const group = hourlyCandles.slice(i, i + 4);
+            const first = group[0];
+            const last = group[3];
+            fourHourCandles.push({
+                symbol,
+                timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+                time: last.time,
+                open: first.open,
+                high: Math.max(...group.map((candle) => Number(candle.high))).toString(),
+                low: Math.min(...group.map((candle) => Number(candle.low))).toString(),
+                close: last.close,
+                volume: group
+                    .reduce((sum, candle) => sum + Number(candle.volume), 0)
+                    .toString(),
+            });
+        }
+        await this.marketCandleRepository.delete({
+            symbol,
+            timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+        });
+        await this.marketCandleRepository.save(fourHourCandles);
+        return fourHourCandles.length;
     }
 };
 exports.MarketDataService = MarketDataService;
