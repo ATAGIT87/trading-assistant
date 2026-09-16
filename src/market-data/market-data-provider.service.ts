@@ -168,28 +168,55 @@ export class MarketDataProviderService {
       (a, b) => a.time.getTime() - b.time.getTime(),
     );
   }
-  async getBinanceHourlyCandles(
-    symbol: string,
-    limit = 1000,
-  ): Promise<
-    {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
-    }[]
-  > {
-    const normalizedSymbol = symbol.toUpperCase();
+  
 
-    if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+  async getBinanceHourlyCandles(
+  symbol: string,
+  limit = 1000,
+): Promise<
+  {
+    time: Date;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }[]
+> {
+  const normalizedSymbol = symbol.toUpperCase();
+
+  if (normalizedSymbol !== "BTCUSD") {
+    throw new Error(
+      `Unsupported symbol: ${normalizedSymbol}`,
+    );
+  }
+
+  const candles: {
+    time: Date;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }[] = [];
+
+  let endTime: number | undefined;
+
+  while (candles.length < limit) {
+    const remaining = limit - candles.length;
+    const requestLimit = Math.min(1000, remaining);
+
+    let url =
+      `https://api.binance.com/api/v3/klines` +
+      `?symbol=BTCUSDT` +
+      `&interval=1h` +
+      `&limit=${requestLimit}`;
+
+    if (endTime !== undefined) {
+      url += `&endTime=${endTime}`;
     }
 
-    const response = await fetch(
-      `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=${limit}`,
-    );
+    const response = await fetch(url);
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -201,7 +228,11 @@ export class MarketDataProviderService {
 
     const data = (await response.json()) as unknown[][];
 
-    return data.map((candle) => ({
+    if (data.length === 0) {
+      break;
+    }
+
+    const batch = data.map((candle) => ({
       time: new Date(Number(candle[0])),
       open: Number(candle[1]),
       high: Number(candle[2]),
@@ -209,5 +240,20 @@ export class MarketDataProviderService {
       close: Number(candle[4]),
       volume: Number(candle[5]),
     }));
+
+    candles.unshift(...batch);
+
+    const oldestTimestamp = Number(data[0][0]);
+
+    endTime = oldestTimestamp - 1;
+
+    if (data.length < requestLimit) {
+      break;
+    }
   }
+
+  return candles.slice(-limit);
+}
+
+
 }

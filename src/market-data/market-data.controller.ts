@@ -187,7 +187,7 @@ export class MarketDataController {
     const candles =
       await this.marketDataProviderService.getBinanceHourlyCandles(
         symbol,
-        1000,
+        3000,
       );
 
     const savedCount = await this.marketDataService.saveCandles(
