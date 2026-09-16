@@ -51,4 +51,14 @@ export declare class IndicatorsService {
         close: number;
     }[], period: number): number | null;
     calculateAdxScore(adx: number): number;
+    calculateIndicatorsFromCandles(candles: MarketCandle[], period: number): {
+        trend: "BULLISH" | "BEARISH" | "NEUTRAL";
+        priceVsSma: "ABOVE" | "BELOW" | "EQUAL";
+        priceVsEma: "ABOVE" | "BELOW" | "EQUAL";
+        rsi: number;
+        rsiStatus: "NEUTRAL" | "OVERSOLD" | "OVERBOUGHT";
+        marketCondition: "NEUTRAL" | "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION";
+        atr: number;
+        adx: number;
+    } | null;
 }

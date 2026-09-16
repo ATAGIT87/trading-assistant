@@ -117,3 +117,6 @@ GET http://localhost:3000/market-data/candles/BTCUSD/1h/atr/14
 ### Get latest ADX
 
 GET http://localhost:3000/market-data/candles/BTCUSD/1h/adx/3
+
+### Run backtesting for BTCUSD 1h
+GET http://localhost:3000/backtesting/BTCUSD/1h

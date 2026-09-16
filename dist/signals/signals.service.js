@@ -29,10 +29,18 @@ let SignalsService = class SignalsService {
         if (!isStrongSetup) {
             return "NO_TRADE";
         }
+        if (trend === "NEUTRAL") {
+            return "NO_TRADE";
+        }
         if (adx < 25) {
             return "NO_TRADE";
         }
         if (atr <= 0) {
+            return "NO_TRADE";
+        }
+        if (higherTimeframeTrend !== null &&
+            ((trend === "BULLISH" && higherTimeframeTrend !== "BULLISH") ||
+                (trend === "BEARISH" && higherTimeframeTrend !== "BEARISH"))) {
             return "NO_TRADE";
         }
         if ((trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
@@ -74,7 +82,11 @@ let SignalsService = class SignalsService {
             adx,
             rsiStatus,
             marketCondition,
-            reason: `Trend is ${trend} and RSI status is ${rsiStatus}.`,
+            reason: action === "BUY"
+                ? `Bullish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
+                : action === "SELL"
+                    ? `Bearish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
+                    : `No valid trading setup. Trend: ${trend}, Higher timeframe trend: ${higherTimeframeTrend ?? "N/A"}, RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`,
         };
     }
     async generateSignal(symbol, timeframe, period) {
@@ -88,8 +100,7 @@ let SignalsService = class SignalsService {
         const entryPrice = await this.marketDataService.getLatestPrice(symbol, timeframe);
         const atr = await this.marketDataService.getLatestAtr(symbol, timeframe, period);
         const adx = await this.marketDataService.getLatestAdx(symbol, timeframe, period);
-        if (higherTimeframeTrend === null ||
-            trend === null ||
+        if (trend === null ||
             priceVsSma === null ||
             priceVsEma === null ||
             rsi === null ||
@@ -136,6 +147,16 @@ let SignalsService = class SignalsService {
             return null;
         }
         return this.marketDataService.getTrend(symbol, higherTimeframe, period);
+    }
+    async generateSignalFromCandles(symbol, timeframe, candles) {
+        const indicators = this.indicatorsService.calculateIndicatorsFromCandles(candles, 14);
+        if (indicators === null) {
+            return null;
+        }
+        const entryPrice = Number(candles[candles.length - 1].close);
+        const higherTimeframeTrend = await this.getHigherTimeframeTrend(symbol, timeframe, 14);
+        const { trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition, atr, adx, } = indicators;
+        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
     }
 };
 exports.SignalsService = SignalsService;

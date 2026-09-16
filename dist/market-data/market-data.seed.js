@@ -13,32 +13,39 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketDataSeed = void 0;
-const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const common_1 = require("@nestjs/common");
 let MarketDataSeed = class MarketDataSeed {
     marketCandleRepository;
     constructor(marketCandleRepository) {
         this.marketCandleRepository = marketCandleRepository;
     }
+    async onModuleInit() {
+        await this.seed();
+    }
     async seed() {
         const candles = [];
         let price = 115000;
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 100; i++) {
             candles.push({
                 symbol: "BTCUSD",
                 timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
-                time: new Date(Date.UTC(2026, 8, 14, 0, i)),
+                time: new Date(Date.UTC(2026, 8, 14, i, 0)),
                 open: price.toString(),
-                high: (price + 500).toString(),
-                low: (price - 500).toString(),
+                high: (price + 1000).toString(),
+                low: (price - 1000).toString(),
                 close: (price + 100).toString(),
                 volume: "100",
             });
-            price += 100;
+            price += i < 50 ? 500 : -500;
         }
+        await this.marketCandleRepository.delete({
+            symbol: "BTCUSD",
+            timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
+        });
         await this.marketCandleRepository.save(candles);
     }
 };

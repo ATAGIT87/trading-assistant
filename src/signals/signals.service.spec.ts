@@ -209,7 +209,7 @@ describe("SignalsService", () => {
       getMarketCondition: jest.fn().mockResolvedValue("BULLISH_CONTINUATION"),
       getLatestPrice: jest.fn().mockResolvedValue(100000),
       getLatestAtr: jest.fn().mockResolvedValue(1000),
-      getLatestAdx: jest.fn().mockResolvedValue(30)
+      getLatestAdx: jest.fn().mockResolvedValue(30),
     };
 
     service = new SignalsService(
@@ -415,25 +415,195 @@ describe("SignalsService", () => {
     expect(signal.action).toBe("NO_TRADE");
   });
 
+  it("should return NO_TRADE when higher timeframe trend disagrees with bullish trend", () => {
+    const signal = service.createSignal(
+      "BULLISH",
+      10000,
+      1000,
+      "ABOVE",
+      "ABOVE",
+      55,
+      30,
+      "NEUTRAL",
+      "BULLISH_CONTINUATION",
+      "BEARISH",
+    );
+
+    expect(signal.action).toBe("NO_TRADE");
+  });
+
+  it("should return BUY when bullish trend is confirmed by higher timeframe", () => {
+    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
+      40,
+    );
+    (
+      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+    ).mockReturnValue(30);
+    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+    (
+      indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+    ).mockReturnValue(10);
+    (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+    const signal = service.createSignal(
+      "BULLISH",
+      10000,
+      1000,
+      "ABOVE",
+      "ABOVE",
+      55,
+      30,
+      "NEUTRAL",
+      "BULLISH_CONTINUATION",
+      "BULLISH",
+    );
+
+    expect(signal.action).toBe("BUY");
+  });
+
   it("should get the trend from the higher timeframe", async () => {
-  const marketDataServiceMock = service["marketDataService"] as any;
+    const marketDataServiceMock = service["marketDataService"] as any;
 
-  marketDataServiceMock.getTrend.mockResolvedValue("BULLISH");
+    marketDataServiceMock.getTrend.mockResolvedValue("BULLISH");
 
-  const trend = await service.getHigherTimeframeTrend(
-    "BTCUSD",
-    Timeframe.ONE_HOUR,
-    14,
-  );
+    const trend = await service.getHigherTimeframeTrend(
+      "BTCUSD",
+      Timeframe.ONE_HOUR,
+      14,
+    );
 
-  expect(trend).toBe("BULLISH");
+    expect(trend).toBe("BULLISH");
 
-  expect(marketDataServiceMock.getTrend).toHaveBeenCalledWith(
-    "BTCUSD",
-    Timeframe.FOUR_HOURS,
-    14,
-  );
-});
+    expect(marketDataServiceMock.getTrend).toHaveBeenCalledWith(
+      "BTCUSD",
+      Timeframe.FOUR_HOURS,
+      14,
+    );
+  });
 
+  it("should return SELL when bearish trend is confirmed by higher timeframe", () => {
+    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
+      40,
+    );
+    (
+      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+    ).mockReturnValue(30);
+    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+    (
+      indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+    ).mockReturnValue(10);
+    (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
 
+    const signal = service.createSignal(
+      "BEARISH",
+      10000,
+      1000,
+      "BELOW",
+      "BELOW",
+      45,
+      30,
+      "NEUTRAL",
+      "BEARISH_CONTINUATION",
+      "BEARISH",
+    );
+
+    expect(signal.action).toBe("SELL");
+  });
+
+  it("should return NO_TRADE when higher timeframe trend is neutral", () => {
+    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
+      40,
+    );
+    (
+      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+    ).mockReturnValue(30);
+    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+    (
+      indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+    ).mockReturnValue(10);
+    (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+    const signal = service.createSignal(
+      "BULLISH",
+      10000,
+      1000,
+      "ABOVE",
+      "ABOVE",
+      55,
+      30,
+      "NEUTRAL",
+      "BULLISH_CONTINUATION",
+      "NEUTRAL",
+    );
+
+    expect(signal.action).toBe("NO_TRADE");
+  });
+
+  it("should return NO_TRADE when trend is neutral", () => {
+    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
+      40,
+    );
+    (
+      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+    ).mockReturnValue(30);
+    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+    (
+      indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+    ).mockReturnValue(10);
+    (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+    const signal = service.createSignal(
+      "NEUTRAL",
+      10000,
+      1000,
+      "ABOVE",
+      "ABOVE",
+      50,
+      30,
+      "NEUTRAL",
+      "BULLISH_CONTINUATION",
+      "BULLISH",
+    );
+
+    expect(signal.action).toBe("NO_TRADE");
+  });
+
+  it("should allow daily timeframe without a higher timeframe", async () => {
+    const marketDataServiceMock = {
+      getTrend: jest.fn().mockResolvedValue("BULLISH"),
+      compareLatestPriceToSma: jest.fn().mockResolvedValue("ABOVE"),
+      compareLatestPriceToEma: jest.fn().mockResolvedValue("ABOVE"),
+      getLatestRsi: jest.fn().mockResolvedValue(55),
+      getRsiStatus: jest.fn().mockResolvedValue("NEUTRAL"),
+      getMarketCondition: jest.fn().mockResolvedValue("BULLISH_CONTINUATION"),
+      getLatestPrice: jest.fn().mockResolvedValue(100000),
+      getLatestAtr: jest.fn().mockResolvedValue(1000),
+      getLatestAdx: jest.fn().mockResolvedValue(30),
+    };
+
+    service = new SignalsService(
+      marketDataServiceMock as any,
+      indicatorsServiceMock as any,
+    );
+
+    (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(
+      40,
+    );
+    (
+      indicatorsServiceMock.calculateAverageAlignmentScore as jest.Mock
+    ).mockReturnValue(30);
+    (indicatorsServiceMock.calculateRsiScore as jest.Mock).mockReturnValue(20);
+    (
+      indicatorsServiceMock.calculateMarketConditionScore as jest.Mock
+    ).mockReturnValue(10);
+    (indicatorsServiceMock.calculateAdxScore as jest.Mock).mockReturnValue(5);
+
+    const signal = await service.generateSignal(
+      "BTCUSD",
+      Timeframe.ONE_DAY,
+      14,
+    );
+
+    expect(signal?.action).toBe("BUY");
+  });
 });

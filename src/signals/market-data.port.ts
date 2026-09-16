@@ -1,4 +1,5 @@
 import type { Timeframe } from "../assets/enums/timeframe.enum";
+import { MarketCandle } from "../market-data/entities/market-candle.entity";
 
 export interface MarketDataPort {
   getTrend(
@@ -52,4 +53,15 @@ export interface MarketDataPort {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null>;
+
+  getHistoricalCandles(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<MarketCandle[]>;
+
+  getHistoricalCandlesUntil(
+    symbol: string,
+    timeframe: Timeframe,
+    until: Date,
+  ): Promise<MarketCandle[]>;
 }

@@ -18,6 +18,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
 const indicators_service_1 = require("../indicators/indicators.service");
+const typeorm_3 = require("typeorm");
 let MarketDataService = class MarketDataService {
     marketCandleRepository;
     indicatorsService;
@@ -180,6 +181,29 @@ let MarketDataService = class MarketDataService {
             low: Number(candle.low),
             close: Number(candle.close),
         })), period);
+    }
+    async getHistoricalCandles(symbol, timeframe) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                time: "ASC",
+            },
+        });
+    }
+    async getHistoricalCandlesUntil(symbol, timeframe, until) {
+        return this.marketCandleRepository.find({
+            where: {
+                symbol,
+                timeframe,
+                time: (0, typeorm_3.LessThanOrEqual)(until),
+            },
+            order: {
+                time: "ASC",
+            },
+        });
     }
 };
 exports.MarketDataService = MarketDataService;

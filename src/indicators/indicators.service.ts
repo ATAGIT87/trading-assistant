@@ -435,48 +435,96 @@ export class IndicatorsService {
     return adx;
   }
   calculateAdxFromCandles(
-    candles: {
-      high: number;
-      low: number;
-      close: number;
-    }[],
-    period: number,
-  ): number | null {
-    if (candles.length < period * 2) {
-      return null;
-    }
-
-    const trueRanges = this.calculateTrueRangesFromCandles(candles);
-
-    const directionalMovements = this.calculateDirectionalMovements(candles);
-
-    const dxValues: number[] = [];
-
-    for (let i = period; i <= trueRanges.length; i++) {
-      const trSlice = trueRanges.slice(i - period, i);
-      const plusDmSlice = directionalMovements.plusDm.slice(i - period, i);
-      const minusDmSlice = directionalMovements.minusDm.slice(i - period, i);
-
-      const di = this.calculateDirectionalIndicators(
-        trSlice,
-        plusDmSlice,
-        minusDmSlice,
-        period,
-      );
-
-      if (!di) {
-        continue;
-      }
-
-      const dx = this.calculateDirectionalIndex(di.plusDi, di.minusDi);
-
-      if (dx !== null) {
-        dxValues.push(dx);
-      }
-    }
-
-    return this.calculateAdx(dxValues, period);
+  candles: {
+    high: number;
+    low: number;
+    close: number;
+  }[],
+  period: number,
+): number | null {
+  if (period <= 0 || candles.length < period * 2) {
+    return null;
   }
+
+  const trueRanges = this.calculateTrueRangesFromCandles(candles);
+
+  const directionalMovements =
+    this.calculateDirectionalMovements(candles);
+
+  if (
+    trueRanges.length < period ||
+    directionalMovements.plusDm.length < period ||
+    directionalMovements.minusDm.length < period
+  ) {
+    return null;
+  }
+
+  const smoothedTrueRanges: number[] = [];
+  const smoothedPlusDm: number[] = [];
+  const smoothedMinusDm: number[] = [];
+
+  let trSum = 0;
+  let plusDmSum = 0;
+  let minusDmSum = 0;
+
+  for (let i = 0; i < period; i++) {
+    trSum += trueRanges[i];
+    plusDmSum += directionalMovements.plusDm[i];
+    minusDmSum += directionalMovements.minusDm[i];
+  }
+
+  smoothedTrueRanges.push(trSum);
+  smoothedPlusDm.push(plusDmSum);
+  smoothedMinusDm.push(minusDmSum);
+
+  for (let i = period; i < trueRanges.length; i++) {
+    trSum =
+      trSum -
+      trSum / period +
+      trueRanges[i];
+
+    plusDmSum =
+      plusDmSum -
+      plusDmSum / period +
+      directionalMovements.plusDm[i];
+
+    minusDmSum =
+      minusDmSum -
+      minusDmSum / period +
+      directionalMovements.minusDm[i];
+
+    smoothedTrueRanges.push(trSum);
+    smoothedPlusDm.push(plusDmSum);
+    smoothedMinusDm.push(minusDmSum);
+  }
+
+  const dxValues: number[] = [];
+
+  for (let i = 0; i < smoothedTrueRanges.length; i++) {
+    const tr = smoothedTrueRanges[i];
+
+    if (tr === 0) {
+      continue;
+    }
+
+    const plusDi =
+      (smoothedPlusDm[i] / tr) * 100;
+
+    const minusDi =
+      (smoothedMinusDm[i] / tr) * 100;
+
+    const dx = this.calculateDirectionalIndex(
+      plusDi,
+      minusDi,
+    );
+
+    if (dx !== null) {
+      dxValues.push(dx);
+    }
+  }
+
+  return this.calculateAdx(dxValues, period);
+}
 
   calculateAdxScore(adx: number): number {
     if (adx >= 25) {
@@ -484,5 +532,63 @@ export class IndicatorsService {
     }
 
     return 0;
+  }
+  calculateIndicatorsFromCandles(candles: MarketCandle[], period: number) {
+    if (candles.length < period * 2) {
+      return null;
+    }
+
+    const closes = candles.map((candle) => Number(candle.close));
+
+    const latestPrice = closes[closes.length - 1];
+
+    const sma = this.calculateSma(closes, period);
+    const ema = this.calculateEma(closes, period);
+    const rsi = this.calculateRsiFromPrices(closes, period);
+    const atr = this.calculateAtr(
+      this.calculateTrueRangesFromCandles(
+        candles.map((candle) => ({
+          high: Number(candle.high),
+          low: Number(candle.low),
+          close: Number(candle.close),
+        })),
+      ),
+      period,
+    );
+    const adx = this.calculateAdxFromCandles(
+      candles.map((candle) => ({
+        high: Number(candle.high),
+        low: Number(candle.low),
+        close: Number(candle.close),
+      })),
+      period,
+    );
+
+    if (
+      sma === null ||
+      ema === null ||
+      rsi === null ||
+      atr === null ||
+      adx === null
+    ) {
+      return null;
+    }
+
+    const priceVsSma = this.comparePriceToAverage(latestPrice, sma);
+    const priceVsEma = this.comparePriceToAverage(latestPrice, ema);
+    const trend = this.determineTrend(priceVsSma, priceVsEma);
+    const rsiStatus = this.classifyRsi(rsi);
+    const marketCondition = this.determineMarketCondition(trend, rsiStatus);
+
+    return {
+      trend,
+      priceVsSma,
+      priceVsEma,
+      rsi,
+      rsiStatus,
+      marketCondition,
+      atr,
+      adx,
+    };
   }
 }

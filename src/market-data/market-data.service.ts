@@ -5,6 +5,7 @@ import { MarketCandle } from "./entities/market-candle.entity";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
+import { LessThanOrEqual } from "typeorm";
 @Injectable()
 export class MarketDataService {
   constructor(
@@ -282,5 +283,37 @@ export class MarketDataService {
       })),
       period,
     );
+  }
+
+  async getHistoricalCandles(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<MarketCandle[]> {
+    return this.marketCandleRepository.find({
+      where: {
+        symbol,
+        timeframe,
+      },
+      order: {
+        time: "ASC",
+      },
+    });
+  }
+
+  async getHistoricalCandlesUntil(
+    symbol: string,
+    timeframe: Timeframe,
+    until: Date,
+  ): Promise<MarketCandle[]> {
+    return this.marketCandleRepository.find({
+      where: {
+        symbol,
+        timeframe,
+        time: LessThanOrEqual(until),
+      },
+      order: {
+        time: "ASC",
+      },
+    });
   }
 }

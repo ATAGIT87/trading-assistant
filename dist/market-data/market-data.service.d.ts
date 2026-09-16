@@ -25,4 +25,6 @@ export declare class MarketDataService {
     getMarketCondition(symbol: string, timeframe: Timeframe, period: number): Promise<"POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL" | null>;
     getLatestAtr(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
+    getHistoricalCandles(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
+    getHistoricalCandlesUntil(symbol: string, timeframe: Timeframe, until: Date): Promise<MarketCandle[]>;
 }

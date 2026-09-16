@@ -4,6 +4,7 @@ import { IndicatorsService } from "../indicators/indicators.service";
 import { Inject, Injectable } from "@nestjs/common";
 import { MARKET_DATA_SERVICE } from "./market-data.token";
 import type { MarketDataPort } from "./market-data.port";
+import { MarketCandle } from "../market-data/entities/market-candle.entity";
 
 const STRONG_SETUP_THRESHOLD = 75;
 @Injectable()
@@ -15,7 +16,7 @@ export class SignalsService {
   ) {}
 
   determineAction(
-    higherTimeframeTrend: TradingSignal["trend"],
+    higherTimeframeTrend: TradingSignal["trend"] | null,
     trend: TradingSignal["trend"],
     marketCondition: TradingSignal["marketCondition"],
     isStrongSetup: boolean,
@@ -25,7 +26,9 @@ export class SignalsService {
     if (!isStrongSetup) {
       return "NO_TRADE";
     }
-
+    if (trend === "NEUTRAL") {
+      return "NO_TRADE";
+    }
     if (adx < 25) {
       return "NO_TRADE";
     }
@@ -33,12 +36,22 @@ export class SignalsService {
     if (atr <= 0) {
       return "NO_TRADE";
     }
+
+    if (
+      higherTimeframeTrend !== null &&
+      ((trend === "BULLISH" && higherTimeframeTrend !== "BULLISH") ||
+        (trend === "BEARISH" && higherTimeframeTrend !== "BEARISH"))
+    ) {
+      return "NO_TRADE";
+    }
+
     if (
       (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
       (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
     ) {
       return "NO_TRADE";
     }
+
     if (marketCondition === "BULLISH_CONTINUATION") {
       return "BUY";
     }
@@ -60,7 +73,7 @@ export class SignalsService {
     adx: number,
     rsiStatus: TradingSignal["rsiStatus"],
     marketCondition: TradingSignal["marketCondition"],
-    higherTimeframeTrend: TradingSignal["trend"],
+    higherTimeframeTrend: TradingSignal["trend"] | null,
   ): TradingSignal {
     const trendScore = this.indicatorsService.calculateTrendScore(trend);
     const averageAlignmentScore =
@@ -112,7 +125,12 @@ export class SignalsService {
       adx,
       rsiStatus,
       marketCondition,
-      reason: `Trend is ${trend} and RSI status is ${rsiStatus}.`,
+      reason:
+        action === "BUY"
+          ? `Bullish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
+          : action === "SELL"
+            ? `Bearish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
+            : `No valid trading setup. Trend: ${trend}, Higher timeframe trend: ${higherTimeframeTrend ?? "N/A"}, RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`,
     };
   }
 
@@ -126,12 +144,11 @@ export class SignalsService {
       timeframe,
       period,
     );
-    const higherTimeframeTrend =
-  await this.getHigherTimeframeTrend(
-    symbol,
-    timeframe,
-    period,
-  );
+    const higherTimeframeTrend = await this.getHigherTimeframeTrend(
+      symbol,
+      timeframe,
+      period,
+    );
     const priceVsSma = await this.marketDataService.compareLatestPriceToSma(
       symbol,
       timeframe,
@@ -172,7 +189,6 @@ export class SignalsService {
       period,
     );
     if (
-      higherTimeframeTrend === null ||
       trend === null ||
       priceVsSma === null ||
       priceVsEma === null ||
@@ -247,27 +263,69 @@ export class SignalsService {
   }
 
   async getHigherTimeframeTrend(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
-  const higherTimeframe =
-    timeframe === Timeframe.FIFTEEN_MINUTES
-      ? Timeframe.ONE_HOUR
-      : timeframe === Timeframe.ONE_HOUR
-        ? Timeframe.FOUR_HOURS
-        : timeframe === Timeframe.FOUR_HOURS
-          ? Timeframe.ONE_DAY
-          : null;
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+  ): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
+    const higherTimeframe =
+      timeframe === Timeframe.FIFTEEN_MINUTES
+        ? Timeframe.ONE_HOUR
+        : timeframe === Timeframe.ONE_HOUR
+          ? Timeframe.FOUR_HOURS
+          : timeframe === Timeframe.FOUR_HOURS
+            ? Timeframe.ONE_DAY
+            : null;
 
-  if (higherTimeframe === null) {
-    return null;
+    if (higherTimeframe === null) {
+      return null;
+    }
+
+    return this.marketDataService.getTrend(symbol, higherTimeframe, period);
   }
+  async generateSignalFromCandles(
+    symbol: string,
+    timeframe: Timeframe,
+    candles: MarketCandle[],
+  ): Promise<TradingSignal | null> {
+    const indicators = this.indicatorsService.calculateIndicatorsFromCandles(
+      candles,
+      14,
+    );
 
-  return this.marketDataService.getTrend(
-    symbol,
-    higherTimeframe,
-    period,
-  );
-}
+    if (indicators === null) {
+      return null;
+    }
+
+    const entryPrice = Number(candles[candles.length - 1].close);
+
+    const higherTimeframeTrend = await this.getHigherTimeframeTrend(
+      symbol,
+      timeframe,
+      14,
+    );
+
+    const {
+      trend,
+      priceVsSma,
+      priceVsEma,
+      rsi,
+      rsiStatus,
+      marketCondition,
+      atr,
+      adx,
+    } = indicators;
+
+    return this.createSignal(
+      trend,
+      entryPrice,
+      atr,
+      priceVsSma,
+      priceVsEma,
+      rsi,
+      adx,
+      rsiStatus,
+      marketCondition,
+      higherTimeframeTrend,
+    );
+  }
 }
