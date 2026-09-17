@@ -6,20 +6,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ScannerModule = void 0;
+exports.AlertsModule = void 0;
 const common_1 = require("@nestjs/common");
-const scanner_service_1 = require("./scanner.service");
-const scanner_controller_1 = require("./scanner.controller");
-const signals_module_1 = require("../signals/signals.module");
-const alerts_module_1 = require("../alerts/alerts.module");
-let ScannerModule = class ScannerModule {
+const alerts_service_1 = require("./alerts.service");
+let AlertsModule = class AlertsModule {
 };
-exports.ScannerModule = ScannerModule;
-exports.ScannerModule = ScannerModule = __decorate([
+exports.AlertsModule = AlertsModule;
+exports.AlertsModule = AlertsModule = __decorate([
     (0, common_1.Module)({
-        imports: [signals_module_1.SignalsModule, alerts_module_1.AlertsModule],
-        providers: [scanner_service_1.ScannerService],
-        controllers: [scanner_controller_1.ScannerController],
+        providers: [alerts_service_1.AlertsService],
+        exports: [alerts_service_1.AlertsService],
     })
-], ScannerModule);
-//# sourceMappingURL=scanner.module.js.map
+], AlertsModule);
+//# sourceMappingURL=alerts.module.js.map

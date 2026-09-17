@@ -16,12 +16,16 @@ const indicators_module_1 = require("./indicators/indicators.module");
 const signals_module_1 = require("./signals/signals.module");
 const backtesting_module_1 = require("./backtesting/backtesting.module");
 const scanner_module_1 = require("./scanner/scanner.module");
+const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+            }),
             typeorm_1.TypeOrmModule.forRoot({
                 type: "postgres",
                 host: "localhost",

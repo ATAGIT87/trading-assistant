@@ -11,30 +11,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScannerService = void 0;
 const common_1 = require("@nestjs/common");
-const schedule_1 = require("@nestjs/schedule");
 const signals_service_1 = require("../signals/signals.service");
-const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const alerts_service_1 = require("../alerts/alerts.service");
 let ScannerService = class ScannerService {
     signalsService;
-    constructor(signalsService) {
+    alertsService;
+    constructor(signalsService, alertsService) {
         this.signalsService = signalsService;
+        this.alertsService = alertsService;
     }
     async scan(symbol, timeframe, period = 14) {
-        return this.signalsService.generateSignal(symbol, timeframe, period);
-    }
-    async scheduledScan() {
-        await this.scan("BTCUSD", timeframe_enum_1.Timeframe.ONE_HOUR);
+        const signal = await this.signalsService.generateSignal(symbol, timeframe, period);
+        if (signal) {
+            await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+        }
+        return signal;
     }
 };
 exports.ScannerService = ScannerService;
-__decorate([
-    (0, schedule_1.Cron)("0 * * * *"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ScannerService.prototype, "scheduledScan", null);
 exports.ScannerService = ScannerService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [signals_service_1.SignalsService])
+    __metadata("design:paramtypes", [signals_service_1.SignalsService,
+        alerts_service_1.AlertsService])
 ], ScannerService);
 //# sourceMappingURL=scanner.service.js.map

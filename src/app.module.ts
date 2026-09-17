@@ -7,9 +7,13 @@ import { IndicatorsModule } from "./indicators/indicators.module";
 import { SignalsModule } from "./signals/signals.module";
 import { BacktestingModule } from "./backtesting/backtesting.module";
 import { ScannerModule } from "./scanner/scanner.module";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+  isGlobal: true,
+}),
     TypeOrmModule.forRoot({
       type: "postgres",
       host: "localhost",
