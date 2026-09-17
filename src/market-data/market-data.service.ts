@@ -6,12 +6,14 @@ import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
 import { LessThanOrEqual } from "typeorm";
+import { MarketDataProviderService } from "./market-data-provider.service";
 @Injectable()
 export class MarketDataService {
   constructor(
     @InjectRepository(MarketCandle)
     private readonly marketCandleRepository: Repository<MarketCandle>,
     private readonly indicatorsService: IndicatorsService,
+    private readonly marketDataProviderService: MarketDataProviderService,
   ) {}
 
   async createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle> {
@@ -317,45 +319,6 @@ export class MarketDataService {
     });
   }
 
-  async saveCandles(
-    symbol: string,
-    candles: {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
-    }[],
-  ): Promise<number> {
-    let savedCount = 0;
-
-    for (const candle of candles) {
-      try {
-        await this.createCandle({
-          symbol,
-          timeframe: Timeframe.ONE_HOUR,
-          time: candle.time.toISOString(),
-          open: candle.open,
-          high: candle.high,
-          low: candle.low,
-          close: candle.close,
-          volume: candle.volume,
-        });
-
-        savedCount++;
-      } catch (error) {
-        if (error instanceof ConflictException) {
-          continue;
-        }
-
-        throw error;
-      }
-    }
-
-    return savedCount;
-  }
-
   async buildFourHourCandles(symbol: string): Promise<number> {
     const hourlyCandles = await this.getHistoricalCandles(
       symbol,
@@ -395,4 +358,62 @@ export class MarketDataService {
 
     return fourHourCandles.length;
   }
+
+  async syncBinanceCandles(
+  symbol: string,
+  timeframe: Timeframe,
+): Promise<number> {
+  const candles =
+    await this.marketDataProviderService.getBinanceCandles(
+      symbol,
+      timeframe,
+      1000,
+    );
+
+  return this.saveCandles(
+    symbol,
+    timeframe,
+    candles,
+  );
+}
+
+async saveCandles(
+  symbol: string,
+  timeframe: Timeframe,
+  candles: {
+    time: Date;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  }[],
+): Promise<number> {
+  let savedCount = 0;
+
+  for (const candle of candles) {
+    try {
+      await this.createCandle({
+        symbol,
+        timeframe,
+        time: candle.time.toISOString(),
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+        volume: candle.volume,
+      });
+
+      savedCount++;
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  return savedCount;
+}
 }

@@ -8,7 +8,13 @@ export class AlertsService {
     timeframe: string,
     signal: TradingSignal,
   ): Promise<void> {
-   
+    if (
+      signal.action !== "BUY" &&
+      signal.action !== "SELL"
+    ) {
+      return;
+    }
+
     const botToken =
       process.env.TELEGRAM_BOT_TOKEN;
 

@@ -20,12 +20,15 @@ const market_candle_entity_1 = require("./entities/market-candle.entity");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const indicators_service_1 = require("../indicators/indicators.service");
 const typeorm_3 = require("typeorm");
+const market_data_provider_service_1 = require("./market-data-provider.service");
 let MarketDataService = class MarketDataService {
     marketCandleRepository;
     indicatorsService;
-    constructor(marketCandleRepository, indicatorsService) {
+    marketDataProviderService;
+    constructor(marketCandleRepository, indicatorsService, marketDataProviderService) {
         this.marketCandleRepository = marketCandleRepository;
         this.indicatorsService = indicatorsService;
+        this.marketDataProviderService = marketDataProviderService;
     }
     async createCandle(dto) {
         try {
@@ -206,31 +209,6 @@ let MarketDataService = class MarketDataService {
             },
         });
     }
-    async saveCandles(symbol, candles) {
-        let savedCount = 0;
-        for (const candle of candles) {
-            try {
-                await this.createCandle({
-                    symbol,
-                    timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
-                    time: candle.time.toISOString(),
-                    open: candle.open,
-                    high: candle.high,
-                    low: candle.low,
-                    close: candle.close,
-                    volume: candle.volume,
-                });
-                savedCount++;
-            }
-            catch (error) {
-                if (error instanceof common_1.ConflictException) {
-                    continue;
-                }
-                throw error;
-            }
-        }
-        return savedCount;
-    }
     async buildFourHourCandles(symbol) {
         const hourlyCandles = await this.getHistoricalCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR);
         const fourHourCandles = [];
@@ -258,12 +236,42 @@ let MarketDataService = class MarketDataService {
         await this.marketCandleRepository.save(fourHourCandles);
         return fourHourCandles.length;
     }
+    async syncBinanceCandles(symbol, timeframe) {
+        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 1000);
+        return this.saveCandles(symbol, timeframe, candles);
+    }
+    async saveCandles(symbol, timeframe, candles) {
+        let savedCount = 0;
+        for (const candle of candles) {
+            try {
+                await this.createCandle({
+                    symbol,
+                    timeframe,
+                    time: candle.time.toISOString(),
+                    open: candle.open,
+                    high: candle.high,
+                    low: candle.low,
+                    close: candle.close,
+                    volume: candle.volume,
+                });
+                savedCount++;
+            }
+            catch (error) {
+                if (error instanceof common_1.ConflictException) {
+                    continue;
+                }
+                throw error;
+            }
+        }
+        return savedCount;
+    }
 };
 exports.MarketDataService = MarketDataService;
 exports.MarketDataService = MarketDataService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(market_candle_entity_1.MarketCandle)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        indicators_service_1.IndicatorsService])
+        indicators_service_1.IndicatorsService,
+        market_data_provider_service_1.MarketDataProviderService])
 ], MarketDataService);
 //# sourceMappingURL=market-data.service.js.map

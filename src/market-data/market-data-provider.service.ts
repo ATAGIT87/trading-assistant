@@ -7,13 +7,19 @@ interface CoinGeckoMarketChartResponse {
 
 @Injectable()
 export class MarketDataProviderService {
-  private readonly baseUrl = "https://api.coingecko.com/api/v3";
+  private readonly baseUrl =
+    "https://api.coingecko.com/api/v3";
 
-  async getLatestPrice(symbol: string): Promise<number> {
-    const normalizedSymbol = symbol.toUpperCase();
+  async getLatestPrice(
+    symbol: string,
+  ): Promise<number> {
+    const normalizedSymbol =
+      symbol.toUpperCase();
 
     if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+      throw new Error(
+        `Unsupported symbol: ${normalizedSymbol}`,
+      );
     }
 
     const response = await fetch(
@@ -21,19 +27,24 @@ export class MarketDataProviderService {
     );
 
     if (!response.ok) {
-      throw new Error(`Market data request failed: ${response.status}`);
+      throw new Error(
+        `Market data request failed: ${response.status}`,
+      );
     }
 
-    const data = (await response.json()) as {
-      bitcoin?: {
-        usd?: number;
+    const data =
+      (await response.json()) as {
+        bitcoin?: {
+          usd?: number;
+        };
       };
-    };
 
     const price = data.bitcoin?.usd;
 
     if (typeof price !== "number") {
-      throw new Error("Invalid BTC price returned by market data provider");
+      throw new Error(
+        "Invalid BTC price returned by market data provider",
+      );
     }
 
     return price;
@@ -49,10 +60,13 @@ export class MarketDataProviderService {
       volume: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
+    const normalizedSymbol =
+      symbol.toUpperCase();
 
     if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+      throw new Error(
+        `Unsupported symbol: ${normalizedSymbol}`,
+      );
     }
 
     const response = await fetch(
@@ -60,16 +74,22 @@ export class MarketDataProviderService {
     );
 
     if (!response.ok) {
-      throw new Error(`Market data request failed: ${response.status}`);
+      throw new Error(
+        `Market data request failed: ${response.status}`,
+      );
     }
 
-    const data = (await response.json()) as CoinGeckoMarketChartResponse;
+    const data =
+      (await response.json()) as CoinGeckoMarketChartResponse;
 
-    return data.prices.map(([timestamp, price], index) => ({
-      time: new Date(timestamp),
-      price,
-      volume: data.total_volumes[index]?.[1] ?? 0,
-    }));
+    return data.prices.map(
+      ([timestamp, price], index) => ({
+        time: new Date(timestamp),
+        price,
+        volume:
+          data.total_volumes[index]?.[1] ?? 0,
+      }),
+    );
   }
 
   async getRealCandles(
@@ -84,10 +104,13 @@ export class MarketDataProviderService {
       close: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
+    const normalizedSymbol =
+      symbol.toUpperCase();
 
     if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+      throw new Error(
+        `Unsupported symbol: ${normalizedSymbol}`,
+      );
     }
 
     const response = await fetch(
@@ -95,25 +118,40 @@ export class MarketDataProviderService {
     );
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorBody =
+        await response.text();
 
-      console.error("CoinGecko OHLC error:", response.status, errorBody);
+      console.error(
+        "CoinGecko OHLC error:",
+        response.status,
+        errorBody,
+      );
 
       throw new Error(
         `Market OHLC request failed: ${response.status} ${errorBody}`,
       );
     }
 
-    const data = (await response.json()) as number[][];
+    const data =
+      (await response.json()) as number[][];
 
-    return data.map(([timestamp, open, high, low, close]) => ({
-      time: new Date(timestamp),
-      open,
-      high,
-      low,
-      close,
-    }));
+    return data.map(
+      ([
+        timestamp,
+        open,
+        high,
+        low,
+        close,
+      ]) => ({
+        time: new Date(timestamp),
+        open,
+        high,
+        low,
+        close,
+      }),
+    );
   }
+
   async getHourlyCandles(
     symbol: string,
     days = 1,
@@ -126,7 +164,11 @@ export class MarketDataProviderService {
       close: number;
     }[]
   > {
-    const candles = await this.getRealCandles(symbol, days);
+    const candles =
+      await this.getRealCandles(
+        symbol,
+        days,
+      );
 
     const hourlyCandles = new Map<
       string,
@@ -140,12 +182,17 @@ export class MarketDataProviderService {
     >();
 
     for (const candle of candles) {
-      const hour = new Date(candle.time);
+      const hour = new Date(
+        candle.time,
+      );
+
       hour.setUTCMinutes(0, 0, 0);
 
-      const key = hour.toISOString();
+      const key =
+        hour.toISOString();
 
-      const existing = hourlyCandles.get(key);
+      const existing =
+        hourlyCandles.get(key);
 
       if (!existing) {
         hourlyCandles.set(key, {
@@ -159,18 +206,32 @@ export class MarketDataProviderService {
         continue;
       }
 
-      existing.high = Math.max(existing.high, candle.high);
-      existing.low = Math.min(existing.low, candle.low);
-      existing.close = candle.close;
+      existing.high = Math.max(
+        existing.high,
+        candle.high,
+      );
+
+      existing.low = Math.min(
+        existing.low,
+        candle.low,
+      );
+
+      existing.close =
+        candle.close;
     }
 
-    return Array.from(hourlyCandles.values()).sort(
-      (a, b) => a.time.getTime() - b.time.getTime(),
+    return Array.from(
+      hourlyCandles.values(),
+    ).sort(
+      (a, b) =>
+        a.time.getTime() -
+        b.time.getTime(),
     );
   }
 
-  async getBinanceHourlyCandles(
+  async getBinanceCandles(
     symbol: string,
+    timeframe: string,
     limit = 1000,
   ): Promise<
     {
@@ -182,73 +243,79 @@ export class MarketDataProviderService {
       volume: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
+    const normalizedSymbol =
+      symbol.toUpperCase();
 
-    if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
+    const binanceSymbolMap: Record<
+      string,
+      string
+    > = {
+      BTCUSD: "BTCUSDT",
+      ETHUSD: "ETHUSDT",
+    };
+
+    const binanceSymbol =
+      binanceSymbolMap[
+        normalizedSymbol
+      ];
+
+    if (!binanceSymbol) {
+      throw new Error(
+        `Unsupported symbol: ${normalizedSymbol}`,
+      );
     }
 
-    const candles: {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
-    }[] = [];
+    const supportedTimeframes = [
+      "15m",
+      "1h",
+    ];
 
-    let endTime: number | undefined;
-
-    while (candles.length < limit) {
-      const remaining = limit - candles.length;
-      const requestLimit = Math.min(1000, remaining);
-
-      let url =
-        `https://api.binance.com/api/v3/klines` +
-        `?symbol=BTCUSDT` +
-        `&interval=1h` +
-        `&limit=${requestLimit}`;
-
-      if (endTime !== undefined) {
-        url += `&endTime=${endTime}`;
-      }
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-
-        throw new Error(
-          `Binance market data request failed: ${response.status} ${errorBody}`,
-        );
-      }
-
-      const data = (await response.json()) as unknown[][];
-
-      if (data.length === 0) {
-        break;
-      }
-
-      const batch = data.map((candle) => ({
-        time: new Date(Number(candle[0])),
-        open: Number(candle[1]),
-        high: Number(candle[2]),
-        low: Number(candle[3]),
-        close: Number(candle[4]),
-        volume: Number(candle[5]),
-      }));
-
-      candles.unshift(...batch);
-
-      const oldestTimestamp = Number(data[0][0]);
-
-      endTime = oldestTimestamp - 1;
-
-      if (data.length < requestLimit) {
-        break;
-      }
+    if (
+      !supportedTimeframes.includes(
+        timeframe,
+      )
+    ) {
+      throw new Error(
+        `Unsupported timeframe: ${timeframe}`,
+      );
     }
 
-    return candles.slice(-limit);
+    const response = await fetch(
+      `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${limit}`,
+    );
+
+    if (!response.ok) {
+      const errorBody =
+        await response.text();
+
+      throw new Error(
+        `Binance market data request failed: ${response.status} ${errorBody}`,
+      );
+    }
+
+    const data =
+      (await response.json()) as unknown[][];
+
+    return data.map((candle) => ({
+      time: new Date(
+        Number(candle[0]),
+      ),
+      open: Number(candle[1]),
+      high: Number(candle[2]),
+      low: Number(candle[3]),
+      close: Number(candle[4]),
+      volume: Number(candle[5]),
+    }));
+  }
+
+  async getBinanceHourlyCandles(
+    symbol: string,
+    limit = 1000,
+  ) {
+    return this.getBinanceCandles(
+      symbol,
+      "1h",
+      limit,
+    );
   }
 }

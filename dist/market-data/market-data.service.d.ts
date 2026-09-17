@@ -3,10 +3,12 @@ import { MarketCandle } from "./entities/market-candle.entity";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
+import { MarketDataProviderService } from "./market-data-provider.service";
 export declare class MarketDataService {
     private readonly marketCandleRepository;
     private readonly indicatorsService;
-    constructor(marketCandleRepository: Repository<MarketCandle>, indicatorsService: IndicatorsService);
+    private readonly marketDataProviderService;
+    constructor(marketCandleRepository: Repository<MarketCandle>, indicatorsService: IndicatorsService, marketDataProviderService: MarketDataProviderService);
     createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle>;
     findAllCandles(): Promise<MarketCandle[]>;
     findCandlesBySymbol(symbol: string): Promise<MarketCandle[]>;
@@ -27,7 +29,9 @@ export declare class MarketDataService {
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
     getHistoricalCandles(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     getHistoricalCandlesUntil(symbol: string, timeframe: Timeframe, until: Date): Promise<MarketCandle[]>;
-    saveCandles(symbol: string, candles: {
+    buildFourHourCandles(symbol: string): Promise<number>;
+    syncBinanceCandles(symbol: string, timeframe: Timeframe): Promise<number>;
+    saveCandles(symbol: string, timeframe: Timeframe, candles: {
         time: Date;
         open: number;
         high: number;
@@ -35,5 +39,4 @@ export declare class MarketDataService {
         close: number;
         volume: number;
     }[]): Promise<number>;
-    buildFourHourCandles(symbol: string): Promise<number>;
 }

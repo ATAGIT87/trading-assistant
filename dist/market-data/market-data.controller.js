@@ -84,10 +84,11 @@ let MarketDataController = class MarketDataController {
         return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
     }
     async syncBinanceCandles(symbol) {
-        const candles = await this.marketDataProviderService.getBinanceHourlyCandles(symbol, 3000);
-        const savedCount = await this.marketDataService.saveCandles(symbol, candles);
+        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, "1h", 1000);
+        const savedCount = await this.marketDataService.saveCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR, candles);
         return {
             symbol,
+            timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
             received: candles.length,
             saved: savedCount,
         };

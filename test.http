@@ -162,3 +162,11 @@ GET http://localhost:3000/signals/latest/BTCUSD/1h
 
 ###
 GET http://localhost:3000/scanner/BTCUSD/1h
+### Get active assets
+GET http://localhost:3000/assets/active
+
+### Get Binance hourly candles for ETHUSD
+POST http://localhost:3000/market-data/sync-binance/ETHUSD
+
+### Get latest trading signal for ETHUSD 15m
+GET http://localhost:3000/scanner/ETHUSD/15m

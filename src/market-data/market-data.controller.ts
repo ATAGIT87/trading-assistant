@@ -181,26 +181,31 @@ export class MarketDataController {
   getBinanceCandles(@Param("symbol") symbol: string) {
     return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
   }
-
-  @Post("sync-binance/:symbol")
-  async syncBinanceCandles(@Param("symbol") symbol: string) {
-    const candles =
-      await this.marketDataProviderService.getBinanceHourlyCandles(
-        symbol,
-        3000,
-      );
-
-    const savedCount = await this.marketDataService.saveCandles(
+@Post("sync-binance/:symbol")
+async syncBinanceCandles(
+  @Param("symbol") symbol: string,
+) {
+  const candles =
+    await this.marketDataProviderService.getBinanceCandles(
       symbol,
+      "1h",
+      1000,
+    );
+
+  const savedCount =
+    await this.marketDataService.saveCandles(
+      symbol,
+      Timeframe.ONE_HOUR,
       candles,
     );
 
-    return {
-      symbol,
-      received: candles.length,
-      saved: savedCount,
-    };
-  }
+  return {
+    symbol,
+    timeframe: Timeframe.ONE_HOUR,
+    received: candles.length,
+    saved: savedCount,
+  };
+}
   @Post("build-4h/:symbol")
   async buildFourHourCandles(@Param("symbol") symbol: string) {
     const saved = await this.marketDataService.buildFourHourCandles(symbol);

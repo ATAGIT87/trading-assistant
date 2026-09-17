@@ -11,27 +11,57 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScannerService = void 0;
 const common_1 = require("@nestjs/common");
+const schedule_1 = require("@nestjs/schedule");
 const signals_service_1 = require("../signals/signals.service");
+const market_data_service_1 = require("../market-data/market-data.service");
 const alerts_service_1 = require("../alerts/alerts.service");
+const assets_service_1 = require("../assets/assets.service");
+const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 let ScannerService = class ScannerService {
     signalsService;
+    marketDataService;
     alertsService;
-    constructor(signalsService, alertsService) {
+    assetsService;
+    constructor(signalsService, marketDataService, alertsService, assetsService) {
         this.signalsService = signalsService;
+        this.marketDataService = marketDataService;
         this.alertsService = alertsService;
+        this.assetsService = assetsService;
     }
     async scan(symbol, timeframe, period = 14) {
+        await this.marketDataService.syncBinanceCandles(symbol, timeframe);
+        if (timeframe === timeframe_enum_1.Timeframe.ONE_HOUR) {
+            await this.marketDataService.buildFourHourCandles(symbol);
+        }
         const signal = await this.signalsService.generateSignal(symbol, timeframe, period);
-        if (signal) {
+        if (!signal) {
+            return null;
+        }
+        if (signal.action === "BUY" ||
+            signal.action === "SELL") {
             await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
         }
         return signal;
     }
+    async scheduledScan() {
+        const assets = await this.assetsService.findActiveAssets();
+        for (const asset of assets) {
+            await this.scan(asset.symbol, asset.timeframe);
+        }
+    }
 };
 exports.ScannerService = ScannerService;
+__decorate([
+    (0, schedule_1.Cron)("0 * * * *"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ScannerService.prototype, "scheduledScan", null);
 exports.ScannerService = ScannerService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [signals_service_1.SignalsService,
-        alerts_service_1.AlertsService])
+        market_data_service_1.MarketDataService,
+        alerts_service_1.AlertsService,
+        assets_service_1.AssetsService])
 ], ScannerService);
 //# sourceMappingURL=scanner.service.js.map

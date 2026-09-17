@@ -20,6 +20,14 @@ export declare class MarketDataProviderService {
         low: number;
         close: number;
     }[]>;
+    getBinanceCandles(symbol: string, timeframe: string, limit?: number): Promise<{
+        time: Date;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        volume: number;
+    }[]>;
     getBinanceHourlyCandles(symbol: string, limit?: number): Promise<{
         time: Date;
         open: number;

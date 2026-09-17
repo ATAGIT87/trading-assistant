@@ -67,6 +67,13 @@ let AssetsService = class AssetsService {
             },
         });
     }
+    async findActiveAssets() {
+        return this.assetRepository.find({
+            where: {
+                isActive: true,
+            },
+        });
+    }
 };
 exports.AssetsService = AssetsService;
 exports.AssetsService = AssetsService = __decorate([

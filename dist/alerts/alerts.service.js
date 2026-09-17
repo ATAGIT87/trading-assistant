@@ -10,6 +10,10 @@ exports.AlertsService = void 0;
 const common_1 = require("@nestjs/common");
 let AlertsService = class AlertsService {
     async sendSignalAlert(symbol, timeframe, signal) {
+        if (signal.action !== "BUY" &&
+            signal.action !== "SELL") {
+            return;
+        }
         const botToken = process.env.TELEGRAM_BOT_TOKEN;
         const chatId = process.env.TELEGRAM_CHAT_ID;
         if (!botToken || !chatId) {

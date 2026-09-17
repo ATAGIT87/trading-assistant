@@ -54,7 +54,7 @@ let MarketDataProviderService = class MarketDataProviderService {
             throw new Error(`Market OHLC request failed: ${response.status} ${errorBody}`);
         }
         const data = (await response.json());
-        return data.map(([timestamp, open, high, low, close]) => ({
+        return data.map(([timestamp, open, high, low, close,]) => ({
             time: new Date(timestamp),
             open,
             high,
@@ -82,52 +82,46 @@ let MarketDataProviderService = class MarketDataProviderService {
             }
             existing.high = Math.max(existing.high, candle.high);
             existing.low = Math.min(existing.low, candle.low);
-            existing.close = candle.close;
+            existing.close =
+                candle.close;
         }
-        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
+        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() -
+            b.time.getTime());
     }
-    async getBinanceHourlyCandles(symbol, limit = 1000) {
+    async getBinanceCandles(symbol, timeframe, limit = 1000) {
         const normalizedSymbol = symbol.toUpperCase();
-        if (normalizedSymbol !== "BTCUSD") {
+        const binanceSymbolMap = {
+            BTCUSD: "BTCUSDT",
+            ETHUSD: "ETHUSDT",
+        };
+        const binanceSymbol = binanceSymbolMap[normalizedSymbol];
+        if (!binanceSymbol) {
             throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
         }
-        const candles = [];
-        let endTime;
-        while (candles.length < limit) {
-            const remaining = limit - candles.length;
-            const requestLimit = Math.min(1000, remaining);
-            let url = `https://api.binance.com/api/v3/klines` +
-                `?symbol=BTCUSDT` +
-                `&interval=1h` +
-                `&limit=${requestLimit}`;
-            if (endTime !== undefined) {
-                url += `&endTime=${endTime}`;
-            }
-            const response = await fetch(url);
-            if (!response.ok) {
-                const errorBody = await response.text();
-                throw new Error(`Binance market data request failed: ${response.status} ${errorBody}`);
-            }
-            const data = (await response.json());
-            if (data.length === 0) {
-                break;
-            }
-            const batch = data.map((candle) => ({
-                time: new Date(Number(candle[0])),
-                open: Number(candle[1]),
-                high: Number(candle[2]),
-                low: Number(candle[3]),
-                close: Number(candle[4]),
-                volume: Number(candle[5]),
-            }));
-            candles.unshift(...batch);
-            const oldestTimestamp = Number(data[0][0]);
-            endTime = oldestTimestamp - 1;
-            if (data.length < requestLimit) {
-                break;
-            }
+        const supportedTimeframes = [
+            "15m",
+            "1h",
+        ];
+        if (!supportedTimeframes.includes(timeframe)) {
+            throw new Error(`Unsupported timeframe: ${timeframe}`);
         }
-        return candles.slice(-limit);
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${limit}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Binance market data request failed: ${response.status} ${errorBody}`);
+        }
+        const data = (await response.json());
+        return data.map((candle) => ({
+            time: new Date(Number(candle[0])),
+            open: Number(candle[1]),
+            high: Number(candle[2]),
+            low: Number(candle[3]),
+            close: Number(candle[4]),
+            volume: Number(candle[5]),
+        }));
+    }
+    async getBinanceHourlyCandles(symbol, limit = 1000) {
+        return this.getBinanceCandles(symbol, "1h", limit);
     }
 };
 exports.MarketDataProviderService = MarketDataProviderService;

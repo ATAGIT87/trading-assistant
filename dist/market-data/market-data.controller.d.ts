@@ -40,6 +40,7 @@ export declare class MarketDataController {
     }[]>;
     syncBinanceCandles(symbol: string): Promise<{
         symbol: string;
+        timeframe: Timeframe;
         received: number;
         saved: number;
     }>;
