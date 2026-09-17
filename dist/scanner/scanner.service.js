@@ -37,17 +37,27 @@ let ScannerService = class ScannerService {
         if (!signal) {
             return null;
         }
-        if (signal.action === "BUY" ||
-            signal.action === "SELL") {
-            await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+        if (signal.action !== "BUY" && signal.action !== "SELL") {
+            return signal;
         }
+        const latestSignal = await this.signalsService.getLatestSignal(symbol, timeframe);
+        if (latestSignal &&
+            latestSignal.action === signal.action &&
+            Number(latestSignal.entryPrice) === Number(signal.entryPrice)) {
+            return signal;
+        }
+        await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
         return signal;
     }
     async scheduledScan() {
+        console.log("[Scanner] Scheduled scan started");
         const assets = await this.assetsService.findActiveAssets();
+        console.log(`[Scanner] Active assets: ${assets.length}`);
         for (const asset of assets) {
+            console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);
             await this.scan(asset.symbol, asset.timeframe);
         }
+        console.log("[Scanner] Scheduled scan finished");
     }
 };
 exports.ScannerService = ScannerService;

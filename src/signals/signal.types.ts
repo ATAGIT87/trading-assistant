@@ -16,5 +16,6 @@ export interface TradingSignal {
     | "BEARISH_CONTINUATION"
     | "BULLISH_CONTINUATION"
     | "NEUTRAL";
+  candleTime: Date;
   reason: string;
 }

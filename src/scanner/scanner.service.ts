@@ -15,57 +15,59 @@ export class ScannerService {
     private readonly assetsService: AssetsService,
   ) {}
 
-  async scan(
-  symbol: string,
-  timeframe: Timeframe,
-  period = 14,
-) {
-  await this.marketDataService.syncBinanceCandles(
-    symbol,
-    timeframe,
-  );
+  async scan(symbol: string, timeframe: Timeframe, period = 14) {
+    await this.marketDataService.syncBinanceCandles(symbol, timeframe);
 
-  if (timeframe === Timeframe.ONE_HOUR) {
-    await this.marketDataService.buildFourHourCandles(
-      symbol,
-    );
-  }
+    if (timeframe === Timeframe.ONE_HOUR) {
+      await this.marketDataService.buildFourHourCandles(symbol);
+    }
 
-  const signal =
-    await this.signalsService.generateSignal(
+    const signal = await this.signalsService.generateSignal(
       symbol,
       timeframe,
       period,
     );
 
-  if (!signal) {
-    return null;
-  }
+    if (!signal) {
+      return null;
+    }
 
-  if (
-    signal.action === "BUY" ||
-    signal.action === "SELL"
-  ) {
-    await this.alertsService.sendSignalAlert(
+    if (signal.action !== "BUY" && signal.action !== "SELL") {
+      return signal;
+    }
+
+    const latestSignal = await this.signalsService.getLatestSignal(
       symbol,
       timeframe,
-      signal,
     );
-  }
 
-  return signal;
-}
+    if (
+      latestSignal &&
+      latestSignal.action === signal.action &&
+      Number(latestSignal.entryPrice) === Number(signal.entryPrice)
+    ) {
+      return signal;
+    }
+
+    await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+
+    return signal;
+  }
 
   @Cron("0 * * * *")
   async scheduledScan() {
-    const assets =
-      await this.assetsService.findActiveAssets();
+    console.log("[Scanner] Scheduled scan started");
+
+    const assets = await this.assetsService.findActiveAssets();
+
+    console.log(`[Scanner] Active assets: ${assets.length}`);
 
     for (const asset of assets) {
-      await this.scan(
-        asset.symbol,
-        asset.timeframe,
-      );
+      console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);
+
+      await this.scan(asset.symbol, asset.timeframe);
     }
+
+    console.log("[Scanner] Scheduled scan finished");
   }
 }

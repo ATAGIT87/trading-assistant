@@ -16,6 +16,7 @@ let Signal = class Signal {
     id;
     symbol;
     timeframe;
+    candleTime;
     action;
     confidence;
     entryPrice;
@@ -45,6 +46,10 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Signal.prototype, "timeframe", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Date)
+], Signal.prototype, "candleTime", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)

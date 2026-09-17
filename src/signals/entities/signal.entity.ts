@@ -21,6 +21,9 @@ export class Signal {
   timeframe!: Timeframe;
 
   @Column()
+  candleTime!: Date;
+
+  @Column()
   action!: string;
 
   @Column("decimal")

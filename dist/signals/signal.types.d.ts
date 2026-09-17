@@ -11,5 +11,6 @@ export interface TradingSignal {
     adx: number;
     rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL";
     marketCondition: "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | "NEUTRAL";
+    candleTime: Date;
     reason: string;
 }

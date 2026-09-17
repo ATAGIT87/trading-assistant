@@ -3,6 +3,7 @@ export declare class Signal {
     id: number;
     symbol: string;
     timeframe: Timeframe;
+    candleTime: Date;
     action: string;
     confidence: number;
     entryPrice: number;

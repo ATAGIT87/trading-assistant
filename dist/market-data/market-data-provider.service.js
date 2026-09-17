@@ -54,7 +54,7 @@ let MarketDataProviderService = class MarketDataProviderService {
             throw new Error(`Market OHLC request failed: ${response.status} ${errorBody}`);
         }
         const data = (await response.json());
-        return data.map(([timestamp, open, high, low, close,]) => ({
+        return data.map(([timestamp, open, high, low, close]) => ({
             time: new Date(timestamp),
             open,
             high,
@@ -82,11 +82,9 @@ let MarketDataProviderService = class MarketDataProviderService {
             }
             existing.high = Math.max(existing.high, candle.high);
             existing.low = Math.min(existing.low, candle.low);
-            existing.close =
-                candle.close;
+            existing.close = candle.close;
         }
-        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() -
-            b.time.getTime());
+        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
     }
     async getBinanceCandles(symbol, timeframe, limit = 1000) {
         const normalizedSymbol = symbol.toUpperCase();
@@ -98,10 +96,7 @@ let MarketDataProviderService = class MarketDataProviderService {
         if (!binanceSymbol) {
             throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
         }
-        const supportedTimeframes = [
-            "15m",
-            "1h",
-        ];
+        const supportedTimeframes = ["15m", "1h"];
         if (!supportedTimeframes.includes(timeframe)) {
             throw new Error(`Unsupported timeframe: ${timeframe}`);
         }

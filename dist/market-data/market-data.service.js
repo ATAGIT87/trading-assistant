@@ -238,7 +238,15 @@ let MarketDataService = class MarketDataService {
     }
     async syncBinanceCandles(symbol, timeframe) {
         const candles = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 1000);
-        return this.saveCandles(symbol, timeframe, candles);
+        const timeframeMs = {
+            [timeframe_enum_1.Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
+            [timeframe_enum_1.Timeframe.ONE_HOUR]: 60 * 60 * 1000,
+            [timeframe_enum_1.Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
+            [timeframe_enum_1.Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
+        };
+        const now = Date.now();
+        const closedCandles = candles.filter((candle) => candle.time.getTime() + timeframeMs[timeframe] <= now);
+        return this.saveCandles(symbol, timeframe, closedCandles);
     }
     async saveCandles(symbol, timeframe, candles) {
         let savedCount = 0;

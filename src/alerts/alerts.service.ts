@@ -8,23 +8,16 @@ export class AlertsService {
     timeframe: string,
     signal: TradingSignal,
   ): Promise<void> {
-    if (
-      signal.action !== "BUY" &&
-      signal.action !== "SELL"
-    ) {
+    if (signal.action !== "BUY" && signal.action !== "SELL") {
       return;
     }
 
-    const botToken =
-      process.env.TELEGRAM_BOT_TOKEN;
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
-    const chatId =
-      process.env.TELEGRAM_CHAT_ID;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!botToken || !chatId) {
-      console.log(
-        "Telegram alert skipped: missing configuration.",
-      );
+      console.log("Telegram alert skipped: missing configuration.");
       return;
     }
 
@@ -52,8 +45,7 @@ export class AlertsService {
       {
         method: "POST",
         headers: {
-          "Content-Type":
-            "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           chat_id: chatId,
@@ -63,12 +55,9 @@ export class AlertsService {
     );
 
     if (!response.ok) {
-      const errorBody =
-        await response.text();
+      const errorBody = await response.text();
 
-      throw new Error(
-        `Telegram alert failed: ${response.status} ${errorBody}`,
-      );
+      throw new Error(`Telegram alert failed: ${response.status} ${errorBody}`);
     }
   }
 }

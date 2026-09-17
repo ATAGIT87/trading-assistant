@@ -7,12 +7,7 @@ import { MarketDataModule } from "../market-data/market-data.module";
 import { AssetsModule } from "../assets/assets.module";
 
 @Module({
-  imports: [
-    SignalsModule,
-    AlertsModule,
-    MarketDataModule,
-    AssetsModule,
-  ],
+  imports: [SignalsModule, AlertsModule, MarketDataModule, AssetsModule],
   providers: [ScannerService],
   controllers: [ScannerController],
 })

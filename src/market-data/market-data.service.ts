@@ -360,60 +360,68 @@ export class MarketDataService {
   }
 
   async syncBinanceCandles(
-  symbol: string,
-  timeframe: Timeframe,
-): Promise<number> {
-  const candles =
-    await this.marketDataProviderService.getBinanceCandles(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<number> {
+    const candles = await this.marketDataProviderService.getBinanceCandles(
       symbol,
       timeframe,
       1000,
     );
 
-  return this.saveCandles(
-    symbol,
-    timeframe,
-    candles,
-  );
-}
+    const timeframeMs: Record<Timeframe, number> = {
+      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
+      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
+      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
+      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
+    };
 
-async saveCandles(
-  symbol: string,
-  timeframe: Timeframe,
-  candles: {
-    time: Date;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-  }[],
-): Promise<number> {
-  let savedCount = 0;
+    const now = Date.now();
 
-  for (const candle of candles) {
-    try {
-      await this.createCandle({
-        symbol,
-        timeframe,
-        time: candle.time.toISOString(),
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
-        volume: candle.volume,
-      });
+    const closedCandles = candles.filter(
+      (candle) => candle.time.getTime() + timeframeMs[timeframe] <= now,
+    );
 
-      savedCount++;
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        continue;
-      }
-
-      throw error;
-    }
+    return this.saveCandles(symbol, timeframe, closedCandles);
   }
 
-  return savedCount;
-}
+  async saveCandles(
+    symbol: string,
+    timeframe: Timeframe,
+    candles: {
+      time: Date;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume: number;
+    }[],
+  ): Promise<number> {
+    let savedCount = 0;
+
+    for (const candle of candles) {
+      try {
+        await this.createCandle({
+          symbol,
+          timeframe,
+          time: candle.time.toISOString(),
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+          volume: candle.volume,
+        });
+
+        savedCount++;
+      } catch (error) {
+        if (error instanceof ConflictException) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    return savedCount;
+  }
 }
