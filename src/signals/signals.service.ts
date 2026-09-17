@@ -5,6 +5,9 @@ import { Inject, Injectable } from "@nestjs/common";
 import { MARKET_DATA_SERVICE } from "./market-data.token";
 import type { MarketDataPort } from "./market-data.port";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Signal } from "./entities/signal.entity";
 
 const STRONG_SETUP_THRESHOLD = 75;
 @Injectable()
@@ -13,6 +16,8 @@ export class SignalsService {
     @Inject(MARKET_DATA_SERVICE)
     private readonly marketDataService: MarketDataPort,
     private readonly indicatorsService: IndicatorsService,
+    @InjectRepository(Signal)
+    private readonly signalRepository: Repository<Signal>,
   ) {}
 
   determineAction(
@@ -133,7 +138,6 @@ export class SignalsService {
             : `No valid trading setup. Trend: ${trend}, Higher timeframe trend: ${higherTimeframeTrend ?? "N/A"}, RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`,
     };
   }
-
   async generateSignal(
     symbol: string,
     timeframe: Timeframe,
@@ -144,11 +148,13 @@ export class SignalsService {
       timeframe,
       period,
     );
+
     const higherTimeframeTrend = await this.getHigherTimeframeTrend(
       symbol,
       timeframe,
       period,
     );
+
     const priceVsSma = await this.marketDataService.compareLatestPriceToSma(
       symbol,
       timeframe,
@@ -174,20 +180,24 @@ export class SignalsService {
       timeframe,
       period,
     );
+
     const entryPrice = await this.marketDataService.getLatestPrice(
       symbol,
       timeframe,
     );
+
     const atr = await this.marketDataService.getLatestAtr(
       symbol,
       timeframe,
       period,
     );
+
     const adx = await this.marketDataService.getLatestAdx(
       symbol,
       timeframe,
       period,
     );
+
     if (
       trend === null ||
       priceVsSma === null ||
@@ -202,7 +212,7 @@ export class SignalsService {
       return null;
     }
 
-    return this.createSignal(
+    const signal = this.createSignal(
       trend,
       entryPrice,
       atr,
@@ -214,6 +224,10 @@ export class SignalsService {
       marketCondition,
       higherTimeframeTrend,
     );
+
+    await this.saveSignal(symbol, timeframe, signal);
+
+    return signal;
   }
   calculateConfidence(
     trendScore: number,
@@ -387,5 +401,57 @@ export class SignalsService {
       marketCondition,
       higherTimeframeTrend,
     );
+  }
+  async saveSignal(
+    symbol: string,
+    timeframe: Timeframe,
+    signal: TradingSignal,
+  ): Promise<Signal> {
+    const entity = this.signalRepository.create({
+      symbol,
+      timeframe,
+      action: signal.action,
+      confidence: signal.confidence,
+      entryPrice: signal.entryPrice,
+      stopLoss: signal.stopLoss,
+      takeProfit: signal.takeProfit,
+      trend: signal.trend,
+      rsi: signal.rsi,
+      adx: signal.adx,
+      marketCondition: signal.marketCondition,
+      isStrongSetup: signal.isStrongSetup,
+      reason: signal.reason,
+    });
+
+    return this.signalRepository.save(entity);
+  }
+  async getSignalHistory(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<Signal[]> {
+    return this.signalRepository.find({
+      where: {
+        symbol,
+        timeframe,
+      },
+      order: {
+        createdAt: "DESC",
+      },
+      take: 50,
+    });
+  }
+  async getLatestSignal(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<Signal | null> {
+    return this.signalRepository.findOne({
+      where: {
+        symbol,
+        timeframe,
+      },
+      order: {
+        createdAt: "DESC",
+      },
+    });
   }
 }

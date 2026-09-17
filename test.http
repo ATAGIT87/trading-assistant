@@ -150,3 +150,15 @@ POST http://localhost:3000/market-data/sync-binance/BTCUSD
 
 ### Get backtesting results for BTCUSD 1h 
 GET http://localhost:3000/backtesting/BTCUSD/1h
+
+### Get signal history for BTCUSD 1h
+GET http://localhost:3000/signals/history/BTCUSD/1h
+
+### Get trading signal for BTCUSD 1h with period 14
+GET http://localhost:3000/signals/BTCUSD/1h/14
+
+### Get latest trading signal for BTCUSD 1h
+GET http://localhost:3000/signals/latest/BTCUSD/1h
+
+###
+GET http://localhost:3000/scanner/BTCUSD/1h

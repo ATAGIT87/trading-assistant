@@ -21,7 +21,7 @@ describe("SignalsService", () => {
 
     service = new SignalsService(
       marketDataServiceMock as any,
-      indicatorsServiceMock as any,
+      indicatorsServiceMock,
     );
   });
 
@@ -214,7 +214,7 @@ describe("SignalsService", () => {
 
     service = new SignalsService(
       marketDataServiceMock as any,
-      indicatorsServiceMock as any,
+      indicatorsServiceMock,
     );
 
     const signal = await service.generateSignal(
@@ -583,7 +583,7 @@ describe("SignalsService", () => {
 
     service = new SignalsService(
       marketDataServiceMock as any,
-      indicatorsServiceMock as any,
+      indicatorsServiceMock,
     );
 
     (indicatorsServiceMock.calculateTrendScore as jest.Mock).mockReturnValue(

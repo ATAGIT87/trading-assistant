@@ -21,11 +21,33 @@ let SignalsController = class SignalsController {
     constructor(signalsService) {
         this.signalsService = signalsService;
     }
+    getSignalHistory(symbol, timeframe) {
+        return this.signalsService.getSignalHistory(symbol, timeframe);
+    }
+    getLatestSignal(symbol, timeframe) {
+        return this.signalsService.getLatestSignal(symbol, timeframe);
+    }
     generateSignal(symbol, timeframe, period) {
         return this.signalsService.generateSignal(symbol, timeframe, Number(period));
     }
 };
 exports.SignalsController = SignalsController;
+__decorate([
+    (0, common_1.Get)("history/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], SignalsController.prototype, "getSignalHistory", null);
+__decorate([
+    (0, common_1.Get)("latest/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], SignalsController.prototype, "getLatestSignal", null);
 __decorate([
     (0, common_1.Get)(":symbol/:timeframe/:period"),
     __param(0, (0, common_1.Param)("symbol")),

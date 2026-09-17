@@ -14,12 +14,18 @@ const signals_controller_1 = require("./signals.controller");
 const indicators_module_1 = require("../indicators/indicators.module");
 const market_data_token_1 = require("./market-data.token");
 const market_data_service_1 = require("../market-data/market-data.service");
+const typeorm_1 = require("@nestjs/typeorm");
+const signal_entity_1 = require("./entities/signal.entity");
 let SignalsModule = class SignalsModule {
 };
 exports.SignalsModule = SignalsModule;
 exports.SignalsModule = SignalsModule = __decorate([
     (0, common_1.Module)({
-        imports: [market_data_module_1.MarketDataModule, indicators_module_1.IndicatorsModule],
+        imports: [
+            market_data_module_1.MarketDataModule,
+            indicators_module_1.IndicatorsModule,
+            typeorm_1.TypeOrmModule.forFeature([signal_entity_1.Signal]),
+        ],
         providers: [
             signals_service_1.SignalsService,
             {

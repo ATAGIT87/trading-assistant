@@ -14,6 +14,7 @@ const market_data_module_1 = require("./market-data/market-data.module");
 const indicators_module_1 = require("./indicators/indicators.module");
 const signals_module_1 = require("./signals/signals.module");
 const backtesting_module_1 = require("./backtesting/backtesting.module");
+const scanner_module_1 = require("./scanner/scanner.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -35,6 +36,7 @@ exports.AppModule = AppModule = __decorate([
             indicators_module_1.IndicatorsModule,
             signals_module_1.SignalsModule,
             backtesting_module_1.BacktestingModule,
+            scanner_module_1.ScannerModule
         ],
     })
 ], AppModule);

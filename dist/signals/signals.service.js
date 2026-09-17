@@ -17,13 +17,18 @@ const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const indicators_service_1 = require("../indicators/indicators.service");
 const common_1 = require("@nestjs/common");
 const market_data_token_1 = require("./market-data.token");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const signal_entity_1 = require("./entities/signal.entity");
 const STRONG_SETUP_THRESHOLD = 75;
 let SignalsService = class SignalsService {
     marketDataService;
     indicatorsService;
-    constructor(marketDataService, indicatorsService) {
+    signalRepository;
+    constructor(marketDataService, indicatorsService, signalRepository) {
         this.marketDataService = marketDataService;
         this.indicatorsService = indicatorsService;
+        this.signalRepository = signalRepository;
     }
     determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr) {
         if (!isStrongSetup) {
@@ -111,7 +116,9 @@ let SignalsService = class SignalsService {
             adx === null) {
             return null;
         }
-        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
+        const signal = this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
+        await this.saveSignal(symbol, timeframe, signal);
+        return signal;
     }
     calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore) {
         return Math.min(trendScore +
@@ -188,11 +195,54 @@ let SignalsService = class SignalsService {
         const { trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition, atr, adx, } = indicators;
         return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
     }
+    async saveSignal(symbol, timeframe, signal) {
+        const entity = this.signalRepository.create({
+            symbol,
+            timeframe,
+            action: signal.action,
+            confidence: signal.confidence,
+            entryPrice: signal.entryPrice,
+            stopLoss: signal.stopLoss,
+            takeProfit: signal.takeProfit,
+            trend: signal.trend,
+            rsi: signal.rsi,
+            adx: signal.adx,
+            marketCondition: signal.marketCondition,
+            isStrongSetup: signal.isStrongSetup,
+            reason: signal.reason,
+        });
+        return this.signalRepository.save(entity);
+    }
+    async getSignalHistory(symbol, timeframe) {
+        return this.signalRepository.find({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                createdAt: "DESC",
+            },
+            take: 50,
+        });
+    }
+    async getLatestSignal(symbol, timeframe) {
+        return this.signalRepository.findOne({
+            where: {
+                symbol,
+                timeframe,
+            },
+            order: {
+                createdAt: "DESC",
+            },
+        });
+    }
 };
 exports.SignalsService = SignalsService;
 exports.SignalsService = SignalsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(market_data_token_1.MARKET_DATA_SERVICE)),
-    __metadata("design:paramtypes", [Object, indicators_service_1.IndicatorsService])
+    __param(2, (0, typeorm_1.InjectRepository)(signal_entity_1.Signal)),
+    __metadata("design:paramtypes", [Object, indicators_service_1.IndicatorsService,
+        typeorm_2.Repository])
 ], SignalsService);
 //# sourceMappingURL=signals.service.js.map

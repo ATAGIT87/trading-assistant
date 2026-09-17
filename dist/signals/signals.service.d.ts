@@ -3,10 +3,13 @@ import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
 import type { MarketDataPort } from "./market-data.port";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
+import { Repository } from "typeorm";
+import { Signal } from "./entities/signal.entity";
 export declare class SignalsService {
     private readonly marketDataService;
     private readonly indicatorsService;
-    constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService);
+    private readonly signalRepository;
+    constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService, signalRepository: Repository<Signal>);
     determineAction(higherTimeframeTrend: TradingSignal["trend"] | null, trend: TradingSignal["trend"], marketCondition: TradingSignal["marketCondition"], isStrongSetup: boolean, adx: number, atr: number): TradingSignal["action"];
     createSignal(trend: TradingSignal["trend"], entryPrice: number, atr: number, priceVsSma: "ABOVE" | "BELOW" | "EQUAL", priceVsEma: "ABOVE" | "BELOW" | "EQUAL", rsi: number, adx: number, rsiStatus: TradingSignal["rsiStatus"], marketCondition: TradingSignal["marketCondition"], higherTimeframeTrend: TradingSignal["trend"] | null): TradingSignal;
     generateSignal(symbol: string, timeframe: Timeframe, period: number): Promise<TradingSignal | null>;
@@ -16,4 +19,7 @@ export declare class SignalsService {
     getHigherTimeframeTrend(symbol: string, timeframe: Timeframe, period: number): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null>;
     private getHigherTimeframeTrendFromCandles;
     generateSignalFromCandles(symbol: string, timeframe: Timeframe, candles: MarketCandle[]): Promise<TradingSignal | null>;
+    saveSignal(symbol: string, timeframe: Timeframe, signal: TradingSignal): Promise<Signal>;
+    getSignalHistory(symbol: string, timeframe: Timeframe): Promise<Signal[]>;
+    getLatestSignal(symbol: string, timeframe: Timeframe): Promise<Signal | null>;
 }

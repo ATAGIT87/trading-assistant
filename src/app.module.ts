@@ -5,6 +5,7 @@ import { MarketDataModule } from "./market-data/market-data.module";
 import { IndicatorsModule } from "./indicators/indicators.module";
 import { SignalsModule } from "./signals/signals.module";
 import { BacktestingModule } from "./backtesting/backtesting.module";
+import { ScannerModule } from "./scanner/scanner.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { BacktestingModule } from "./backtesting/backtesting.module";
     IndicatorsModule,
     SignalsModule,
     BacktestingModule,
+    ScannerModule
   ],
 })
 export class AppModule {}
