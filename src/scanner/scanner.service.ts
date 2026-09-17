@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Cron } from "@nestjs/schedule";
 import { SignalsService } from "../signals/signals.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 
@@ -17,6 +18,14 @@ export class ScannerService {
       symbol,
       timeframe,
       period,
+    );
+  }
+
+  @Cron("0 * * * *")
+  async scheduledScan() {
+    await this.scan(
+      "BTCUSD",
+      Timeframe.ONE_HOUR,
     );
   }
 }

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AssetsModule } from "./assets/assets.module";
 import { MarketDataModule } from "./market-data/market-data.module";
@@ -24,7 +25,8 @@ import { ScannerModule } from "./scanner/scanner.module";
     IndicatorsModule,
     SignalsModule,
     BacktestingModule,
-    ScannerModule
+    ScannerModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

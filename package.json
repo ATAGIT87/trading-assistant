@@ -13,7 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-   "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -23,6 +23,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^12.0.2",
     "@nestjs/typeorm": "^12.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -64,9 +65,9 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
-   "transform": {
-  "^.+\\.(t|j)s$": "ts-jest"
-},
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
