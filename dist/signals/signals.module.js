@@ -8,14 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsModule = void 0;
 const common_1 = require("@nestjs/common");
-const signals_service_1 = require("./signals.service");
+const typeorm_1 = require("@nestjs/typeorm");
 const market_data_module_1 = require("../market-data/market-data.module");
-const signals_controller_1 = require("./signals.controller");
 const indicators_module_1 = require("../indicators/indicators.module");
+const signal_entity_1 = require("./entities/signal.entity");
+const signals_service_1 = require("./signals.service");
+const signals_controller_1 = require("./signals.controller");
 const market_data_token_1 = require("./market-data.token");
 const market_data_service_1 = require("../market-data/market-data.service");
-const typeorm_1 = require("@nestjs/typeorm");
-const signal_entity_1 = require("./entities/signal.entity");
+const signal_storage_service_1 = require("./signal-storage.service");
+const signal_calculation_service_1 = require("./signal-calculation.service");
+const signal_timeframe_service_1 = require("./signal-timeframe.service");
 let SignalsModule = class SignalsModule {
 };
 exports.SignalsModule = SignalsModule;
@@ -28,6 +31,9 @@ exports.SignalsModule = SignalsModule = __decorate([
         ],
         providers: [
             signals_service_1.SignalsService,
+            signal_storage_service_1.SignalStorageService,
+            signal_calculation_service_1.SignalCalculationService,
+            signal_timeframe_service_1.SignalTimeframeService,
             {
                 provide: market_data_token_1.MARKET_DATA_SERVICE,
                 useExisting: market_data_service_1.MarketDataService,

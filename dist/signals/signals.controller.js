@@ -15,17 +15,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsController = void 0;
 const common_1 = require("@nestjs/common");
 const signals_service_1 = require("./signals.service");
+const signal_storage_service_1 = require("./signal-storage.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 let SignalsController = class SignalsController {
     signalsService;
-    constructor(signalsService) {
+    signalStorageService;
+    constructor(signalsService, signalStorageService) {
         this.signalsService = signalsService;
+        this.signalStorageService = signalStorageService;
     }
     getSignalHistory(symbol, timeframe) {
-        return this.signalsService.getSignalHistory(symbol, timeframe);
+        return this.signalStorageService.getSignalHistory(symbol, timeframe);
     }
     getLatestSignal(symbol, timeframe) {
-        return this.signalsService.getLatestSignal(symbol, timeframe);
+        return this.signalStorageService.getLatestSignal(symbol, timeframe);
     }
     generateSignal(symbol, timeframe, period) {
         return this.signalsService.generateSignal(symbol, timeframe, Number(period));
@@ -59,6 +62,7 @@ __decorate([
 ], SignalsController.prototype, "generateSignal", null);
 exports.SignalsController = SignalsController = __decorate([
     (0, common_1.Controller)("signals"),
-    __metadata("design:paramtypes", [signals_service_1.SignalsService])
+    __metadata("design:paramtypes", [signals_service_1.SignalsService,
+        signal_storage_service_1.SignalStorageService])
 ], SignalsController);
 //# sourceMappingURL=signals.controller.js.map

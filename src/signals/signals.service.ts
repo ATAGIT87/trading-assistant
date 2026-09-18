@@ -1,392 +1,157 @@
+import { Inject, Injectable } from "@nestjs/common";
+
 import { TradingSignal } from "./signal.types";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { IndicatorsService } from "../indicators/indicators.service";
-import { Inject, Injectable } from "@nestjs/common";
 import { MARKET_DATA_SERVICE } from "./market-data.token";
 import type { MarketDataPort } from "./market-data.port";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Signal } from "./entities/signal.entity";
+import { SignalStorageService } from "./signal-storage.service";
+import { SignalCalculationService } from "./signal-calculation.service";
+import { SignalTimeframeService } from "./signal-timeframe.service";
 
-const STRONG_SETUP_THRESHOLD = 75;
 @Injectable()
 export class SignalsService {
   constructor(
     @Inject(MARKET_DATA_SERVICE)
     private readonly marketDataService: MarketDataPort,
     private readonly indicatorsService: IndicatorsService,
-    @InjectRepository(Signal)
-    private readonly signalRepository: Repository<Signal>,
+    private readonly signalStorageService: SignalStorageService,
+    private readonly signalCalculationService: SignalCalculationService,
+    private readonly signalTimeframeService: SignalTimeframeService,
   ) {}
 
-  determineAction(
-    higherTimeframeTrend: TradingSignal["trend"] | null,
-    trend: TradingSignal["trend"],
-    marketCondition: TradingSignal["marketCondition"],
-    isStrongSetup: boolean,
-    adx: number,
-    atr: number,
-  ): TradingSignal["action"] {
-    if (!isStrongSetup) {
-      return "NO_TRADE";
-    }
-    if (trend === "NEUTRAL") {
-      return "NO_TRADE";
-    }
-    if (adx < 25) {
-      return "NO_TRADE";
-    }
-
-    if (atr <= 0) {
-      return "NO_TRADE";
-    }
-
-    if (
-      higherTimeframeTrend !== null &&
-      ((trend === "BULLISH" && higherTimeframeTrend !== "BULLISH") ||
-        (trend === "BEARISH" && higherTimeframeTrend !== "BEARISH"))
-    ) {
-      return "NO_TRADE";
-    }
-
-    if (
-      (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
-      (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
-    ) {
-      return "NO_TRADE";
-    }
-
-    if (marketCondition === "BULLISH_CONTINUATION") {
-      return "BUY";
-    }
-
-    if (marketCondition === "BEARISH_CONTINUATION") {
-      return "SELL";
-    }
-
-    return "WAIT";
-  }
-
-  createSignal(
-  trend: TradingSignal["trend"],
-  entryPrice: number,
-  atr: number,
-  priceVsSma: "ABOVE" | "BELOW" | "EQUAL",
-  priceVsEma: "ABOVE" | "BELOW" | "EQUAL",
-  rsi: number,
-  adx: number,
-  rsiStatus: TradingSignal["rsiStatus"],
-  marketCondition: TradingSignal["marketCondition"],
-  higherTimeframeTrend: TradingSignal["trend"] | null,
-  candleTime: Date,
-): TradingSignal {
-    const trendScore = this.indicatorsService.calculateTrendScore(trend);
-    const averageAlignmentScore =
-      this.indicatorsService.calculateAverageAlignmentScore(
-        priceVsSma,
-        priceVsEma,
-      );
-    const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
-    const marketConditionScore =
-      this.indicatorsService.calculateMarketConditionScore(
-        trend,
-        marketCondition,
-      );
-    const adxScore = this.indicatorsService.calculateAdxScore(adx);
-    const confidence = this.calculateConfidence(
-      trendScore,
-      averageAlignmentScore,
-      rsiScore,
-      marketConditionScore,
-      adxScore,
-    );
-    const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
-    const action = this.determineAction(
-      higherTimeframeTrend,
-      trend,
-      marketCondition,
-      isStrongSetup,
-      adx,
-      atr,
-    );
-    let stopLoss: number | null = null;
-    let takeProfit: number | null = null;
-
-    if (action === "BUY" || action === "SELL") {
-      stopLoss = this.calculateStopLoss(action, entryPrice, atr);
-
-      takeProfit = this.calculateTakeProfit(action, entryPrice, stopLoss, 2);
-    }
-
-    return {
-      action,
-      confidence,
-      entryPrice,
-      stopLoss,
-      takeProfit,
-      isStrongSetup,
-      trend,
-      rsi,
-      adx,
-      rsiStatus,
-      marketCondition,
-      candleTime,
-      reason:
-        action === "BUY"
-          ? `Bullish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
-          : action === "SELL"
-            ? `Bearish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
-            : `No valid trading setup. Trend: ${trend}, Higher timeframe trend: ${higherTimeframeTrend ?? "N/A"}, RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`,
-    };
-  }
   async generateSignal(
-  symbol: string,
-  timeframe: Timeframe,
-  period: number,
-): Promise<TradingSignal | null> {
-  const trend = await this.marketDataService.getTrend(
-    symbol,
-    timeframe,
-    period,
-  );
-
-  const higherTimeframeTrend = await this.getHigherTimeframeTrend(
-    symbol,
-    timeframe,
-    period,
-  );
-
-  const priceVsSma =
-    await this.marketDataService.compareLatestPriceToSma(
-      symbol,
-      timeframe,
-      period,
-    );
-
-  const priceVsEma =
-    await this.marketDataService.compareLatestPriceToEma(
-      symbol,
-      timeframe,
-      period,
-    );
-
-  const rsi = await this.marketDataService.getLatestRsi(
-    symbol,
-    timeframe,
-  );
-
-  const rsiStatus = await this.marketDataService.getRsiStatus(
-    symbol,
-    timeframe,
-    period,
-  );
-
-  const marketCondition =
-    await this.marketDataService.getMarketCondition(
-      symbol,
-      timeframe,
-      period,
-    );
-
-  const entryPrice =
-    await this.marketDataService.getLatestPrice(
-      symbol,
-      timeframe,
-    );
-
-  const atr = await this.marketDataService.getLatestAtr(
-    symbol,
-    timeframe,
-    period,
-  );
-
-  const adx = await this.marketDataService.getLatestAdx(
-    symbol,
-    timeframe,
-    period,
-  );
-
-  const candles =
-    await this.marketDataService.getHistoricalCandles(
-      symbol,
-      timeframe,
-    );
-
-  if (candles.length === 0) {
-    return null;
-  }
-
-  const latestCandle = candles[candles.length - 1];
-
-  if (
-    trend === null ||
-    priceVsSma === null ||
-    priceVsEma === null ||
-    rsi === null ||
-    rsiStatus === null ||
-    marketCondition === null ||
-    entryPrice === null ||
-    atr === null ||
-    adx === null
-  ) {
-    return null;
-  }
-
-  const signal = this.createSignal(
-    trend,
-    entryPrice,
-    atr,
-    priceVsSma,
-    priceVsEma,
-    rsi,
-    adx,
-    rsiStatus,
-    marketCondition,
-    higherTimeframeTrend,
-    latestCandle.time,
-  );
-
-  const existingSignal =
-    await this.getSignalByCandleTime(
-      symbol,
-      timeframe,
-      latestCandle.time,
-    );
-
-  if (!existingSignal) {
-    await this.saveSignal(
-      symbol,
-      timeframe,
-      signal,
-    );
-  }
-
-  return signal;
-}
-  calculateConfidence(
-    trendScore: number,
-    averageAlignmentScore: number,
-    rsiScore: number,
-    marketConditionScore: number,
-    adxScore: number,
-  ): number {
-    return Math.min(
-      trendScore +
-        averageAlignmentScore +
-        rsiScore +
-        marketConditionScore +
-        adxScore,
-      100,
-    );
-  }
-
-  calculateStopLoss(
-    action: "BUY" | "SELL",
-    entryPrice: number,
-    atr: number,
-  ): number {
-    const stopDistance = 1.5 * atr;
-
-    if (action === "BUY") {
-      return entryPrice - stopDistance;
-    }
-
-    return entryPrice + stopDistance;
-  }
-
-  calculateTakeProfit(
-    action: "BUY" | "SELL",
-    entryPrice: number,
-    stopLoss: number,
-    riskRewardRatio: number,
-  ): number {
-    const risk = Math.abs(entryPrice - stopLoss);
-    const reward = risk * riskRewardRatio;
-
-    if (action === "BUY") {
-      return entryPrice + reward;
-    }
-
-    return entryPrice - reward;
-  }
-
-  async getHigherTimeframeTrend(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
-    const higherTimeframe =
-      timeframe === Timeframe.FIFTEEN_MINUTES
-        ? Timeframe.ONE_HOUR
-        : timeframe === Timeframe.ONE_HOUR
-          ? Timeframe.FOUR_HOURS
-          : timeframe === Timeframe.FOUR_HOURS
-            ? Timeframe.ONE_DAY
-            : null;
-
-    if (higherTimeframe === null) {
-      return null;
-    }
-
-    return this.marketDataService.getTrend(symbol, higherTimeframe, period);
-  }
-
-  private async getHigherTimeframeTrendFromCandles(
-    symbol: string,
-    timeframe: Timeframe,
-    until: Date,
-  ): Promise<TradingSignal["trend"] | null> {
-    let higherTimeframe: Timeframe | null = null;
-
-    if (timeframe === Timeframe.FIFTEEN_MINUTES) {
-      higherTimeframe = Timeframe.ONE_HOUR;
-    } else if (timeframe === Timeframe.ONE_HOUR) {
-      higherTimeframe = Timeframe.FOUR_HOURS;
-    } else if (timeframe === Timeframe.FOUR_HOURS) {
-      higherTimeframe = Timeframe.ONE_DAY;
-    }
-
-    if (higherTimeframe === null) {
-      return null;
-    }
-
-    const higherTimeframeCandles =
-      await this.marketDataService.getHistoricalCandlesUntil(
+  ): Promise<TradingSignal | null> {
+    const trend =
+      await this.marketDataService.getTrend(
         symbol,
-        higherTimeframe,
-        until,
+        timeframe,
+        period,
       );
 
-    if (higherTimeframeCandles.length < 28) {
+    const higherTimeframeTrend =
+      await this.signalTimeframeService.getHigherTimeframeTrend(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const priceVsSma =
+      await this.marketDataService.compareLatestPriceToSma(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const priceVsEma =
+      await this.marketDataService.compareLatestPriceToEma(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const rsi =
+      await this.marketDataService.getLatestRsi(
+        symbol,
+        timeframe,
+      );
+
+    const rsiStatus =
+      await this.marketDataService.getRsiStatus(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const marketCondition =
+      await this.marketDataService.getMarketCondition(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const entryPrice =
+      await this.marketDataService.getLatestPrice(
+        symbol,
+        timeframe,
+      );
+
+    const atr =
+      await this.marketDataService.getLatestAtr(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const adx =
+      await this.marketDataService.getLatestAdx(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const candles =
+      await this.marketDataService.getHistoricalCandles(
+        symbol,
+        timeframe,
+      );
+
+    if (candles.length === 0) {
       return null;
     }
 
-    const latestClose = Number(
-      higherTimeframeCandles[higherTimeframeCandles.length - 1].close,
-    );
+    const latestCandle =
+      candles[candles.length - 1];
 
-    const closes = higherTimeframeCandles.map((candle) => Number(candle.close));
-
-    const sma = this.indicatorsService.calculateSma(closes, 14);
-
-    const ema = this.indicatorsService.calculateEma(closes, 14);
-
-    if (sma === null || ema === null) {
+    if (
+      trend === null ||
+      priceVsSma === null ||
+      priceVsEma === null ||
+      rsi === null ||
+      rsiStatus === null ||
+      marketCondition === null ||
+      entryPrice === null ||
+      atr === null ||
+      adx === null
+    ) {
       return null;
     }
 
-    const priceVsSma = this.indicatorsService.comparePriceToAverage(
-      latestClose,
-      sma,
-    );
+    const signal =
+      this.signalCalculationService.createSignal(
+        trend,
+        entryPrice,
+        atr,
+        priceVsSma,
+        priceVsEma,
+        rsi,
+        adx,
+        rsiStatus,
+        marketCondition,
+        higherTimeframeTrend,
+        latestCandle.time,
+      );
 
-    const priceVsEma = this.indicatorsService.comparePriceToAverage(
-      latestClose,
-      ema,
-    );
+    const existingSignal =
+      await this.signalStorageService.getSignalByCandleTime(
+        symbol,
+        timeframe,
+        latestCandle.time,
+      );
 
-    return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+    if (!existingSignal) {
+      await this.signalStorageService.saveSignal(
+        symbol,
+        timeframe,
+        signal,
+      );
+    }
+
+    return signal;
   }
 
   async generateSignalFromCandles(
@@ -394,24 +159,28 @@ export class SignalsService {
     timeframe: Timeframe,
     candles: MarketCandle[],
   ): Promise<TradingSignal | null> {
-    const indicators = this.indicatorsService.calculateIndicatorsFromCandles(
-      candles,
-      14,
-    );
+    const indicators =
+      this.indicatorsService.calculateIndicatorsFromCandles(
+        candles,
+        14,
+      );
 
     if (indicators === null) {
       return null;
     }
 
-    const latestCandle = candles[candles.length - 1];
+    const latestCandle =
+      candles[candles.length - 1];
 
-    const entryPrice = Number(latestCandle.close);
+    const entryPrice =
+      Number(latestCandle.close);
 
-    const higherTimeframeTrend = await this.getHigherTimeframeTrendFromCandles(
-      symbol,
-      timeframe,
-      latestCandle.time,
-    );
+    const higherTimeframeTrend =
+      await this.signalTimeframeService.getHigherTimeframeTrendFromCandles(
+        symbol,
+        timeframe,
+        latestCandle.time,
+      );
 
     const {
       trend,
@@ -424,85 +193,30 @@ export class SignalsService {
       adx,
     } = indicators;
 
-   return this.createSignal(
-  trend,
-  entryPrice,
-  atr,
-  priceVsSma,
-  priceVsEma,
-  rsi,
-  adx,
-  rsiStatus,
-  marketCondition,
-  higherTimeframeTrend,
-  latestCandle.time,
-);
-  }
-  async saveSignal(
-    symbol: string,
-    timeframe: Timeframe,
-    signal: TradingSignal,
-  ): Promise<Signal> {
-    const entity = this.signalRepository.create({
-      symbol,
-      timeframe,
-      action: signal.action,
-      confidence: signal.confidence,
-      entryPrice: signal.entryPrice,
-      stopLoss: signal.stopLoss,
-      takeProfit: signal.takeProfit,
-      trend: signal.trend,
-      rsi: signal.rsi,
-      adx: signal.adx,
-      marketCondition: signal.marketCondition,
-      isStrongSetup: signal.isStrongSetup,
-      reason: signal.reason,
-      candleTime: signal.candleTime,
-    });
-
-    return this.signalRepository.save(entity);
-  }
-  async getSignalHistory(
-    symbol: string,
-    timeframe: Timeframe,
-  ): Promise<Signal[]> {
-    return this.signalRepository.find({
-      where: {
-        symbol,
-        timeframe,
-      },
-      order: {
-        createdAt: "DESC",
-      },
-      take: 50,
-    });
-  }
-  async getLatestSignal(
-    symbol: string,
-    timeframe: Timeframe,
-  ): Promise<Signal | null> {
-    return this.signalRepository.findOne({
-      where: {
-        symbol,
-        timeframe,
-      },
-      order: {
-        createdAt: "DESC",
-      },
-    });
+    return this.signalCalculationService.createSignal(
+      trend,
+      entryPrice,
+      atr,
+      priceVsSma,
+      priceVsEma,
+      rsi,
+      adx,
+      rsiStatus,
+      marketCondition,
+      higherTimeframeTrend,
+      latestCandle.time,
+    );
   }
 
   async getSignalByCandleTime(
-  symbol: string,
-  timeframe: Timeframe,
-  candleTime: Date,
-): Promise<Signal | null> {
-  return this.signalRepository.findOne({
-    where: {
+    symbol: string,
+    timeframe: Timeframe,
+    candleTime: Date,
+  ) {
+    return this.signalStorageService.getSignalByCandleTime(
       symbol,
       timeframe,
       candleTime,
-    },
-  });
-}
+    );
+  }
 }
