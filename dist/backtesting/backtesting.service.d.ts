@@ -5,6 +5,8 @@ import { BacktestResult } from "./interfaces/backtest-result.interface";
 export declare class BacktestingService {
     private readonly marketDataService;
     private readonly signalsService;
+    private readonly FEE_RATE;
+    private readonly SLIPPAGE_RATE;
     constructor(marketDataService: MarketDataService, signalsService: SignalsService);
     run(symbol: string, timeframe: Timeframe): Promise<BacktestResult>;
 }

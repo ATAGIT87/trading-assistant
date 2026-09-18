@@ -84,7 +84,8 @@ let MarketDataProviderService = class MarketDataProviderService {
             existing.low = Math.min(existing.low, candle.low);
             existing.close = candle.close;
         }
-        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
+        return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() -
+            b.time.getTime());
     }
     async getBinanceCandles(symbol, timeframe, limit = 1000) {
         const normalizedSymbol = this.normalizeSymbol(symbol);
@@ -97,23 +98,42 @@ let MarketDataProviderService = class MarketDataProviderService {
         if (!binanceSymbol) {
             throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
         }
-        if (limit < 1 || limit > 1000) {
-            throw new Error(`Invalid candle limit: ${limit}. Must be between 1 and 1000.`);
+        if (limit < 1 || limit > 10000) {
+            throw new Error(`Invalid candle limit: ${limit}. Must be between 1 and 10000.`);
         }
-        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${limit}`);
-        if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Binance market data request failed: ${response.status} ${errorBody}`);
+        const allCandles = [];
+        let endTime = Date.now();
+        while (allCandles.length < limit) {
+            const requestLimit = Math.min(1000, limit - allCandles.length);
+            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${requestLimit}&endTime=${endTime}`);
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`Binance market data request failed: ${response.status} ${errorBody}`);
+            }
+            const data = (await response.json());
+            if (data.length === 0) {
+                break;
+            }
+            const candles = data.map((candle) => ({
+                time: new Date(Number(candle[0])),
+                open: Number(candle[1]),
+                high: Number(candle[2]),
+                low: Number(candle[3]),
+                close: Number(candle[4]),
+                volume: Number(candle[5]),
+            }));
+            allCandles.unshift(...candles);
+            const oldestCandle = candles[0];
+            const oldestTime = oldestCandle.time.getTime();
+            endTime = oldestTime - 1;
+            if (data.length < requestLimit) {
+                break;
+            }
         }
-        const data = (await response.json());
-        return data.map((candle) => ({
-            time: new Date(Number(candle[0])),
-            open: Number(candle[1]),
-            high: Number(candle[2]),
-            low: Number(candle[3]),
-            close: Number(candle[4]),
-            volume: Number(candle[5]),
-        }));
+        return allCandles
+            .slice(-limit)
+            .sort((a, b) => a.time.getTime() -
+            b.time.getTime());
     }
     async getBinanceHourlyCandles(symbol, limit = 1000) {
         return this.getBinanceCandles(symbol, "1h", limit);
@@ -126,7 +146,12 @@ let MarketDataProviderService = class MarketDataProviderService {
         return normalizedSymbol;
     }
     validateTimeframe(timeframe) {
-        const supportedTimeframes = ["15m", "1h", "4h", "1d"];
+        const supportedTimeframes = [
+            "15m",
+            "1h",
+            "4h",
+            "1d",
+        ];
         if (!supportedTimeframes.includes(timeframe)) {
             throw new Error(`Unsupported timeframe: ${timeframe}`);
         }

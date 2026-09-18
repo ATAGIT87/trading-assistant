@@ -83,12 +83,12 @@ let MarketDataController = class MarketDataController {
     getBinanceCandles(symbol) {
         return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
     }
-    async syncBinanceCandles(symbol) {
-        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, "1h", 1000);
-        const savedCount = await this.marketDataService.saveCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR, candles);
+    async syncBinanceCandles(symbol, timeframe) {
+        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 10000);
+        const savedCount = await this.marketDataService.saveCandles(symbol, timeframe, candles);
         return {
             symbol,
-            timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
+            timeframe,
             received: candles.length,
             saved: savedCount,
         };
@@ -259,10 +259,11 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getBinanceCandles", null);
 __decorate([
-    (0, common_1.Post)("sync-binance/:symbol"),
+    (0, common_1.Post)("sync-binance/:symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], MarketDataController.prototype, "syncBinanceCandles", null);
 __decorate([

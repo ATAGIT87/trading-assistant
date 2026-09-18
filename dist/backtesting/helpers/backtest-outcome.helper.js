@@ -6,6 +6,7 @@ function findTradeOutcome(signal, futureCandles) {
         return {
             result: null,
             exitIndex: null,
+            exitPrice: null,
             maeR: 0,
             mfeR: 0,
             durationCandles: 0,
@@ -16,6 +17,7 @@ function findTradeOutcome(signal, futureCandles) {
         return {
             result: null,
             exitIndex: null,
+            exitPrice: null,
             maeR: 0,
             mfeR: 0,
             durationCandles: 0,
@@ -36,8 +38,9 @@ function findTradeOutcome(signal, futureCandles) {
             const hitTakeProfit = high >= signal.takeProfit;
             if (hitStopLoss && hitTakeProfit) {
                 return {
-                    result: false,
-                    exitIndex: i,
+                    result: null,
+                    exitIndex: null,
+                    exitPrice: null,
                     maeR: maxMae,
                     mfeR: maxMfe,
                     durationCandles: i + 1,
@@ -47,6 +50,7 @@ function findTradeOutcome(signal, futureCandles) {
                 return {
                     result: false,
                     exitIndex: i,
+                    exitPrice: signal.stopLoss,
                     maeR: maxMae,
                     mfeR: maxMfe,
                     durationCandles: i + 1,
@@ -56,6 +60,7 @@ function findTradeOutcome(signal, futureCandles) {
                 return {
                     result: true,
                     exitIndex: i,
+                    exitPrice: signal.takeProfit,
                     maeR: maxMae,
                     mfeR: maxMfe,
                     durationCandles: i + 1,
@@ -71,8 +76,9 @@ function findTradeOutcome(signal, futureCandles) {
             const hitTakeProfit = low <= signal.takeProfit;
             if (hitStopLoss && hitTakeProfit) {
                 return {
-                    result: false,
-                    exitIndex: i,
+                    result: null,
+                    exitIndex: null,
+                    exitPrice: null,
                     maeR: maxMae,
                     mfeR: maxMfe,
                     durationCandles: i + 1,
@@ -82,6 +88,7 @@ function findTradeOutcome(signal, futureCandles) {
                 return {
                     result: false,
                     exitIndex: i,
+                    exitPrice: signal.stopLoss,
                     maeR: maxMae,
                     mfeR: maxMfe,
                     durationCandles: i + 1,
@@ -91,6 +98,7 @@ function findTradeOutcome(signal, futureCandles) {
                 return {
                     result: true,
                     exitIndex: i,
+                    exitPrice: signal.takeProfit,
                     maeR: maxMae,
                     mfeR: maxMfe,
                     durationCandles: i + 1,
@@ -101,6 +109,7 @@ function findTradeOutcome(signal, futureCandles) {
     return {
         result: null,
         exitIndex: null,
+        exitPrice: null,
         maeR: maxMae,
         mfeR: maxMfe,
         durationCandles: futureCandles.length,

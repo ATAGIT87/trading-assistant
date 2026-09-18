@@ -38,7 +38,7 @@ export declare class MarketDataController {
         close: number;
         volume: number;
     }[]>;
-    syncBinanceCandles(symbol: string): Promise<{
+    syncBinanceCandles(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
         received: number;

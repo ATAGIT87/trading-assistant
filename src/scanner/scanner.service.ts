@@ -16,6 +16,20 @@ export class ScannerService {
     private readonly assetsService: AssetsService,
   ) {}
 
+  private isMarketDataFresh(candleTime: Date, timeframe: Timeframe): boolean {
+    const timeframeMs: Record<Timeframe, number> = {
+      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
+      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
+      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
+      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
+    };
+
+    const maxAge = timeframeMs[timeframe] * 2;
+    const age = Date.now() - candleTime.getTime();
+
+    return age >= 0 && age <= maxAge;
+  }
+
   async scan(symbol: string, timeframe: Timeframe, period = 14) {
     if (timeframe === Timeframe.FIFTEEN_MINUTES) {
       await this.marketDataService.syncBinanceCandles(
@@ -40,6 +54,14 @@ export class ScannerService {
     }
 
     const latestCandle = candles[candles.length - 1];
+
+    if (!this.isMarketDataFresh(latestCandle.time, timeframe)) {
+      console.log(
+        `[Scanner] Skipping stale market data: ${symbol} / ${timeframe} / ${latestCandle.time.toISOString()}`,
+      );
+
+      return null;
+    }
 
     const existingSignal = await this.signalsService.getSignalByCandleTime(
       symbol,
@@ -88,6 +110,16 @@ export class ScannerService {
       }
 
       if (asset.timeframe === Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
+        continue;
+      }
+
+      if (
+        asset.timeframe !== Timeframe.FIFTEEN_MINUTES &&
+        asset.timeframe !== Timeframe.ONE_HOUR
+      ) {
+        console.log(
+          `[Scanner] Skipping unsupported scheduled timeframe: ${asset.symbol} / ${asset.timeframe}`,
+        );
         continue;
       }
 

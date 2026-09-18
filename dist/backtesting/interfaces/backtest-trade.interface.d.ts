@@ -17,4 +17,5 @@ export interface BacktestTrade {
     marketCondition: TradingSignal["marketCondition"];
     result: "WIN" | "LOSS" | "OPEN";
     exitTime: Date | null;
+    exitPrice: number | null;
 }

@@ -9,6 +9,7 @@ export declare class ScannerService {
     private readonly alertsService;
     private readonly assetsService;
     constructor(signalsService: SignalsService, marketDataService: MarketDataService, alertsService: AlertsService, assetsService: AssetsService);
+    private isMarketDataFresh;
     scan(symbol: string, timeframe: Timeframe, period?: number): Promise<import("../signals/signal.types").TradingSignal | null>;
     scheduledScan(): Promise<void>;
 }

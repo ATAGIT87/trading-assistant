@@ -28,6 +28,17 @@ let ScannerService = class ScannerService {
         this.alertsService = alertsService;
         this.assetsService = assetsService;
     }
+    isMarketDataFresh(candleTime, timeframe) {
+        const timeframeMs = {
+            [timeframe_enum_1.Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
+            [timeframe_enum_1.Timeframe.ONE_HOUR]: 60 * 60 * 1000,
+            [timeframe_enum_1.Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
+            [timeframe_enum_1.Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
+        };
+        const maxAge = timeframeMs[timeframe] * 2;
+        const age = Date.now() - candleTime.getTime();
+        return age >= 0 && age <= maxAge;
+    }
     async scan(symbol, timeframe, period = 14) {
         if (timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES) {
             await this.marketDataService.syncBinanceCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR);
@@ -41,6 +52,10 @@ let ScannerService = class ScannerService {
             return null;
         }
         const latestCandle = candles[candles.length - 1];
+        if (!this.isMarketDataFresh(latestCandle.time, timeframe)) {
+            console.log(`[Scanner] Skipping stale market data: ${symbol} / ${timeframe} / ${latestCandle.time.toISOString()}`);
+            return null;
+        }
         const existingSignal = await this.signalsService.getSignalByCandleTime(symbol, timeframe, latestCandle.time);
         const signal = await this.signalsService.generateSignal(symbol, timeframe, period);
         if (!signal) {
@@ -64,6 +79,11 @@ let ScannerService = class ScannerService {
                 continue;
             }
             if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
+                continue;
+            }
+            if (asset.timeframe !== timeframe_enum_1.Timeframe.FIFTEEN_MINUTES &&
+                asset.timeframe !== timeframe_enum_1.Timeframe.ONE_HOUR) {
+                console.log(`[Scanner] Skipping unsupported scheduled timeframe: ${asset.symbol} / ${asset.timeframe}`);
                 continue;
             }
             console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);

@@ -3,6 +3,7 @@ import { TradingSignal } from "../../signals/signal.types";
 export interface TradeOutcome {
     result: boolean | null;
     exitIndex: number | null;
+    exitPrice: number | null;
     maeR: number;
     mfeR: number;
     durationCandles: number;

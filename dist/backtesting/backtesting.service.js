@@ -19,6 +19,8 @@ const backtest_statistics_helper_1 = require("./helpers/backtest-statistics.help
 let BacktestingService = class BacktestingService {
     marketDataService;
     signalsService;
+    FEE_RATE = 0.001;
+    SLIPPAGE_RATE = 0.0005;
     constructor(marketDataService, signalsService) {
         this.marketDataService = marketDataService;
         this.signalsService = signalsService;
@@ -48,7 +50,8 @@ let BacktestingService = class BacktestingService {
                 throw new Error(`Look-ahead detected at ${candles[i].time.toISOString()}`);
             }
             const signal = await this.signalsService.generateSignalFromCandles(symbol, timeframe, historicalCandles);
-            if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+            if (signal?.action !== "BUY" &&
+                signal?.action !== "SELL") {
                 i++;
                 continue;
             }
@@ -61,12 +64,53 @@ let BacktestingService = class BacktestingService {
                     : "OPEN";
             const riskAmount = signal.stopLoss === null
                 ? 0
-                : Math.abs(signal.entryPrice - signal.stopLoss);
+                : Math.abs(signal.entryPrice -
+                    signal.stopLoss);
+            const grossR = outcome.result === true
+                ? 2
+                : outcome.result === false
+                    ? -1
+                    : null;
+            let netR = null;
+            if (grossR !== null &&
+                riskAmount > 0 &&
+                outcome.exitPrice !== null) {
+                const entryPrice = signal.entryPrice;
+                const exitPrice = outcome.exitPrice;
+                const entryExecutionPrice = signal.action === "BUY"
+                    ? entryPrice *
+                        (1 + this.SLIPPAGE_RATE)
+                    : entryPrice *
+                        (1 - this.SLIPPAGE_RATE);
+                const exitExecutionPrice = signal.action === "BUY"
+                    ? exitPrice *
+                        (1 - this.SLIPPAGE_RATE)
+                    : exitPrice *
+                        (1 + this.SLIPPAGE_RATE);
+                const entryFee = entryExecutionPrice *
+                    this.FEE_RATE;
+                const exitFee = exitExecutionPrice *
+                    this.FEE_RATE;
+                const totalTradingCost = entryFee +
+                    exitFee;
+                const priceSlippageCost = Math.abs(entryExecutionPrice -
+                    entryPrice) +
+                    Math.abs(exitExecutionPrice -
+                        exitPrice);
+                const totalCost = totalTradingCost +
+                    priceSlippageCost;
+                const costR = totalCost /
+                    riskAmount;
+                netR =
+                    grossR -
+                        costR;
+            }
             const backtestTrade = {
                 time: candles[i].time,
                 action: signal.action,
                 confidence: signal.confidence,
                 entryPrice: signal.entryPrice,
+                exitPrice: outcome.exitPrice,
                 stopLoss: signal.stopLoss,
                 takeProfit: signal.takeProfit,
                 trend: signal.trend,
@@ -78,7 +122,7 @@ let BacktestingService = class BacktestingService {
                     ? null
                     : (futureCandles[outcome.exitIndex]?.time ?? null),
                 riskAmount,
-                resultR: outcome.result === true ? 2 : outcome.result === false ? -1 : null,
+                resultR: netR,
                 maeR: outcome.maeR,
                 mfeR: outcome.mfeR,
                 durationCandles: outcome.durationCandles,
@@ -90,20 +134,28 @@ let BacktestingService = class BacktestingService {
             else {
                 testTrades.push(backtestTrade);
             }
-            if (outcome.result === true) {
-                winningTrades++;
-            }
-            if (outcome.result === false) {
-                losingTrades++;
+            if (netR !== null) {
+                if (netR > 0) {
+                    winningTrades++;
+                }
+                else if (netR < 0) {
+                    losingTrades++;
+                }
             }
             if (outcome.exitIndex === null) {
                 break;
             }
-            i = i + outcome.exitIndex + 2;
+            i =
+                i +
+                    outcome.exitIndex +
+                    2;
         }
-        const completedTrades = winningTrades + losingTrades;
-        const totalR = winningTrades * 2 - losingTrades;
-        const expectancyR = completedTrades === 0 ? 0 : totalR / completedTrades;
+        const completedTrades = winningTrades +
+            losingTrades;
+        const totalR = trades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
+        const expectancyR = completedTrades === 0
+            ? 0
+            : totalR / completedTrades;
         const statistics = (0, backtest_statistics_helper_1.calculateBacktestStatistics)(trades);
         const training = (0, backtest_summary_helper_1.calculateBacktestSummary)(trainingTrades);
         const test = (0, backtest_summary_helper_1.calculateBacktestSummary)(testTrades);
@@ -112,7 +164,11 @@ let BacktestingService = class BacktestingService {
             totalTrades: trades.length,
             winningTrades,
             losingTrades,
-            winRate: completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+            winRate: completedTrades === 0
+                ? 0
+                : (winningTrades /
+                    completedTrades) *
+                    100,
             totalR,
             expectancyR,
             training,
