@@ -15,59 +15,115 @@ export class ScannerService {
     private readonly assetsService: AssetsService,
   ) {}
 
-  async scan(symbol: string, timeframe: Timeframe, period = 14) {
-    await this.marketDataService.syncBinanceCandles(symbol, timeframe);
+  async scan(
+  symbol: string,
+  timeframe: Timeframe,
+  period = 14,
+) {
+  await this.marketDataService.syncBinanceCandles(
+    symbol,
+    timeframe,
+  );
 
-    if (timeframe === Timeframe.ONE_HOUR) {
-      await this.marketDataService.buildFourHourCandles(symbol);
-    }
+  if (timeframe === Timeframe.ONE_HOUR) {
+    await this.marketDataService.buildFourHourCandles(
+      symbol,
+    );
+  }
 
-    const signal = await this.signalsService.generateSignal(
+  const candles =
+    await this.marketDataService.getHistoricalCandles(
+      symbol,
+      timeframe,
+    );
+
+  if (candles.length === 0) {
+    return null;
+  }
+
+  const latestCandle =
+    candles[candles.length - 1];
+
+  const existingSignal =
+    await this.signalsService.getSignalByCandleTime(
+      symbol,
+      timeframe,
+      latestCandle.time,
+    );
+
+  const signal =
+    await this.signalsService.generateSignal(
       symbol,
       timeframe,
       period,
     );
 
-    if (!signal) {
-      return null;
-    }
+  if (!signal) {
+    return null;
+  }
 
-    if (signal.action !== "BUY" && signal.action !== "SELL") {
-      return signal;
-    }
-
-    const latestSignal = await this.signalsService.getLatestSignal(
-      symbol,
-      timeframe,
-    );
-
-    if (
-      latestSignal &&
-      latestSignal.action === signal.action &&
-      Number(latestSignal.entryPrice) === Number(signal.entryPrice)
-    ) {
-      return signal;
-    }
-
-    await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
-
+  if (
+    existingSignal ||
+    (signal.action !== "BUY" &&
+      signal.action !== "SELL")
+  ) {
     return signal;
   }
 
-  @Cron("0 * * * *")
-  async scheduledScan() {
-    console.log("[Scanner] Scheduled scan started");
+  await this.alertsService.sendSignalAlert(
+    symbol,
+    timeframe,
+    signal,
+  );
 
-    const assets = await this.assetsService.findActiveAssets();
+  return signal;
+}
 
-    console.log(`[Scanner] Active assets: ${assets.length}`);
+  @Cron("*/15 * * * *")
+async scheduledScan() {
+  console.log("[Scanner] Scheduled scan started");
 
-    for (const asset of assets) {
-      console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);
+  const assets =
+    await this.assetsService.findActiveAssets();
 
-      await this.scan(asset.symbol, asset.timeframe);
+  console.log(
+    `[Scanner] Active assets: ${assets.length}`,
+  );
+
+  for (const asset of assets) {
+    const now = new Date();
+
+    if (
+      asset.timeframe === Timeframe.FIFTEEN_MINUTES &&
+      now.getMinutes() % 15 !== 0
+    ) {
+      continue;
     }
 
-    console.log("[Scanner] Scheduled scan finished");
+    if (
+      asset.timeframe === Timeframe.ONE_HOUR &&
+      now.getMinutes() !== 0
+    ) {
+      continue;
+    }
+
+    console.log(
+      `[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`,
+    );
+
+    try {
+      await this.scan(
+        asset.symbol,
+        asset.timeframe,
+      );
+    } catch (error) {
+      console.error(
+        `[Scanner] Failed ${asset.symbol} / ${asset.timeframe}`,
+        error,
+      );
+    }
   }
+
+  console.log("[Scanner] Scheduled scan finished");
+}
 }

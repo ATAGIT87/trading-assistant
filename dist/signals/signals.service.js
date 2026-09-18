@@ -60,7 +60,7 @@ let SignalsService = class SignalsService {
         }
         return "WAIT";
     }
-    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend) {
+    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend, candleTime) {
         const trendScore = this.indicatorsService.calculateTrendScore(trend);
         const averageAlignmentScore = this.indicatorsService.calculateAverageAlignmentScore(priceVsSma, priceVsEma);
         const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
@@ -87,6 +87,7 @@ let SignalsService = class SignalsService {
             adx,
             rsiStatus,
             marketCondition,
+            candleTime,
             reason: action === "BUY"
                 ? `Bullish trend confirmed by higher timeframe. RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`
                 : action === "SELL"
@@ -105,6 +106,11 @@ let SignalsService = class SignalsService {
         const entryPrice = await this.marketDataService.getLatestPrice(symbol, timeframe);
         const atr = await this.marketDataService.getLatestAtr(symbol, timeframe, period);
         const adx = await this.marketDataService.getLatestAdx(symbol, timeframe, period);
+        const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
+        if (candles.length === 0) {
+            return null;
+        }
+        const latestCandle = candles[candles.length - 1];
         if (trend === null ||
             priceVsSma === null ||
             priceVsEma === null ||
@@ -116,8 +122,11 @@ let SignalsService = class SignalsService {
             adx === null) {
             return null;
         }
-        const signal = this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
-        await this.saveSignal(symbol, timeframe, signal);
+        const signal = this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend, latestCandle.time);
+        const existingSignal = await this.getSignalByCandleTime(symbol, timeframe, latestCandle.time);
+        if (!existingSignal) {
+            await this.saveSignal(symbol, timeframe, signal);
+        }
         return signal;
     }
     calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore) {
@@ -193,7 +202,7 @@ let SignalsService = class SignalsService {
         const entryPrice = Number(latestCandle.close);
         const higherTimeframeTrend = await this.getHigherTimeframeTrendFromCandles(symbol, timeframe, latestCandle.time);
         const { trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition, atr, adx, } = indicators;
-        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend);
+        return this.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend, latestCandle.time);
     }
     async saveSignal(symbol, timeframe, signal) {
         const entity = this.signalRepository.create({
@@ -210,6 +219,7 @@ let SignalsService = class SignalsService {
             marketCondition: signal.marketCondition,
             isStrongSetup: signal.isStrongSetup,
             reason: signal.reason,
+            candleTime: signal.candleTime,
         });
         return this.signalRepository.save(entity);
     }
@@ -233,6 +243,15 @@ let SignalsService = class SignalsService {
             },
             order: {
                 createdAt: "DESC",
+            },
+        });
+    }
+    async getSignalByCandleTime(symbol, timeframe, candleTime) {
+        return this.signalRepository.findOne({
+            where: {
+                symbol,
+                timeframe,
+                candleTime,
             },
         });
     }

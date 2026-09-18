@@ -3,10 +3,12 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  Unique,
 } from "typeorm";
 import { Timeframe } from "../../assets/enums/timeframe.enum";
 
 @Entity()
+@Unique(["symbol", "timeframe", "candleTime"])
 export class Signal {
   @PrimaryGeneratedColumn()
   id!: number;

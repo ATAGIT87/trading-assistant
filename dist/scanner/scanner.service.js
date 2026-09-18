@@ -33,17 +33,19 @@ let ScannerService = class ScannerService {
         if (timeframe === timeframe_enum_1.Timeframe.ONE_HOUR) {
             await this.marketDataService.buildFourHourCandles(symbol);
         }
+        const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
+        if (candles.length === 0) {
+            return null;
+        }
+        const latestCandle = candles[candles.length - 1];
+        const existingSignal = await this.signalsService.getSignalByCandleTime(symbol, timeframe, latestCandle.time);
         const signal = await this.signalsService.generateSignal(symbol, timeframe, period);
         if (!signal) {
             return null;
         }
-        if (signal.action !== "BUY" && signal.action !== "SELL") {
-            return signal;
-        }
-        const latestSignal = await this.signalsService.getLatestSignal(symbol, timeframe);
-        if (latestSignal &&
-            latestSignal.action === signal.action &&
-            Number(latestSignal.entryPrice) === Number(signal.entryPrice)) {
+        if (existingSignal ||
+            (signal.action !== "BUY" &&
+                signal.action !== "SELL")) {
             return signal;
         }
         await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
@@ -54,15 +56,29 @@ let ScannerService = class ScannerService {
         const assets = await this.assetsService.findActiveAssets();
         console.log(`[Scanner] Active assets: ${assets.length}`);
         for (const asset of assets) {
+            const now = new Date();
+            if (asset.timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES &&
+                now.getMinutes() % 15 !== 0) {
+                continue;
+            }
+            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR &&
+                now.getMinutes() !== 0) {
+                continue;
+            }
             console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);
-            await this.scan(asset.symbol, asset.timeframe);
+            try {
+                await this.scan(asset.symbol, asset.timeframe);
+            }
+            catch (error) {
+                console.error(`[Scanner] Failed ${asset.symbol} / ${asset.timeframe}`, error);
+            }
         }
         console.log("[Scanner] Scheduled scan finished");
     }
 };
 exports.ScannerService = ScannerService;
 __decorate([
-    (0, schedule_1.Cron)("0 * * * *"),
+    (0, schedule_1.Cron)("*/15 * * * *"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

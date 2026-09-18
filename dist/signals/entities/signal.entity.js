@@ -99,6 +99,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Signal.prototype, "createdAt", void 0);
 exports.Signal = Signal = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)(),
+    (0, typeorm_1.Unique)(["symbol", "timeframe", "candleTime"])
 ], Signal);
 //# sourceMappingURL=signal.entity.js.map
