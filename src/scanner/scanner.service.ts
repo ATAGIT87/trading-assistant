@@ -20,6 +20,12 @@ export class ScannerService {
   timeframe: Timeframe,
   period = 14,
 ) {
+  if (timeframe === Timeframe.FIFTEEN_MINUTES) {
+  await this.marketDataService.syncBinanceCandles(
+    symbol,
+    Timeframe.ONE_HOUR,
+  );
+}
   await this.marketDataService.syncBinanceCandles(
     symbol,
     timeframe,

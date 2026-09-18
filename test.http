@@ -170,3 +170,6 @@ POST http://localhost:3000/market-data/sync-binance/ETHUSD
 
 ### Get latest trading signal for ETHUSD 15m
 GET http://localhost:3000/scanner/ETHUSD/15m
+
+### Build 4-hour candles for ETHUSD
+POST http://localhost:3000/market-data/build-4h/ETHUSD

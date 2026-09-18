@@ -29,6 +29,9 @@ let ScannerService = class ScannerService {
         this.assetsService = assetsService;
     }
     async scan(symbol, timeframe, period = 14) {
+        if (timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES) {
+            await this.marketDataService.syncBinanceCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR);
+        }
         await this.marketDataService.syncBinanceCandles(symbol, timeframe);
         if (timeframe === timeframe_enum_1.Timeframe.ONE_HOUR) {
             await this.marketDataService.buildFourHourCandles(symbol);

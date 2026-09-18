@@ -319,45 +319,127 @@ export class MarketDataService {
     });
   }
 
-  async buildFourHourCandles(symbol: string): Promise<number> {
-    const hourlyCandles = await this.getHistoricalCandles(
-      symbol,
-      Timeframe.ONE_HOUR,
-    );
-
-    const fourHourCandles: Partial<MarketCandle>[] = [];
-
-    for (let i = 0; i + 3 < hourlyCandles.length; i += 4) {
-      const group = hourlyCandles.slice(i, i + 4);
-
-      const first = group[0];
-      const last = group[3];
-
-      fourHourCandles.push({
+ async buildFourHourCandles(
+  symbol: string,
+): Promise<number> {
+  const hourlyCandles =
+    await this.marketCandleRepository.find({
+      where: {
         symbol,
-        timeframe: Timeframe.FOUR_HOURS,
-        time: last.time,
-        open: first.open,
-        high: Math.max(
-          ...group.map((candle) => Number(candle.high)),
-        ).toString(),
-        low: Math.min(...group.map((candle) => Number(candle.low))).toString(),
-        close: last.close,
-        volume: group
-          .reduce((sum, candle) => sum + Number(candle.volume), 0)
-          .toString(),
-      });
-    }
-
-    await this.marketCandleRepository.delete({
-      symbol,
-      timeframe: Timeframe.FOUR_HOURS,
+        timeframe: Timeframe.ONE_HOUR,
+      },
+      order: {
+        time: "ASC",
+      },
     });
 
-    await this.marketCandleRepository.save(fourHourCandles);
-
-    return fourHourCandles.length;
+  if (hourlyCandles.length === 0) {
+    return 0;
   }
+
+  const groups = new Map<
+    number,
+    MarketCandle[]
+  >();
+
+  for (const candle of hourlyCandles) {
+    const time = new Date(candle.time);
+
+    const alignedHour =
+      Math.floor(time.getUTCHours() / 4) * 4;
+
+    const startTime = new Date(time);
+
+    startTime.setUTCHours(
+      alignedHour,
+      0,
+      0,
+      0,
+    );
+
+    const key = startTime.getTime();
+
+    const group = groups.get(key) ?? [];
+
+    group.push(candle);
+
+    groups.set(key, group);
+  }
+
+  const fourHourCandles: MarketCandle[] = [];
+
+  for (const [startTime, candles] of groups) {
+    candles.sort(
+      (a, b) =>
+        a.time.getTime() -
+        b.time.getTime(),
+    );
+
+    if (candles.length !== 4) {
+      continue;
+    }
+
+    const first = candles[0];
+    const last =
+      candles[candles.length - 1];
+
+    const high = Math.max(
+      ...candles.map((candle) =>
+        Number(candle.high),
+      ),
+    );
+
+    const low = Math.min(
+      ...candles.map((candle) =>
+        Number(candle.low),
+      ),
+    );
+
+    const volume = candles.reduce(
+      (sum, candle) =>
+        sum + Number(candle.volume),
+      0,
+    );
+
+    const fourHourCandle =
+      new MarketCandle();
+
+    fourHourCandle.symbol = symbol;
+    fourHourCandle.timeframe =
+      Timeframe.FOUR_HOURS;
+    fourHourCandle.time =
+      new Date(startTime);
+    fourHourCandle.open =
+      first.open;
+    fourHourCandle.high =
+      high.toString();
+    fourHourCandle.low =
+      low.toString();
+    fourHourCandle.close =
+      last.close;
+    fourHourCandle.volume =
+      volume.toString();
+
+    fourHourCandles.push(
+      fourHourCandle,
+    );
+  }
+
+  await this.marketCandleRepository.delete({
+    symbol,
+    timeframe: Timeframe.FOUR_HOURS,
+  });
+
+  if (fourHourCandles.length === 0) {
+    return 0;
+  }
+
+  await this.marketCandleRepository.save(
+    fourHourCandles,
+  );
+
+  return fourHourCandles.length;
+}
 
   async syncBinanceCandles(
     symbol: string,
