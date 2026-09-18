@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const signals_service_1 = require("./signals.service");
 const signal_storage_service_1 = require("./signal-storage.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const signal_response_schema_1 = require("./signal-response.schema");
 let SignalsController = class SignalsController {
     signalsService;
     signalStorageService;
@@ -30,8 +31,9 @@ let SignalsController = class SignalsController {
     getLatestSignal(symbol, timeframe) {
         return this.signalStorageService.getLatestSignal(symbol, timeframe);
     }
-    generateSignal(symbol, timeframe, period) {
-        return this.signalsService.generateSignal(symbol, timeframe, Number(period));
+    async generateSignal(symbol, timeframe, period) {
+        const result = await this.signalsService.generateSignal(symbol, timeframe, period);
+        return signal_response_schema_1.SignalResponseSchema.parse(result);
     }
 };
 exports.SignalsController = SignalsController;
@@ -55,10 +57,10 @@ __decorate([
     (0, common_1.Get)(":symbol/:timeframe/:period"),
     __param(0, (0, common_1.Param)("symbol")),
     __param(1, (0, common_1.Param)("timeframe")),
-    __param(2, (0, common_1.Param)("period")),
+    __param(2, (0, common_1.Param)("period", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, String, Number]),
+    __metadata("design:returntype", Promise)
 ], SignalsController.prototype, "generateSignal", null);
 exports.SignalsController = SignalsController = __decorate([
     (0, common_1.Controller)("signals"),

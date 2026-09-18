@@ -21,8 +21,9 @@ let BacktestingController = class BacktestingController {
     constructor(backtestingService) {
         this.backtestingService = backtestingService;
     }
-    runBacktest(symbol, timeframe) {
-        return this.backtestingService.run(symbol, timeframe);
+    async runBacktest(symbol, timeframe) {
+        const result = await this.backtestingService.run(symbol, timeframe);
+        return result;
     }
 };
 exports.BacktestingController = BacktestingController;
@@ -32,7 +33,7 @@ __decorate([
     __param(1, (0, common_1.Param)("timeframe")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], BacktestingController.prototype, "runBacktest", null);
 exports.BacktestingController = BacktestingController = __decorate([
     (0, common_1.Controller)("backtesting"),

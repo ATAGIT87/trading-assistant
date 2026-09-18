@@ -107,3 +107,4 @@ POST http://localhost:3000/market-data/sync-binance/ETHUSD/15m
 
 ###
 GET http://localhost:3000/backtesting/BTCUSD/15m
+

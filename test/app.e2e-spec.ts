@@ -5,6 +5,7 @@ import { INestApplication } from "@nestjs/common";
 import request from "supertest";
 
 import { AppModule } from "../src/app.module";
+import { SignalResponseSchema } from "../src/signals/signal-response.schema";
 
 async function main() {
   const moduleRef = await Test.createTestingModule({
@@ -16,39 +17,23 @@ async function main() {
   await app.init();
 
   const response = await request(app.getHttpServer()).get(
-    "/backtesting/ETHUSD/15m",
+    "/signals/ETHUSD/15m/14",
   );
 
   console.log("E2E status:", response.status);
 
-  const body = response.body;
-  const trades = body.trades;
+  const body = SignalResponseSchema.parse(response.body);
 
-  const wins = trades.filter(
-    (trade: any) => trade.result === "WIN",
-  ).length;
-
-  const losses = trades.filter(
-    (trade: any) => trade.result === "LOSS",
-  ).length;
-
-  const totalR = trades.reduce(
-    (sum: number, trade: any) =>
-      sum + Number(trade.resultR ?? 0),
-    0,
-  );
-
-  console.log("Backtest validation:", {
-    trades: trades.length,
-    wins,
-    losses,
-    totalR,
-    reportedTotalTrades: body.totalTrades,
-    reportedWinningTrades: body.winningTrades,
-    reportedLosingTrades: body.losingTrades,
-    reportedWinRate: body.winRate,
-    reportedTotalR: body.totalR,
-    expectancyR: body.expectancyR,
+  console.log("Signal validation:", {
+    action: body.action,
+    confidence: body.confidence,
+    entryPrice: body.entryPrice,
+    stopLoss: body.stopLoss,
+    takeProfit: body.takeProfit,
+    trend: body.trend,
+    rsi: body.rsi,
+    adx: body.adx,
+    marketCondition: body.marketCondition,
   });
 
   await app.close();
