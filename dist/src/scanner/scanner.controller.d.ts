@@ -3,5 +3,19 @@ import { Timeframe } from "../assets/enums/timeframe.enum";
 export declare class ScannerController {
     private readonly scannerService;
     constructor(scannerService: ScannerService);
-    scan(symbol: string, timeframe: Timeframe): Promise<import("../signals/signal.types").TradingSignal | import("../signals/entities/signal.entity").Signal | null>;
+    scan(symbol: string, timeframe: Timeframe, period: number): Promise<{
+        action: "BUY" | "SELL" | "WAIT" | "NO_TRADE";
+        confidence: number;
+        entryPrice: number;
+        stopLoss: number | null;
+        takeProfit: number | null;
+        isStrongSetup: boolean;
+        trend: "BULLISH" | "BEARISH" | "NEUTRAL";
+        rsi: number;
+        adx: number;
+        rsiStatus: string;
+        marketCondition: string;
+        candleTime: Date;
+        reason: string;
+    } | null>;
 }
