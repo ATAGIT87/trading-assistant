@@ -23,11 +23,15 @@ export class BacktestingService {
     this.slippageRate = 0;
   }
 
-  async run(symbol: string, timeframe: Timeframe): Promise<BacktestResult> {
-    const candles = await this.marketDataService.getHistoricalCandles(
-      symbol,
-      timeframe,
-    );
+  async run(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<BacktestResult> {
+    const candles =
+      await this.marketDataService.getHistoricalCandles(
+        symbol,
+        timeframe,
+      );
 
     const higherTimeframe =
       timeframe === Timeframe.FIFTEEN_MINUTES
@@ -47,7 +51,9 @@ export class BacktestingService {
           );
 
     const period = 14;
-    const splitIndex = Math.floor(candles.length * 0.7);
+
+    const splitIndex =
+      Math.floor(candles.length * 0.7);
 
     const trades: BacktestTrade[] = [];
     const trainingTrades: BacktestTrade[] = [];
@@ -65,26 +71,39 @@ export class BacktestingService {
       endIndex: number,
       targetTrades: BacktestTrade[],
     ) => {
-      let i = Math.max(startIndex, period * 2 - 1);
+      let i = Math.max(
+        startIndex,
+        period * 2 - 1,
+      );
 
       while (i < endIndex) {
-        const historicalCandles = candles.slice(0, i + 1);
+        const historicalCandles =
+          candles.slice(0, i + 1);
 
-        const signal = await this.signalsService.generateSignalFromCandles(
-          symbol,
-          timeframe,
-          historicalCandles,
-          higherTimeframeCandles,
-        );
+        const signal =
+          await this.signalsService.generateSignalFromCandles(
+            symbol,
+            timeframe,
+            historicalCandles,
+            higherTimeframeCandles,
+          );
 
-        if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+        if (
+          signal?.action !== "BUY" &&
+          signal?.action !== "SELL"
+        ) {
           i++;
           continue;
         }
 
-        const futureCandles = candles.slice(i + 1, endIndex);
+        const futureCandles =
+          candles.slice(i + 1, endIndex);
 
-        const outcome = findTradeOutcome(signal, futureCandles);
+        const outcome =
+          findTradeOutcome(
+            signal,
+            futureCandles,
+          );
 
         const result =
           outcome.result === true
@@ -96,77 +115,150 @@ export class BacktestingService {
         const riskAmount =
           signal.stopLoss === null
             ? 0
-            : Math.abs(signal.entryPrice - signal.stopLoss);
+            : Math.abs(
+                signal.entryPrice -
+                  signal.stopLoss,
+              );
 
         const grossR =
-          outcome.result === true ? 2 : outcome.result === false ? -1 : null;
+          outcome.result === true
+            ? 2
+            : outcome.result === false
+              ? -1
+              : null;
 
         let feeR = 0;
         let slippageR = 0;
         let netR: number | null = grossR;
 
-        if (grossR !== null && riskAmount > 0) {
-          const entryPrice = signal.entryPrice;
+        if (
+          grossR !== null &&
+          riskAmount > 0
+        ) {
+          const entryPrice =
+            signal.entryPrice;
 
-          const exitPrice = outcome.exitPrice ?? entryPrice;
+          const exitPrice =
+            outcome.exitPrice ??
+            entryPrice;
 
-          const entryFee = entryPrice * this.feeRate;
+          const entryFee =
+            entryPrice *
+            this.feeRate;
 
-          const exitFee = exitPrice * this.feeRate;
+          const exitFee =
+            exitPrice *
+            this.feeRate;
 
-          const totalFee = entryFee + exitFee;
+          const totalFee =
+            entryFee +
+            exitFee;
 
-          feeR = totalFee / riskAmount;
+          feeR =
+            totalFee /
+            riskAmount;
 
-          const entrySlippage = entryPrice * this.slippageRate;
+          const entrySlippage =
+            entryPrice *
+            this.slippageRate;
 
-          const exitSlippage = exitPrice * this.slippageRate;
+          const exitSlippage =
+            exitPrice *
+            this.slippageRate;
 
-          const totalSlippage = entrySlippage + exitSlippage;
+          const totalSlippage =
+            entrySlippage +
+            exitSlippage;
 
-          slippageR = totalSlippage / riskAmount;
+          slippageR =
+            totalSlippage /
+            riskAmount;
 
-          netR = grossR - feeR - slippageR;
+          netR =
+            grossR -
+            feeR -
+            slippageR;
         }
 
         const backtestTrade: BacktestTrade = {
-          time: candles[i].time,
-          action: signal.action,
-          confidence: signal.confidence,
-          entryPrice: signal.entryPrice,
-          exitPrice: outcome.exitPrice,
-          stopLoss: signal.stopLoss,
-          takeProfit: signal.takeProfit,
-          trend: signal.trend,
-          rsi: signal.rsi,
-          adx: signal.adx,
-          marketCondition: signal.marketCondition,
+          time:
+            candles[i].time,
+
+          action:
+            signal.action,
+
+          confidence:
+            signal.confidence,
+
+          entryPrice:
+            signal.entryPrice,
+
+          exitPrice:
+            outcome.exitPrice,
+
+          stopLoss:
+            signal.stopLoss,
+
+          takeProfit:
+            signal.takeProfit,
+
+          trend:
+            signal.trend,
+
+          rsi:
+            signal.rsi,
+
+          adx:
+            signal.adx,
+
+          marketCondition:
+            signal.marketCondition,
+
           result,
 
           exitTime:
             outcome.exitIndex === null
               ? null
-              : (futureCandles[outcome.exitIndex]?.time ?? null),
+              : (
+                  futureCandles[
+                    outcome.exitIndex
+                  ]?.time ??
+                  null
+                ),
 
           riskAmount,
 
-          resultR: netR,
+          resultR:
+            netR,
 
-          maeR: outcome.maeR,
-          mfeR: outcome.mfeR,
+          maeR:
+            outcome.maeR,
 
-          durationCandles: outcome.durationCandles,
+          mfeR:
+            outcome.mfeR,
+
+          durationCandles:
+            outcome.durationCandles,
         };
 
-        trades.push(backtestTrade);
-        targetTrades.push(backtestTrade);
+        trades.push(
+          backtestTrade,
+        );
+
+        targetTrades.push(
+          backtestTrade,
+        );
 
         if (grossR !== null) {
-          grossTotalR += grossR;
+          grossTotalR +=
+            grossR;
         }
 
-        totalFeeR += feeR;
-        totalSlippageR += slippageR;
+        totalFeeR +=
+          feeR;
+
+        totalSlippageR +=
+          slippageR;
 
         if (netR !== null) {
           if (netR > 0) {
@@ -176,41 +268,82 @@ export class BacktestingService {
           }
         }
 
-        if (outcome.exitIndex === null) {
+        if (
+          outcome.exitIndex === null
+        ) {
           break;
         }
 
-        i = i + outcome.exitIndex + 2;
+        i =
+          i +
+          outcome.exitIndex +
+          2;
       }
     };
 
-    await processSegment(0, splitIndex, trainingTrades);
+    await processSegment(
+      0,
+      splitIndex,
+      trainingTrades,
+    );
 
-    await processSegment(splitIndex, candles.length, testTrades);
+    await processSegment(
+      splitIndex,
+      candles.length,
+      testTrades,
+    );
 
-    const completedTrades = winningTrades + losingTrades;
+    const completedTrades =
+      winningTrades +
+      losingTrades;
 
-    const totalR = trades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
+    const totalR =
+      trades.reduce(
+        (sum, trade) =>
+          sum +
+          (trade.resultR ?? 0),
+        0,
+      );
 
-    const expectancyR = completedTrades === 0 ? 0 : totalR / completedTrades;
+    const expectancyR =
+      completedTrades === 0
+        ? 0
+        : totalR /
+          completedTrades;
 
-    const statistics = calculateBacktestStatistics(trades);
+    const statistics =
+      calculateBacktestStatistics(
+        trades,
+      );
 
-    const training = calculateBacktestSummary(trainingTrades);
+    const training =
+      calculateBacktestSummary(
+        trainingTrades,
+      );
 
-    const test = calculateBacktestSummary(testTrades);
+    const test =
+      calculateBacktestSummary(
+        testTrades,
+      );
 
     return {
       ...statistics,
 
-      totalTrades: trades.length,
+      totalTrades:
+        trades.length,
 
       winningTrades,
 
       losingTrades,
 
       winRate:
-        completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+        completedTrades === 0
+          ? 0
+          : (
+              winningTrades /
+              completedTrades
+            ) *
+            100,
 
       totalR,
 
@@ -222,13 +355,15 @@ export class BacktestingService {
 
       totalSlippageR,
 
-      totalCostR: totalFeeR + totalSlippageR,
+      totalCostR:
+        totalFeeR +
+        totalSlippageR,
 
       training,
 
       test,
 
-      trades: [],
+      trades,
     };
   }
 }

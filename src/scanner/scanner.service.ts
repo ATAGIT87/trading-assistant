@@ -29,67 +29,75 @@ export class ScannerService {
 
     return age >= 0 && age <= maxAge;
   }
-
-  async scan(symbol: string, timeframe: Timeframe, period = 14) {
-    if (timeframe === Timeframe.FIFTEEN_MINUTES) {
-      await this.marketDataService.syncBinanceCandles(
-        symbol,
-        Timeframe.ONE_HOUR,
-      );
-    }
-
-    await this.marketDataService.syncBinanceCandles(symbol, timeframe);
-
-    if (timeframe === Timeframe.ONE_HOUR) {
-      await this.marketDataService.buildFourHourCandles(symbol);
-    }
-
-    const candles = await this.marketDataService.getHistoricalCandles(
+async scan(symbol: string, timeframe: Timeframe, period = 14) {
+  if (timeframe === Timeframe.FIFTEEN_MINUTES) {
+    await this.marketDataService.syncBinanceCandles(
       symbol,
-      timeframe,
+      Timeframe.ONE_HOUR,
+    );
+  }
+
+  await this.marketDataService.syncBinanceCandles(symbol, timeframe);
+
+  if (timeframe === Timeframe.ONE_HOUR) {
+    await this.marketDataService.buildFourHourCandles(symbol);
+  }
+
+  const candles = await this.marketDataService.getHistoricalCandles(
+    symbol,
+    timeframe,
+  );
+
+  if (candles.length === 0) {
+    return null;
+  }
+
+  const latestCandle = candles[candles.length - 1];
+
+  if (!this.isMarketDataFresh(latestCandle.time, timeframe)) {
+    console.log(
+      `[Scanner] Skipping stale market data: ${symbol} / ${timeframe} / ${latestCandle.time.toISOString()}`,
     );
 
-    if (candles.length === 0) {
-      return null;
-    }
+    return null;
+  }
 
-    const latestCandle = candles[candles.length - 1];
-
-    if (!this.isMarketDataFresh(latestCandle.time, timeframe)) {
-      console.log(
-        `[Scanner] Skipping stale market data: ${symbol} / ${timeframe} / ${latestCandle.time.toISOString()}`,
-      );
-
-      return null;
-    }
-
-    const existingSignal = await this.signalsService.getSignalByCandleTime(
+  const existingSignal =
+    await this.signalsService.getSignalByCandleTime(
       symbol,
       timeframe,
       latestCandle.time,
     );
 
-    const signal = await this.signalsService.generateSignal(
-      symbol,
-      timeframe,
-      period,
-    );
+  if (existingSignal) {
+    return existingSignal;
+  }
 
-    if (!signal) {
-      return null;
-    }
+  const signal = await this.signalsService.generateSignal(
+    symbol,
+    timeframe,
+    period,
+  );
 
-    if (
-      existingSignal ||
-      (signal.action !== "BUY" && signal.action !== "SELL")
-    ) {
-      return signal;
-    }
+  if (!signal) {
+    return null;
+  }
 
-    await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
-
+  if (
+    signal.action !== "BUY" &&
+    signal.action !== "SELL"
+  ) {
     return signal;
   }
+
+  await this.alertsService.sendSignalAlert(
+    symbol,
+    timeframe,
+    signal,
+  );
+
+  return signal;
+}
 
   @Cron("*/15 * * * *")
   async scheduledScan() {

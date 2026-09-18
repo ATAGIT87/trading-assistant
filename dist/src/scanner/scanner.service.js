@@ -57,12 +57,15 @@ let ScannerService = class ScannerService {
             return null;
         }
         const existingSignal = await this.signalsService.getSignalByCandleTime(symbol, timeframe, latestCandle.time);
+        if (existingSignal) {
+            return existingSignal;
+        }
         const signal = await this.signalsService.generateSignal(symbol, timeframe, period);
         if (!signal) {
             return null;
         }
-        if (existingSignal ||
-            (signal.action !== "BUY" && signal.action !== "SELL")) {
+        if (signal.action !== "BUY" &&
+            signal.action !== "SELL") {
             return signal;
         }
         await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
