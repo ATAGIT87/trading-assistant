@@ -66,4 +66,11 @@ export class AssetsService {
       },
     });
   }
+  async findActiveAssets(): Promise<Asset[]> {
+    return this.assetRepository.find({
+      where: {
+        isActive: true,
+      },
+    });
+  }
 }

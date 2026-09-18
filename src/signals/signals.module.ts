@@ -1,15 +1,28 @@
 import { Module } from "@nestjs/common";
-import { SignalsService } from "./signals.service";
+import { TypeOrmModule } from "@nestjs/typeorm";
+
 import { MarketDataModule } from "../market-data/market-data.module";
-import { SignalsController } from "./signals.controller";
 import { IndicatorsModule } from "../indicators/indicators.module";
+import { Signal } from "./entities/signal.entity";
+import { SignalsService } from "./signals.service";
+import { SignalsController } from "./signals.controller";
 import { MARKET_DATA_SERVICE } from "./market-data.token";
 import { MarketDataService } from "../market-data/market-data.service";
+import { SignalStorageService } from "./signal-storage.service";
+import { SignalCalculationService } from "./signal-calculation.service";
+import { SignalTimeframeService } from "./signal-timeframe.service";
 
 @Module({
-  imports: [MarketDataModule, IndicatorsModule],
+  imports: [
+    MarketDataModule,
+    IndicatorsModule,
+    TypeOrmModule.forFeature([Signal]),
+  ],
   providers: [
     SignalsService,
+    SignalStorageService,
+    SignalCalculationService,
+    SignalTimeframeService,
     {
       provide: MARKET_DATA_SERVICE,
       useExisting: MarketDataService,

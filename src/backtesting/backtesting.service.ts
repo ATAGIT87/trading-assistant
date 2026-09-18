@@ -1,651 +1,249 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { MarketDataService } from "../market-data/market-data.service";
 import { SignalsService } from "../signals/signals.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
-import { MarketCandle } from "../market-data/entities/market-candle.entity";
-import { TradingSignal } from "../signals/signal.types";
-
-export interface BacktestTrade {
-  riskAmount: number;
-  resultR: number | null;
-  time: Date;
-  action: "BUY" | "SELL";
-  confidence: number;
-  entryPrice: number;
-  stopLoss: number | null;
-  takeProfit: number | null;
-  trend: TradingSignal["trend"];
-  rsi: number;
-  adx: number;
-  marketCondition: TradingSignal["marketCondition"];
-  result: "WIN" | "LOSS" | "OPEN";
-  exitTime: Date | null;
-}
-
-export interface BacktestResult {
-  sellAdxBelow25Trades: number;
-sellAdxBelow25Wins: number;
-sellAdxBelow25R: number;
-
-sellAdx25To30Trades: number;
-sellAdx25To30Wins: number;
-sellAdx25To30R: number;
-
-sellAdx30To35Trades: number;
-sellAdx30To35Wins: number;
-sellAdx30To35R: number;
-
-sellAdx35To40Trades: number;
-sellAdx35To40Wins: number;
-sellAdx35To40R: number;
-
-sellAdxAbove40Trades: number;
-sellAdxAbove40Wins: number;
-sellAdxAbove40R: number;
-
-  sellWinAverageRsi: number;
-sellLossAverageRsi: number;
-sellWinAverageAdx: number;
-sellLossAverageAdx: number;
-
-buyWinAverageRsi: number;
-buyLossAverageRsi: number;
-buyWinAverageAdx: number;
-buyLossAverageAdx: number;
-
-  buyTrades: number;
-  buyWins: number;
-  buyLosses: number;
-  buyTotalR: number;
-
-  sellTrades: number;
-  sellWins: number;
-  sellLosses: number;
-  sellTotalR: number;
-
-  totalTrades: number;
-  winningTrades: number;
-  losingTrades: number;
-  winRate: number;
-  totalR: number;
-  expectancyR: number;
-  trades: BacktestTrade[];
-
-  training: {
-  totalTrades: number;
-  winningTrades: number;
-  losingTrades: number;
-  winRate: number;
-  totalR: number;
-  expectancyR: number;
-};
-
-test: {
-  totalTrades: number;
-  winningTrades: number;
-  losingTrades: number;
-  winRate: number;
-  totalR: number;
-  expectancyR: number;
-};
-}
+import { BacktestTrade } from "./interfaces/backtest-trade.interface";
+import { BacktestResult } from "./interfaces/backtest-result.interface";
+import { findTradeOutcome } from "./helpers/backtest-outcome.helper";
+import { calculateBacktestSummary } from "./helpers/backtest-summary.helper";
+import { calculateBacktestStatistics } from "./helpers/backtest-statistics.helper";
 
 @Injectable()
 export class BacktestingService {
+  private readonly feeRate: number;
+  private readonly slippageRate: number;
+
   constructor(
     private readonly marketDataService: MarketDataService,
     private readonly signalsService: SignalsService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.feeRate = 0;
+    this.slippageRate = 0;
+  }
 
-  private calculateBacktestSummary(
-  trades: BacktestTrade[],
-) {
-  const completedTrades = trades.filter(
-    (trade) =>
-      trade.result === "WIN" ||
-      trade.result === "LOSS",
-  );
-
-  const winningTrades = completedTrades.filter(
-    (trade) => trade.result === "WIN",
-  ).length;
-
-  const losingTrades = completedTrades.filter(
-    (trade) => trade.result === "LOSS",
-  ).length;
-
-  const totalR = completedTrades.reduce(
-    (sum, trade) => sum + (trade.resultR ?? 0),
-    0,
-  );
-
-  return {
-    totalTrades: completedTrades.length,
-    winningTrades,
-    losingTrades,
-
-    winRate:
-      completedTrades.length === 0
-        ? 0
-        : (winningTrades / completedTrades.length) * 100,
-
-    totalR,
-
-    expectancyR:
-      completedTrades.length === 0
-        ? 0
-        : totalR / completedTrades.length,
-  };
-}
-
-  async run(
-  symbol: string,
-  timeframe: Timeframe,
-): Promise<BacktestResult> {
-  const candles =
-    await this.marketDataService.getHistoricalCandles(
+  async run(symbol: string, timeframe: Timeframe): Promise<BacktestResult> {
+    const candles = await this.marketDataService.getHistoricalCandles(
       symbol,
       timeframe,
     );
 
-  console.log("CANDLES:", candles.length);
+    const higherTimeframe =
+      timeframe === Timeframe.FIFTEEN_MINUTES
+        ? Timeframe.ONE_HOUR
+        : timeframe === Timeframe.ONE_HOUR
+          ? Timeframe.FOUR_HOURS
+          : timeframe === Timeframe.FOUR_HOURS
+            ? Timeframe.ONE_DAY
+            : null;
 
-  const period = 14;
+    const higherTimeframeCandles =
+      higherTimeframe === null
+        ? []
+        : await this.marketDataService.getHistoricalCandles(
+            symbol,
+            higherTimeframe,
+          );
 
-  const splitIndex = Math.floor(
-    candles.length * 0.7,
-  );
+    const period = 14;
 
-  const trainingCandles = candles.slice(
-    0,
-    splitIndex,
-  );
+    const splitIndex = Math.floor(candles.length * 0.7);
 
-  const testCandles = candles.slice(
-    splitIndex,
-  );
+    const trades: BacktestTrade[] = [];
+    const trainingTrades: BacktestTrade[] = [];
+    const testTrades: BacktestTrade[] = [];
 
-  console.log(
-    "TRAINING CANDLES:",
-    trainingCandles.length,
-  );
+    let winningTrades = 0;
+    let losingTrades = 0;
 
-  console.log(
-    "TEST CANDLES:",
-    testCandles.length,
-  );
+    let grossTotalR = 0;
+    let totalFeeR = 0;
+    let totalSlippageR = 0;
 
-  console.log(
-    "TRAINING END:",
-    trainingCandles[
-      trainingCandles.length - 1
-    ]?.time,
-  );
+    const processSegment = async (
+      startIndex: number,
+      endIndex: number,
+      targetTrades: BacktestTrade[],
+    ) => {
+      let i = Math.max(startIndex, period * 2 - 1);
 
-  console.log(
-    "TEST START:",
-    testCandles[0]?.time,
-  );
+      while (i < endIndex) {
+        const historicalCandles = candles.slice(0, i + 1);
 
-  let totalTrades = 0;
-  let winningTrades = 0;
-  let losingTrades = 0;
+        const signal = await this.signalsService.generateSignalFromCandles(
+          symbol,
+          timeframe,
+          historicalCandles,
+          higherTimeframeCandles,
+        );
 
-  let buyTrades = 0;
-  let buyWins = 0;
-  let buyLosses = 0;
-  let buyTotalR = 0;
+        if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+          i++;
+          continue;
+        }
 
-  let sellTrades = 0;
-  let sellWins = 0;
-  let sellLosses = 0;
-  let sellTotalR = 0;
+        const futureCandles = candles.slice(i + 1, endIndex);
 
-  let buyWinRsiSum = 0;
-  let buyLossRsiSum = 0;
-  let buyWinAdxSum = 0;
-  let buyLossAdxSum = 0;
+        const outcome = findTradeOutcome(signal, futureCandles);
 
-  let sellWinRsiSum = 0;
-  let sellLossRsiSum = 0;
-  let sellWinAdxSum = 0;
-  let sellLossAdxSum = 0;
+        const result =
+          outcome.result === true
+            ? "WIN"
+            : outcome.result === false
+              ? "LOSS"
+              : "OPEN";
 
-  let sellAdxBelow25Trades = 0;
-  let sellAdxBelow25Wins = 0;
-  let sellAdxBelow25R = 0;
+        const riskAmount =
+          signal.stopLoss === null
+            ? 0
+            : Math.abs(signal.entryPrice - signal.stopLoss);
 
-  let sellAdx25To30Trades = 0;
-  let sellAdx25To30Wins = 0;
-  let sellAdx25To30R = 0;
+        const grossR =
+          outcome.result === true ? 2 : outcome.result === false ? -1 : null;
 
-  let sellAdx30To35Trades = 0;
-  let sellAdx30To35Wins = 0;
-  let sellAdx30To35R = 0;
+        let feeR = 0;
+        let slippageR = 0;
+        let netR: number | null = grossR;
 
-  let sellAdx35To40Trades = 0;
-  let sellAdx35To40Wins = 0;
-  let sellAdx35To40R = 0;
+        if (grossR !== null && riskAmount > 0) {
+          const entryPrice = signal.entryPrice;
 
-  let sellAdxAbove40Trades = 0;
-  let sellAdxAbove40Wins = 0;
-  let sellAdxAbove40R = 0;
+          const exitPrice = outcome.exitPrice ?? entryPrice;
 
-  const trades: BacktestTrade[] = [];
+          const entryFee = entryPrice * this.feeRate;
 
-  const trainingTrades: BacktestTrade[] = [];
-  const testTrades: BacktestTrade[] = [];
+          const exitFee = exitPrice * this.feeRate;
 
-  let i = period * 2 - 1;
+          const totalFee = entryFee + exitFee;
 
-  while (i < candles.length) {
-    const historicalCandles =
-      await this.marketDataService.getHistoricalCandlesUntil(
-        symbol,
-        timeframe,
-        candles[i].time,
-      );
+          feeR = totalFee / riskAmount;
 
-    if (
-      historicalCandles.length === 0 ||
-      historicalCandles[
-        historicalCandles.length - 1
-      ].time.getTime() !==
-        candles[i].time.getTime()
-    ) {
-      throw new Error(
-        `Look-ahead detected at ${candles[
-          i
-        ].time.toISOString()}`,
-      );
-    }
+          const entrySlippage = entryPrice * this.slippageRate;
 
-    const signal =
-      await this.signalsService.generateSignalFromCandles(
-        symbol,
-        timeframe,
-        historicalCandles,
-      );
+          const exitSlippage = exitPrice * this.slippageRate;
 
-    if (
-      signal?.action !== "BUY" &&
-      signal?.action !== "SELL"
-    ) {
-      i++;
-      continue;
-    }
+          const totalSlippage = entrySlippage + exitSlippage;
 
-    const futureCandles =
-      candles.slice(i + 1);
+          slippageR = totalSlippage / riskAmount;
 
-    const trade =
-      this.findTradeOutcome(
-        signal,
-        futureCandles,
-      );
+          netR = grossR - feeR - slippageR;
+        }
 
-    const result =
-      trade.result === true
-        ? "WIN"
-        : trade.result === false
-          ? "LOSS"
-          : "OPEN";
+        const backtestTrade: BacktestTrade = {
+          time: candles[i].time,
 
-    const resultR =
-      trade.result === true
-        ? 2
-        : trade.result === false
-          ? -1
-          : 0;
+          action: signal.action,
 
-    const backtestTrade: BacktestTrade = {
-      time: candles[i].time,
-      action: signal.action,
-      confidence: signal.confidence,
-      entryPrice: signal.entryPrice,
-      stopLoss: signal.stopLoss,
-      takeProfit: signal.takeProfit,
-      trend: signal.trend,
-      rsi: signal.rsi,
-      adx: signal.adx,
-      marketCondition:
-        signal.marketCondition,
-      result,
+          confidence: signal.confidence,
 
-      exitTime:
-        trade.exitIndex === null
-          ? null
-          : (
-              futureCandles[
-                trade.exitIndex
-              ]?.time ?? null
-            ),
+          entryPrice: signal.entryPrice,
 
-      riskAmount:
-        signal.stopLoss === null
-          ? 0
-          : Math.abs(
-              signal.entryPrice -
-                signal.stopLoss,
-            ),
+          exitPrice: outcome.exitPrice,
 
-      resultR:
-        trade.result === true
-          ? 2
-          : trade.result === false
-            ? -1
-            : null,
+          stopLoss: signal.stopLoss,
+
+          takeProfit: signal.takeProfit,
+
+          trend: signal.trend,
+
+          rsi: signal.rsi,
+
+          adx: signal.adx,
+
+          marketCondition: signal.marketCondition,
+
+          result,
+
+          exitTime:
+            outcome.exitIndex === null
+              ? null
+              : (futureCandles[outcome.exitIndex]?.time ?? null),
+
+          riskAmount,
+
+          resultR: netR,
+
+          maeR: outcome.maeR,
+
+          mfeR: outcome.mfeR,
+
+          durationCandles: outcome.durationCandles,
+        };
+
+        trades.push(backtestTrade);
+
+        targetTrades.push(backtestTrade);
+
+        if (grossR !== null) {
+          grossTotalR += grossR;
+        }
+
+        totalFeeR += feeR;
+
+        totalSlippageR += slippageR;
+
+        if (netR !== null) {
+          if (netR > 0) {
+            winningTrades++;
+          } else if (netR < 0) {
+            losingTrades++;
+          }
+        }
+
+        if (outcome.exitIndex === null) {
+          break;
+        }
+
+        i = i + outcome.exitIndex + 2;
+      }
     };
 
-    trades.push(backtestTrade);
+    await processSegment(0, splitIndex, trainingTrades);
 
-    if (i < splitIndex) {
-      trainingTrades.push(
-        backtestTrade,
-      );
-    } else {
-      testTrades.push(backtestTrade);
-    }
+    await processSegment(splitIndex, candles.length, testTrades);
 
-    totalTrades++;
+    const completedTrades = winningTrades + losingTrades;
 
-    if (signal.action === "BUY") {
-      buyTrades++;
+    const totalR = trades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
 
-      if (result === "WIN") {
-        buyWins++;
-        buyWinRsiSum += signal.rsi;
-        buyWinAdxSum += signal.adx;
-      }
+    const expectancyR = completedTrades === 0 ? 0 : totalR / completedTrades;
 
-      if (result === "LOSS") {
-        buyLosses++;
-        buyLossRsiSum += signal.rsi;
-        buyLossAdxSum += signal.adx;
-      }
+    const statistics = calculateBacktestStatistics(trades);
 
-      buyTotalR += resultR;
-    }
+    const training = calculateBacktestSummary(trainingTrades);
 
-    if (signal.action === "SELL") {
-      sellTrades++;
-
-      if (result === "WIN") {
-        sellWins++;
-        sellWinRsiSum += signal.rsi;
-        sellWinAdxSum += signal.adx;
-      }
-
-      if (result === "LOSS") {
-        sellLosses++;
-        sellLossRsiSum += signal.rsi;
-        sellLossAdxSum += signal.adx;
-      }
-
-      sellTotalR += resultR;
-
-      if (signal.adx < 25) {
-        sellAdxBelow25Trades++;
-
-        if (result === "WIN") {
-          sellAdxBelow25Wins++;
-        }
-
-        sellAdxBelow25R += resultR;
-      } else if (signal.adx < 30) {
-        sellAdx25To30Trades++;
-
-        if (result === "WIN") {
-          sellAdx25To30Wins++;
-        }
-
-        sellAdx25To30R += resultR;
-      } else if (signal.adx < 35) {
-        sellAdx30To35Trades++;
-
-        if (result === "WIN") {
-          sellAdx30To35Wins++;
-        }
-
-        sellAdx30To35R += resultR;
-      } else if (signal.adx < 40) {
-        sellAdx35To40Trades++;
-
-        if (result === "WIN") {
-          sellAdx35To40Wins++;
-        }
-
-        sellAdx35To40R += resultR;
-      } else {
-        sellAdxAbove40Trades++;
-
-        if (result === "WIN") {
-          sellAdxAbove40Wins++;
-        }
-
-        sellAdxAbove40R += resultR;
-      }
-    }
-
-    if (trade.result === true) {
-      winningTrades++;
-    }
-
-    if (trade.result === false) {
-      losingTrades++;
-    }
-
-    if (trade.exitIndex === null) {
-      break;
-    }
-
-    i =
-      i +
-      trade.exitIndex +
-      2;
-  }
-
-  const completedTrades =
-    winningTrades + losingTrades;
-
-  const totalR =
-    winningTrades * 2 -
-    losingTrades;
-
-  const expectancyR =
-    completedTrades === 0
-      ? 0
-      : totalR / completedTrades;
-
-  const buyWinAverageRsi =
-    buyWins === 0
-      ? 0
-      : buyWinRsiSum / buyWins;
-
-  const buyLossAverageRsi =
-    buyLosses === 0
-      ? 0
-      : buyLossRsiSum / buyLosses;
-
-  const buyWinAverageAdx =
-    buyWins === 0
-      ? 0
-      : buyWinAdxSum / buyWins;
-
-  const buyLossAverageAdx =
-    buyLosses === 0
-      ? 0
-      : buyLossAdxSum / buyLosses;
-
-  const sellWinAverageRsi =
-    sellWins === 0
-      ? 0
-      : sellWinRsiSum / sellWins;
-
-  const sellLossAverageRsi =
-    sellLosses === 0
-      ? 0
-      : sellLossRsiSum / sellLosses;
-
-  const sellWinAverageAdx =
-    sellWins === 0
-      ? 0
-      : sellWinAdxSum / sellWins;
-
-  const sellLossAverageAdx =
-    sellLosses === 0
-      ? 0
-      : sellLossAdxSum / sellLosses;
-
-  const training =
-    this.calculateBacktestSummary(
-      trainingTrades,
-    );
-
-  const test =
-    this.calculateBacktestSummary(
-      testTrades,
-    );
-
-  return {
-    sellAdxBelow25Trades,
-    sellAdxBelow25Wins,
-    sellAdxBelow25R,
-
-    sellAdx25To30Trades,
-    sellAdx25To30Wins,
-    sellAdx25To30R,
-
-    sellAdx30To35Trades,
-    sellAdx30To35Wins,
-    sellAdx30To35R,
-
-    sellAdx35To40Trades,
-    sellAdx35To40Wins,
-    sellAdx35To40R,
-
-    sellAdxAbove40Trades,
-    sellAdxAbove40Wins,
-    sellAdxAbove40R,
-
-    sellWinAverageRsi,
-    sellLossAverageRsi,
-    sellWinAverageAdx,
-    sellLossAverageAdx,
-
-    buyWinAverageRsi,
-    buyLossAverageRsi,
-    buyWinAverageAdx,
-    buyLossAverageAdx,
-
-    buyTrades,
-    buyWins,
-    buyLosses,
-    buyTotalR,
-
-    sellTrades,
-    sellWins,
-    sellLosses,
-    sellTotalR,
-
-    totalTrades,
-    winningTrades,
-    losingTrades,
-
-    winRate:
-      completedTrades === 0
-        ? 0
-        : (winningTrades /
-            completedTrades) *
-          100,
-
-    totalR,
-    expectancyR,
-
-    training,
-    test,
-
-    trades,
-  };
-}
-  private findTradeOutcome(
-    signal: TradingSignal,
-    futureCandles: MarketCandle[],
-  ): {
-    result: boolean | null;
-    exitIndex: number | null;
-  } {
-    if (signal.stopLoss === null || signal.takeProfit === null) {
-      return {
-        result: null,
-        exitIndex: null,
-      };
-    }
-
-    for (let i = 0; i < futureCandles.length; i++) {
-      const candle = futureCandles[i];
-
-      const high = Number(candle.high);
-      const low = Number(candle.low);
-
-      if (signal.action === "BUY") {
-        const hitStopLoss = low <= signal.stopLoss;
-
-        const hitTakeProfit = high >= signal.takeProfit;
-
-        if (hitStopLoss && hitTakeProfit) {
-          return {
-            result: false,
-            exitIndex: i,
-          };
-        }
-
-        if (hitStopLoss) {
-          return {
-            result: false,
-            exitIndex: i,
-          };
-        }
-
-        if (hitTakeProfit) {
-          return {
-            result: true,
-            exitIndex: i,
-          };
-        }
-      }
-
-      if (signal.action === "SELL") {
-        const hitStopLoss = high >= signal.stopLoss;
-
-        const hitTakeProfit = low <= signal.takeProfit;
-
-        if (hitStopLoss && hitTakeProfit) {
-          return {
-            result: false,
-            exitIndex: i,
-          };
-        }
-
-        if (hitStopLoss) {
-          return {
-            result: false,
-            exitIndex: i,
-          };
-        }
-
-        if (hitTakeProfit) {
-          return {
-            result: true,
-            exitIndex: i,
-          };
-        }
-      }
-    }
+    const test = calculateBacktestSummary(testTrades);
 
     return {
-      result: null,
-      exitIndex: null,
+      ...statistics,
+
+      totalTrades: trades.length,
+
+      winningTrades,
+
+      losingTrades,
+
+      winRate:
+        completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+
+      totalR,
+
+      expectancyR,
+
+      grossTotalR,
+
+      totalFeeR,
+
+      totalSlippageR,
+
+      totalCostR: totalFeeR + totalSlippageR,
+
+      training,
+
+      test,
+
+      trades,
     };
   }
 }

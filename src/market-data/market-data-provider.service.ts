@@ -114,6 +114,7 @@ export class MarketDataProviderService {
       close,
     }));
   }
+
   async getHourlyCandles(
     symbol: string,
     days = 1,
@@ -141,6 +142,7 @@ export class MarketDataProviderService {
 
     for (const candle of candles) {
       const hour = new Date(candle.time);
+
       hour.setUTCMinutes(0, 0, 0);
 
       const key = hour.toISOString();
@@ -160,7 +162,9 @@ export class MarketDataProviderService {
       }
 
       existing.high = Math.max(existing.high, candle.high);
+
       existing.low = Math.min(existing.low, candle.low);
+
       existing.close = candle.close;
     }
 
@@ -169,8 +173,9 @@ export class MarketDataProviderService {
     );
   }
 
-  async getBinanceHourlyCandles(
+  async getBinanceCandles(
     symbol: string,
+    timeframe: string,
     limit = 1000,
   ): Promise<
     {
@@ -182,13 +187,28 @@ export class MarketDataProviderService {
       volume: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
+    const normalizedSymbol = this.normalizeSymbol(symbol);
 
-    if (normalizedSymbol !== "BTCUSD") {
+    this.validateTimeframe(timeframe);
+
+    const binanceSymbolMap: Record<string, string> = {
+      BTCUSD: "BTCUSDT",
+      ETHUSD: "ETHUSDT",
+    };
+
+    const binanceSymbol = binanceSymbolMap[normalizedSymbol];
+
+    if (!binanceSymbol) {
       throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
     }
 
-    const candles: {
+    if (limit < 1 || limit > 10000) {
+      throw new Error(
+        `Invalid candle limit: ${limit}. Must be between 1 and 10000.`,
+      );
+    }
+
+    const allCandles: {
       time: Date;
       open: number;
       high: number;
@@ -197,23 +217,14 @@ export class MarketDataProviderService {
       volume: number;
     }[] = [];
 
-    let endTime: number | undefined;
+    let endTime = Date.now();
 
-    while (candles.length < limit) {
-      const remaining = limit - candles.length;
-      const requestLimit = Math.min(1000, remaining);
+    while (allCandles.length < limit) {
+      const requestLimit = Math.min(1000, limit - allCandles.length);
 
-      let url =
-        `https://api.binance.com/api/v3/klines` +
-        `?symbol=BTCUSDT` +
-        `&interval=1h` +
-        `&limit=${requestLimit}`;
-
-      if (endTime !== undefined) {
-        url += `&endTime=${endTime}`;
-      }
-
-      const response = await fetch(url);
+      const response = await fetch(
+        `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${requestLimit}&endTime=${endTime}`,
+      );
 
       if (!response.ok) {
         const errorBody = await response.text();
@@ -229,7 +240,7 @@ export class MarketDataProviderService {
         break;
       }
 
-      const batch = data.map((candle) => ({
+      const candles = data.map((candle) => ({
         time: new Date(Number(candle[0])),
         open: Number(candle[1]),
         high: Number(candle[2]),
@@ -238,17 +249,43 @@ export class MarketDataProviderService {
         volume: Number(candle[5]),
       }));
 
-      candles.unshift(...batch);
+      allCandles.unshift(...candles);
 
-      const oldestTimestamp = Number(data[0][0]);
+      const oldestCandle = candles[0];
 
-      endTime = oldestTimestamp - 1;
+      const oldestTime = oldestCandle.time.getTime();
+
+      endTime = oldestTime - 1;
 
       if (data.length < requestLimit) {
         break;
       }
     }
 
-    return candles.slice(-limit);
+    return allCandles
+      .slice(-limit)
+      .sort((a, b) => a.time.getTime() - b.time.getTime());
+  }
+
+  async getBinanceHourlyCandles(symbol: string, limit = 1000) {
+    return this.getBinanceCandles(symbol, "1h", limit);
+  }
+
+  private normalizeSymbol(symbol: string): string {
+    const normalizedSymbol = symbol.trim().toUpperCase();
+
+    if (!normalizedSymbol) {
+      throw new Error("Symbol is required");
+    }
+
+    return normalizedSymbol;
+  }
+
+  private validateTimeframe(timeframe: string): void {
+    const supportedTimeframes = ["15m", "1h", "4h", "1d"];
+
+    if (!supportedTimeframes.includes(timeframe)) {
+      throw new Error(`Unsupported timeframe: ${timeframe}`);
+    }
   }
 }
