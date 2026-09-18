@@ -57,6 +57,9 @@ export interface BacktestResult {
   totalR: number;
   expectancyR: number;
 
+  grossTotalR: number;
+  totalCostR: number;
+
   winAverageMaeR: number;
   winAverageMfeR: number;
   winAverageDurationCandles: number;
@@ -72,4 +75,7 @@ export interface BacktestResult {
   test: BacktestSummary;
 
   trades: BacktestTrade[];
+
+  totalFeeR: number;
+  totalSlippageR: number;
 }

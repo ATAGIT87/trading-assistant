@@ -91,24 +91,42 @@ export class IndicatorsService {
   }
 
   calculateRsiFromPrices(values: number[], period: number): number | null {
-    if (values.length <= period) {
+    if (period <= 0 || values.length <= period) {
       return null;
     }
 
     const changes = this.calculatePriceChanges(values);
 
-    const { gains, losses } = this.calculateGainsAndLosses(changes);
+    let gainSum = 0;
+    let lossSum = 0;
 
-    const averageGain = this.calculateAverage(gains, period);
+    for (let i = 0; i < period; i++) {
+      const change = changes[i];
 
-    const averageLoss = this.calculateAverage(losses, period);
+      if (change > 0) {
+        gainSum += change;
+      } else {
+        lossSum += Math.abs(change);
+      }
+    }
 
-    if (averageGain === null || averageLoss === null) {
-      return null;
+    let averageGain = gainSum / period;
+    let averageLoss = lossSum / period;
+
+    for (let i = period; i < changes.length; i++) {
+      const change = changes[i];
+
+      const gain = change > 0 ? change : 0;
+      const loss = change < 0 ? Math.abs(change) : 0;
+
+      averageGain = (averageGain * (period - 1) + gain) / period;
+
+      averageLoss = (averageLoss * (period - 1) + loss) / period;
     }
 
     return this.calculateRsi(averageGain, averageLoss);
   }
+
   calculateRsiFromCandles(
     candles: MarketCandle[],
     period: number,
@@ -270,20 +288,24 @@ export class IndicatorsService {
       Math.abs(currentLow - previousClose),
     );
   }
-
   calculateAtr(trueRanges: number[], period: number): number | null {
     if (trueRanges.length < period || period <= 0) {
       return null;
     }
 
-    const recentTrueRanges = trueRanges.slice(-period);
+    let atr = 0;
 
-    const sum = recentTrueRanges.reduce(
-      (total, trueRange) => total + trueRange,
-      0,
-    );
+    for (let i = 0; i < period; i++) {
+      atr += trueRanges[i];
+    }
 
-    return sum / period;
+    atr /= period;
+
+    for (let i = period; i < trueRanges.length; i++) {
+      atr = (atr * (period - 1) + trueRanges[i]) / period;
+    }
+
+    return atr;
   }
 
   calculateTrueRangesFromCandles(
@@ -458,52 +480,50 @@ export class IndicatorsService {
       return null;
     }
 
-    const smoothedTrueRanges: number[] = [];
-    const smoothedPlusDm: number[] = [];
-    const smoothedMinusDm: number[] = [];
-
-    let trSum = 0;
-    let plusDmSum = 0;
-    let minusDmSum = 0;
+    let trSmoothed = 0;
+    let plusDmSmoothed = 0;
+    let minusDmSmoothed = 0;
 
     for (let i = 0; i < period; i++) {
-      trSum += trueRanges[i];
-      plusDmSum += directionalMovements.plusDm[i];
-      minusDmSum += directionalMovements.minusDm[i];
-    }
-
-    smoothedTrueRanges.push(trSum);
-    smoothedPlusDm.push(plusDmSum);
-    smoothedMinusDm.push(minusDmSum);
-
-    for (let i = period; i < trueRanges.length; i++) {
-      trSum = trSum - trSum / period + trueRanges[i];
-
-      plusDmSum =
-        plusDmSum - plusDmSum / period + directionalMovements.plusDm[i];
-
-      minusDmSum =
-        minusDmSum - minusDmSum / period + directionalMovements.minusDm[i];
-
-      smoothedTrueRanges.push(trSum);
-      smoothedPlusDm.push(plusDmSum);
-      smoothedMinusDm.push(minusDmSum);
+      trSmoothed += trueRanges[i];
+      plusDmSmoothed += directionalMovements.plusDm[i];
+      minusDmSmoothed += directionalMovements.minusDm[i];
     }
 
     const dxValues: number[] = [];
 
-    for (let i = 0; i < smoothedTrueRanges.length; i++) {
-      const tr = smoothedTrueRanges[i];
-
-      if (tr === 0) {
-        continue;
+    const calculateDx = () => {
+      if (trSmoothed === 0) {
+        return null;
       }
 
-      const plusDi = (smoothedPlusDm[i] / tr) * 100;
+      const plusDi = (plusDmSmoothed / trSmoothed) * 100;
 
-      const minusDi = (smoothedMinusDm[i] / tr) * 100;
+      const minusDi = (minusDmSmoothed / trSmoothed) * 100;
 
-      const dx = this.calculateDirectionalIndex(plusDi, minusDi);
+      return this.calculateDirectionalIndex(plusDi, minusDi);
+    };
+
+    const firstDx = calculateDx();
+
+    if (firstDx !== null) {
+      dxValues.push(firstDx);
+    }
+
+    for (let i = period; i < trueRanges.length; i++) {
+      trSmoothed = trSmoothed - trSmoothed / period + trueRanges[i];
+
+      plusDmSmoothed =
+        plusDmSmoothed -
+        plusDmSmoothed / period +
+        directionalMovements.plusDm[i];
+
+      minusDmSmoothed =
+        minusDmSmoothed -
+        minusDmSmoothed / period +
+        directionalMovements.minusDm[i];
+
+      const dx = calculateDx();
 
       if (dx !== null) {
         dxValues.push(dx);
@@ -512,7 +532,6 @@ export class IndicatorsService {
 
     return this.calculateAdx(dxValues, period);
   }
-
   calculateAdxScore(adx: number): number {
     if (adx >= 25) {
       return 5;

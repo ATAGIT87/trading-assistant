@@ -25,9 +25,7 @@ export function findTradeOutcome(
     };
   }
 
-  const riskAmount = Math.abs(
-    signal.entryPrice - signal.stopLoss,
-  );
+  const riskAmount = Math.abs(signal.entryPrice - signal.stopLoss);
 
   if (riskAmount <= 0) {
     return {
@@ -50,20 +48,16 @@ export function findTradeOutcome(
     const low = Number(candle.low);
 
     if (signal.action === "BUY") {
-      const adverseMove =
-        (signal.entryPrice - low) / riskAmount;
+      const adverseMove = (signal.entryPrice - low) / riskAmount;
 
-      const favorableMove =
-        (high - signal.entryPrice) / riskAmount;
+      const favorableMove = (high - signal.entryPrice) / riskAmount;
 
       maxMae = Math.max(maxMae, adverseMove);
       maxMfe = Math.max(maxMfe, favorableMove);
 
-      const hitStopLoss =
-        low <= signal.stopLoss;
+      const hitStopLoss = low <= signal.stopLoss;
 
-      const hitTakeProfit =
-        high >= signal.takeProfit;
+      const hitTakeProfit = high >= signal.takeProfit;
 
       if (hitStopLoss && hitTakeProfit) {
         return {
@@ -100,20 +94,16 @@ export function findTradeOutcome(
     }
 
     if (signal.action === "SELL") {
-      const adverseMove =
-        (high - signal.entryPrice) / riskAmount;
+      const adverseMove = (high - signal.entryPrice) / riskAmount;
 
-      const favorableMove =
-        (signal.entryPrice - low) / riskAmount;
+      const favorableMove = (signal.entryPrice - low) / riskAmount;
 
       maxMae = Math.max(maxMae, adverseMove);
       maxMfe = Math.max(maxMfe, favorableMove);
 
-      const hitStopLoss =
-        high >= signal.stopLoss;
+      const hitStopLoss = high >= signal.stopLoss;
 
-      const hitTakeProfit =
-        low <= signal.takeProfit;
+      const hitTakeProfit = low <= signal.takeProfit;
 
       if (hitStopLoss && hitTakeProfit) {
         return {

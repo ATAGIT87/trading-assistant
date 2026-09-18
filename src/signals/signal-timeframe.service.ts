@@ -33,6 +33,7 @@ export class SignalTimeframeService {
     symbol: string,
     timeframe: Timeframe,
     until: Date,
+    preloadedCandles?: MarketCandle[],
   ): Promise<TradingSignal["trend"] | null> {
     const higherTimeframe = this.getHigherTimeframe(timeframe);
 
@@ -40,19 +41,25 @@ export class SignalTimeframeService {
       return null;
     }
 
-    const candles = await this.marketDataService.getHistoricalCandlesUntil(
-      symbol,
-      higherTimeframe,
-      until,
-    );
+    const candles =
+      preloadedCandles ??
+      (await this.marketDataService.getHistoricalCandlesUntil(
+        symbol,
+        higherTimeframe,
+        until,
+      ));
 
-    if (candles.length < 28) {
+    const candlesUntil = preloadedCandles
+      ? candles.filter((candle) => candle.time.getTime() <= until.getTime())
+      : candles;
+
+    if (candlesUntil.length < 28) {
       return null;
     }
 
-    const latestClose = Number(candles[candles.length - 1].close);
+    const latestClose = Number(candlesUntil[candlesUntil.length - 1].close);
 
-    const closes = candles.map((candle) => Number(candle.close));
+    const closes = candlesUntil.map((candle) => Number(candle.close));
 
     const sma = this.indicatorsService.calculateSma(closes, 14);
 

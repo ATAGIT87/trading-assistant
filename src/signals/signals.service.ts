@@ -139,6 +139,7 @@ export class SignalsService {
     symbol: string,
     timeframe: Timeframe,
     candles: MarketCandle[],
+    higherTimeframeCandles?: MarketCandle[],
   ): Promise<TradingSignal | null> {
     const indicators = this.indicatorsService.calculateIndicatorsFromCandles(
       candles,
@@ -158,6 +159,7 @@ export class SignalsService {
         symbol,
         timeframe,
         latestCandle.time,
+        higherTimeframeCandles,
       );
 
     const {

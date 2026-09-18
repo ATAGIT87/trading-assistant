@@ -98,5 +98,12 @@ GET http://localhost:3000/scanner/ETHUSD/15m
 ### BACKTESTING
 ### =========================
 
-### Run ETHUSD 15m Backtest
-GET http://localhost:3000/backtesting/ETHUSD/15m
+### 
+GET http://localhost:3000/backtesting/BTCUSD/1d
+
+### 
+POST http://localhost:3000/market-data/sync-binance/ETHUSD/15m
+
+
+###
+GET http://localhost:3000/backtesting/BTCUSD/15m
