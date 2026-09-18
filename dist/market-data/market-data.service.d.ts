@@ -1,14 +1,14 @@
-import { Repository } from "typeorm";
-import { MarketCandle } from "./entities/market-candle.entity";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
-import { Timeframe } from "../assets/enums/timeframe.enum";
-import { IndicatorsService } from "../indicators/indicators.service";
+import { MarketCandle } from "./entities/market-candle.entity";
+import { MarketCandleStorageService } from "./market-candle-storage.service";
+import { MarketDataAnalysisService } from "./market-data-analysis.service";
 import { MarketDataProviderService } from "./market-data-provider.service";
+import { Timeframe } from "../assets/enums/timeframe.enum";
 export declare class MarketDataService {
-    private readonly marketCandleRepository;
-    private readonly indicatorsService;
+    private readonly storageService;
+    private readonly analysisService;
     private readonly marketDataProviderService;
-    constructor(marketCandleRepository: Repository<MarketCandle>, indicatorsService: IndicatorsService, marketDataProviderService: MarketDataProviderService);
+    constructor(storageService: MarketCandleStorageService, analysisService: MarketDataAnalysisService, marketDataProviderService: MarketDataProviderService);
     createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle>;
     findAllCandles(): Promise<MarketCandle[]>;
     findCandlesBySymbol(symbol: string): Promise<MarketCandle[]>;

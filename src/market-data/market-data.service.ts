@@ -1,93 +1,72 @@
-import { ConflictException, Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, QueryFailedError } from "typeorm";
-import { MarketCandle } from "./entities/market-candle.entity";
+import {
+  ConflictException,
+  Injectable,
+} from "@nestjs/common";
+
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
-import { Timeframe } from "../assets/enums/timeframe.enum";
-import { IndicatorsService } from "../indicators/indicators.service";
-import { LessThanOrEqual } from "typeorm";
+import { MarketCandle } from "./entities/market-candle.entity";
+import { MarketCandleStorageService } from "./market-candle-storage.service";
+import { MarketDataAnalysisService } from "./market-data-analysis.service";
 import { MarketDataProviderService } from "./market-data-provider.service";
+import { Timeframe } from "../assets/enums/timeframe.enum";
+
 @Injectable()
 export class MarketDataService {
   constructor(
-    @InjectRepository(MarketCandle)
-    private readonly marketCandleRepository: Repository<MarketCandle>,
-    private readonly indicatorsService: IndicatorsService,
+    private readonly storageService: MarketCandleStorageService,
+    private readonly analysisService: MarketDataAnalysisService,
     private readonly marketDataProviderService: MarketDataProviderService,
   ) {}
 
-  async createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle> {
-    try {
-      const candle = this.marketCandleRepository.create({
-        symbol: dto.symbol,
-        timeframe: dto.timeframe,
-        time: new Date(dto.time),
-        open: dto.open.toString(),
-        high: dto.high.toString(),
-        low: dto.low.toString(),
-        close: dto.close.toString(),
-        volume: dto.volume.toString(),
-      });
-
-      return await this.marketCandleRepository.save(candle);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error as any).driverError?.code === "23505"
-      ) {
-        throw new ConflictException("Candle already exists");
-      }
-
-      throw error;
-    }
+  createCandle(
+    dto: CreateMarketCandleDto,
+  ): Promise<MarketCandle> {
+    return this.storageService.createCandle(
+      dto,
+    );
   }
+
   findAllCandles(): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.find();
+    return this.storageService.findAllCandles();
   }
-  findCandlesBySymbol(symbol: string): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.find({
-      where: {
-        symbol,
-      },
-    });
+
+  findCandlesBySymbol(
+    symbol: string,
+  ): Promise<MarketCandle[]> {
+    return this.storageService.findCandlesBySymbol(
+      symbol,
+    );
   }
 
   findCandlesBySymbolAndTimeframe(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.find({
-      where: {
-        symbol,
-        timeframe,
-      },
-      order: {
-        time: "DESC",
-      },
-      take: 100,
-    });
+    return this.storageService.findCandlesBySymbolAndTimeframe(
+      symbol,
+      timeframe,
+    );
   }
 
   async findLatestCandle(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle | null> {
-    return this.marketCandleRepository.findOne({
-      where: {
-        symbol,
-        timeframe,
-      },
-      order: {
-        time: "DESC",
-      },
-    });
+    return this.storageService.findLatestCandle(
+      symbol,
+      timeframe,
+    );
   }
 
   async getLatestPrice(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number | null> {
-    const candle = await this.findLatestCandle(symbol, timeframe);
+    const candle =
+      await this.storageService.findLatestCandle(
+        symbol,
+        timeframe,
+      );
 
     if (!candle) {
       return null;
@@ -95,29 +74,30 @@ export class MarketDataService {
 
     return Number(candle.close);
   }
-  async getCandlesForAnalysis(
+
+  getCandlesForAnalysis(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.find({
-      where: {
-        symbol,
-        timeframe,
-      },
-      order: {
-        time: "ASC",
-      },
-      take: 100,
-    });
+    return this.storageService.getCandlesForAnalysis(
+      symbol,
+      timeframe,
+    );
   }
 
   async getLatestRsi(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number | null> {
-    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+    const candles =
+      await this.getCandlesForAnalysis(
+        symbol,
+        timeframe,
+      );
 
-    return this.indicatorsService.calculateRsiFromCandles(candles, 14);
+    return this.analysisService.getLatestRsi(
+      candles,
+    );
   }
 
   async getLatestSma(
@@ -125,9 +105,16 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+    const candles =
+      await this.getCandlesForAnalysis(
+        symbol,
+        timeframe,
+      );
 
-    return this.indicatorsService.calculateSmaFromCandles(candles, period);
+    return this.analysisService.getLatestSma(
+      candles,
+      period,
+    );
   }
 
   async getLatestEma(
@@ -135,10 +122,14 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+    const candles =
+      await this.getCandlesForAnalysis(
+        symbol,
+        timeframe,
+      );
 
-    return this.indicatorsService.calculateEma(
-      candles.map((candle) => Number(candle.close)),
+    return this.analysisService.getLatestEma(
+      candles,
       period,
     );
   }
@@ -147,105 +138,199 @@ export class MarketDataService {
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<"ABOVE" | "BELOW" | "EQUAL" | null> {
-    const price = await this.getLatestPrice(symbol, timeframe);
-    const sma = await this.getLatestSma(symbol, timeframe, period);
+  ): Promise<
+    "ABOVE" | "BELOW" | "EQUAL" | null
+  > {
+    const price =
+      await this.getLatestPrice(
+        symbol,
+        timeframe,
+      );
+
+    const sma =
+      await this.getLatestSma(
+        symbol,
+        timeframe,
+        period,
+      );
 
     if (price === null || sma === null) {
       return null;
     }
 
-    return this.indicatorsService.comparePriceToAverage(Number(price), sma);
+    return this.analysisService.comparePriceToSma(
+      price,
+      sma,
+    );
   }
 
   async compareLatestPriceToEma(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<"ABOVE" | "BELOW" | "EQUAL" | null> {
-    const price = await this.getLatestPrice(symbol, timeframe);
-    const ema = await this.getLatestEma(symbol, timeframe, period);
+  ): Promise<
+    "ABOVE" | "BELOW" | "EQUAL" | null
+  > {
+    const price =
+      await this.getLatestPrice(
+        symbol,
+        timeframe,
+      );
+
+    const ema =
+      await this.getLatestEma(
+        symbol,
+        timeframe,
+        period,
+      );
 
     if (price === null || ema === null) {
       return null;
     }
 
-    return this.indicatorsService.comparePriceToAverage(Number(price), ema);
+    return this.analysisService.comparePriceToEma(
+      price,
+      ema,
+    );
   }
 
   async compareSmaToEma(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<"SMA_ABOVE_EMA" | "SMA_BELOW_EMA" | "SMA_EQUAL_EMA" | null> {
-    const sma = await this.getLatestSma(symbol, timeframe, period);
-    const ema = await this.getLatestEma(symbol, timeframe, period);
+  ):
+    Promise<
+      | "SMA_ABOVE_EMA"
+      | "SMA_BELOW_EMA"
+      | "SMA_EQUAL_EMA"
+      | null
+    > {
+    const sma =
+      await this.getLatestSma(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const ema =
+      await this.getLatestEma(
+        symbol,
+        timeframe,
+        period,
+      );
 
     if (sma === null || ema === null) {
       return null;
     }
 
-    return this.indicatorsService.compareSmaToEma(sma, ema);
+    return this.analysisService.compareSmaToEma(
+      sma,
+      ema,
+    );
   }
+
   async getTrend(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
-    const price = await this.getLatestPrice(symbol, timeframe);
-    const sma = await this.getLatestSma(symbol, timeframe, period);
-    const ema = await this.getLatestEma(symbol, timeframe, period);
+  ): Promise<
+    "BULLISH" | "BEARISH" | "NEUTRAL" | null
+  > {
+    const price =
+      await this.getLatestPrice(
+        symbol,
+        timeframe,
+      );
 
-    if (price === null || sma === null || ema === null) {
+    const sma =
+      await this.getLatestSma(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    const ema =
+      await this.getLatestEma(
+        symbol,
+        timeframe,
+        period,
+      );
+
+    if (
+      price === null ||
+      sma === null ||
+      ema === null
+    ) {
       return null;
     }
 
-    const priceVsSma = this.indicatorsService.comparePriceToAverage(
-      Number(price),
+    return this.analysisService.determineTrend(
+      price,
       sma,
-    );
-
-    const priceVsEma = this.indicatorsService.comparePriceToAverage(
-      Number(price),
       ema,
     );
-
-    return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
   }
+
   async getRsiStatus(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<"OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" | null> {
-    const rsi = await this.getLatestRsi(symbol, timeframe);
+  ):
+    Promise<
+      "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" | null
+    > {
+    const rsi =
+      await this.getLatestRsi(
+        symbol,
+        timeframe,
+      );
 
     if (rsi === null) {
       return null;
     }
 
-    return this.indicatorsService.classifyRsi(rsi);
+    return this.analysisService.classifyRsi(
+      rsi,
+    );
   }
 
   async getMarketCondition(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<
-    | "POSSIBLE_REVERSAL"
-    | "BEARISH_CONTINUATION"
-    | "BULLISH_CONTINUATION"
-    | "NEUTRAL"
-    | null
-  > {
-    const trend = await this.getTrend(symbol, timeframe, period);
+  ):
+    Promise<
+      | "POSSIBLE_REVERSAL"
+      | "BEARISH_CONTINUATION"
+      | "BULLISH_CONTINUATION"
+      | "NEUTRAL"
+      | null
+    > {
+    const trend =
+      await this.getTrend(
+        symbol,
+        timeframe,
+        period,
+      );
 
-    const rsiStatus = await this.getRsiStatus(symbol, timeframe, period);
+    const rsiStatus =
+      await this.getRsiStatus(
+        symbol,
+        timeframe,
+        period,
+      );
 
-    if (trend === null || rsiStatus === null) {
+    if (
+      trend === null ||
+      rsiStatus === null
+    ) {
       return null;
     }
 
-    return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
+    return this.analysisService.determineMarketCondition(
+      trend,
+      rsiStatus,
+    );
   }
 
   async getLatestAtr(
@@ -253,21 +338,16 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+    const candles =
+      await this.getCandlesForAnalysis(
+        symbol,
+        timeframe,
+      );
 
-    if (candles.length < period + 1) {
-      return null;
-    }
-
-    const trueRanges = this.indicatorsService.calculateTrueRangesFromCandles(
-      candles.map((candle) => ({
-        high: Number(candle.high),
-        low: Number(candle.low),
-        close: Number(candle.close),
-      })),
+    return this.analysisService.calculateAtr(
+      candles,
+      period,
     );
-
-    return this.indicatorsService.calculateAtr(trueRanges, period);
   }
 
   async getLatestAdx(
@@ -275,196 +355,216 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
+    const candles =
+      await this.getCandlesForAnalysis(
+        symbol,
+        timeframe,
+      );
 
-    return this.indicatorsService.calculateAdxFromCandles(
-      candles.map((candle) => ({
-        high: Number(candle.high),
-        low: Number(candle.low),
-        close: Number(candle.close),
-      })),
+    return this.analysisService.calculateAdx(
+      candles,
       period,
     );
   }
 
-  async getHistoricalCandles(
+  getHistoricalCandles(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.find({
-      where: {
-        symbol,
-        timeframe,
-      },
-      order: {
-        time: "ASC",
-      },
-    });
+    return this.storageService.getHistoricalCandles(
+      symbol,
+      timeframe,
+    );
   }
 
-  async getHistoricalCandlesUntil(
+  getHistoricalCandlesUntil(
     symbol: string,
     timeframe: Timeframe,
     until: Date,
   ): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.find({
-      where: {
-        symbol,
-        timeframe,
-        time: LessThanOrEqual(until),
-      },
-      order: {
-        time: "ASC",
-      },
-    });
-  }
-
- async buildFourHourCandles(
-  symbol: string,
-): Promise<number> {
-  const hourlyCandles =
-    await this.marketCandleRepository.find({
-      where: {
-        symbol,
-        timeframe: Timeframe.ONE_HOUR,
-      },
-      order: {
-        time: "ASC",
-      },
-    });
-
-  if (hourlyCandles.length === 0) {
-    return 0;
-  }
-
-  const groups = new Map<
-    number,
-    MarketCandle[]
-  >();
-
-  for (const candle of hourlyCandles) {
-    const time = new Date(candle.time);
-
-    const alignedHour =
-      Math.floor(time.getUTCHours() / 4) * 4;
-
-    const startTime = new Date(time);
-
-    startTime.setUTCHours(
-      alignedHour,
-      0,
-      0,
-      0,
+    return this.storageService.getHistoricalCandlesUntil(
+      symbol,
+      timeframe,
+      until,
     );
-
-    const key = startTime.getTime();
-
-    const group = groups.get(key) ?? [];
-
-    group.push(candle);
-
-    groups.set(key, group);
   }
 
-  const fourHourCandles: MarketCandle[] = [];
+  async buildFourHourCandles(
+    symbol: string,
+  ): Promise<number> {
+    const hourlyCandles =
+      await this.storageService.getHistoricalCandles(
+        symbol,
+        Timeframe.ONE_HOUR,
+      );
 
-  for (const [startTime, candles] of groups) {
-    candles.sort(
-      (a, b) =>
-        a.time.getTime() -
-        b.time.getTime(),
-    );
-
-    if (candles.length !== 4) {
-      continue;
+    if (hourlyCandles.length === 0) {
+      return 0;
     }
 
-    const first = candles[0];
-    const last =
-      candles[candles.length - 1];
+    const groups =
+      new Map<number, MarketCandle[]>();
 
-    const high = Math.max(
-      ...candles.map((candle) =>
-        Number(candle.high),
-      ),
+    for (const candle of hourlyCandles) {
+      const time =
+        new Date(candle.time);
+
+      const alignedHour =
+        Math.floor(
+          time.getUTCHours() / 4,
+        ) * 4;
+
+      const startTime =
+        new Date(time);
+
+      startTime.setUTCHours(
+        alignedHour,
+        0,
+        0,
+        0,
+      );
+
+      const key =
+        startTime.getTime();
+
+      const group =
+        groups.get(key) ?? [];
+
+      group.push(candle);
+      groups.set(key, group);
+    }
+
+    const fourHourCandles: MarketCandle[] =
+      [];
+
+    for (const [
+      startTime,
+      candles,
+    ] of groups) {
+      candles.sort(
+        (a, b) =>
+          a.time.getTime() -
+          b.time.getTime(),
+      );
+
+      if (candles.length !== 4) {
+        continue;
+      }
+
+      const first = candles[0];
+      const last =
+        candles[candles.length - 1];
+
+      const high = Math.max(
+        ...candles.map((candle) =>
+          Number(candle.high),
+        ),
+      );
+
+      const low = Math.min(
+        ...candles.map((candle) =>
+          Number(candle.low),
+        ),
+      );
+
+      const volume =
+        candles.reduce(
+          (sum, candle) =>
+            sum +
+            Number(candle.volume),
+          0,
+        );
+
+      const fourHourCandle =
+        new MarketCandle();
+
+      fourHourCandle.symbol =
+        symbol;
+
+      fourHourCandle.timeframe =
+        Timeframe.FOUR_HOURS;
+
+      fourHourCandle.time =
+        new Date(startTime);
+
+      fourHourCandle.open =
+        first.open;
+
+      fourHourCandle.high =
+        high.toString();
+
+      fourHourCandle.low =
+        low.toString();
+
+      fourHourCandle.close =
+        last.close;
+
+      fourHourCandle.volume =
+        volume.toString();
+
+      fourHourCandles.push(
+        fourHourCandle,
+      );
+    }
+
+    await this.storageService.deleteFourHourCandles(
+      symbol,
     );
 
-    const low = Math.min(
-      ...candles.map((candle) =>
-        Number(candle.low),
-      ),
+    if (
+      fourHourCandles.length === 0
+    ) {
+      return 0;
+    }
+
+    await this.storageService.saveCandles(
+      fourHourCandles,
     );
 
-    const volume = candles.reduce(
-      (sum, candle) =>
-        sum + Number(candle.volume),
-      0,
-    );
-
-    const fourHourCandle =
-      new MarketCandle();
-
-    fourHourCandle.symbol = symbol;
-    fourHourCandle.timeframe =
-      Timeframe.FOUR_HOURS;
-    fourHourCandle.time =
-      new Date(startTime);
-    fourHourCandle.open =
-      first.open;
-    fourHourCandle.high =
-      high.toString();
-    fourHourCandle.low =
-      low.toString();
-    fourHourCandle.close =
-      last.close;
-    fourHourCandle.volume =
-      volume.toString();
-
-    fourHourCandles.push(
-      fourHourCandle,
-    );
+    return fourHourCandles.length;
   }
-
-  await this.marketCandleRepository.delete({
-    symbol,
-    timeframe: Timeframe.FOUR_HOURS,
-  });
-
-  if (fourHourCandles.length === 0) {
-    return 0;
-  }
-
-  await this.marketCandleRepository.save(
-    fourHourCandles,
-  );
-
-  return fourHourCandles.length;
-}
 
   async syncBinanceCandles(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number> {
-    const candles = await this.marketDataProviderService.getBinanceCandles(
-      symbol,
-      timeframe,
-      1000,
-    );
+    const candles =
+      await this.marketDataProviderService.getBinanceCandles(
+        symbol,
+        timeframe,
+        1000,
+      );
 
-    const timeframeMs: Record<Timeframe, number> = {
-      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
-      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
-      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
-      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
+    const timeframeMs:
+      Record<Timeframe, number> = {
+      [Timeframe.FIFTEEN_MINUTES]:
+        15 * 60 * 1000,
+
+      [Timeframe.ONE_HOUR]:
+        60 * 60 * 1000,
+
+      [Timeframe.FOUR_HOURS]:
+        4 * 60 * 60 * 1000,
+
+      [Timeframe.ONE_DAY]:
+        24 * 60 * 60 * 1000,
     };
 
     const now = Date.now();
 
-    const closedCandles = candles.filter(
-      (candle) => candle.time.getTime() + timeframeMs[timeframe] <= now,
-    );
+    const closedCandles =
+      candles.filter(
+        (candle) =>
+          candle.time.getTime() +
+            timeframeMs[timeframe] <=
+          now,
+      );
 
-    return this.saveCandles(symbol, timeframe, closedCandles);
+    return this.saveCandles(
+      symbol,
+      timeframe,
+      closedCandles,
+    );
   }
 
   async saveCandles(
@@ -483,7 +583,7 @@ export class MarketDataService {
 
     for (const candle of candles) {
       try {
-        await this.createCandle({
+        await this.storageService.createCandle({
           symbol,
           timeframe,
           time: candle.time.toISOString(),
@@ -496,7 +596,9 @@ export class MarketDataService {
 
         savedCount++;
       } catch (error) {
-        if (error instanceof ConflictException) {
+        if (
+          error instanceof ConflictException
+        ) {
           continue;
         }
 

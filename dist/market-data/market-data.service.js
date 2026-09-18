@@ -8,113 +8,59 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketDataService = void 0;
 const common_1 = require("@nestjs/common");
-const typeorm_1 = require("@nestjs/typeorm");
-const typeorm_2 = require("typeorm");
 const market_candle_entity_1 = require("./entities/market-candle.entity");
-const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
-const indicators_service_1 = require("../indicators/indicators.service");
-const typeorm_3 = require("typeorm");
+const market_candle_storage_service_1 = require("./market-candle-storage.service");
+const market_data_analysis_service_1 = require("./market-data-analysis.service");
 const market_data_provider_service_1 = require("./market-data-provider.service");
+const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 let MarketDataService = class MarketDataService {
-    marketCandleRepository;
-    indicatorsService;
+    storageService;
+    analysisService;
     marketDataProviderService;
-    constructor(marketCandleRepository, indicatorsService, marketDataProviderService) {
-        this.marketCandleRepository = marketCandleRepository;
-        this.indicatorsService = indicatorsService;
+    constructor(storageService, analysisService, marketDataProviderService) {
+        this.storageService = storageService;
+        this.analysisService = analysisService;
         this.marketDataProviderService = marketDataProviderService;
     }
-    async createCandle(dto) {
-        try {
-            const candle = this.marketCandleRepository.create({
-                symbol: dto.symbol,
-                timeframe: dto.timeframe,
-                time: new Date(dto.time),
-                open: dto.open.toString(),
-                high: dto.high.toString(),
-                low: dto.low.toString(),
-                close: dto.close.toString(),
-                volume: dto.volume.toString(),
-            });
-            return await this.marketCandleRepository.save(candle);
-        }
-        catch (error) {
-            if (error instanceof typeorm_2.QueryFailedError &&
-                error.driverError?.code === "23505") {
-                throw new common_1.ConflictException("Candle already exists");
-            }
-            throw error;
-        }
+    createCandle(dto) {
+        return this.storageService.createCandle(dto);
     }
     findAllCandles() {
-        return this.marketCandleRepository.find();
+        return this.storageService.findAllCandles();
     }
     findCandlesBySymbol(symbol) {
-        return this.marketCandleRepository.find({
-            where: {
-                symbol,
-            },
-        });
+        return this.storageService.findCandlesBySymbol(symbol);
     }
     findCandlesBySymbolAndTimeframe(symbol, timeframe) {
-        return this.marketCandleRepository.find({
-            where: {
-                symbol,
-                timeframe,
-            },
-            order: {
-                time: "DESC",
-            },
-            take: 100,
-        });
+        return this.storageService.findCandlesBySymbolAndTimeframe(symbol, timeframe);
     }
     async findLatestCandle(symbol, timeframe) {
-        return this.marketCandleRepository.findOne({
-            where: {
-                symbol,
-                timeframe,
-            },
-            order: {
-                time: "DESC",
-            },
-        });
+        return this.storageService.findLatestCandle(symbol, timeframe);
     }
     async getLatestPrice(symbol, timeframe) {
-        const candle = await this.findLatestCandle(symbol, timeframe);
+        const candle = await this.storageService.findLatestCandle(symbol, timeframe);
         if (!candle) {
             return null;
         }
         return Number(candle.close);
     }
-    async getCandlesForAnalysis(symbol, timeframe) {
-        return this.marketCandleRepository.find({
-            where: {
-                symbol,
-                timeframe,
-            },
-            order: {
-                time: "ASC",
-            },
-            take: 100,
-        });
+    getCandlesForAnalysis(symbol, timeframe) {
+        return this.storageService.getCandlesForAnalysis(symbol, timeframe);
     }
     async getLatestRsi(symbol, timeframe) {
         const candles = await this.getCandlesForAnalysis(symbol, timeframe);
-        return this.indicatorsService.calculateRsiFromCandles(candles, 14);
+        return this.analysisService.getLatestRsi(candles);
     }
     async getLatestSma(symbol, timeframe, period) {
         const candles = await this.getCandlesForAnalysis(symbol, timeframe);
-        return this.indicatorsService.calculateSmaFromCandles(candles, period);
+        return this.analysisService.getLatestSma(candles, period);
     }
     async getLatestEma(symbol, timeframe, period) {
         const candles = await this.getCandlesForAnalysis(symbol, timeframe);
-        return this.indicatorsService.calculateEma(candles.map((candle) => Number(candle.close)), period);
+        return this.analysisService.getLatestEma(candles, period);
     }
     async compareLatestPriceToSma(symbol, timeframe, period) {
         const price = await this.getLatestPrice(symbol, timeframe);
@@ -122,7 +68,7 @@ let MarketDataService = class MarketDataService {
         if (price === null || sma === null) {
             return null;
         }
-        return this.indicatorsService.comparePriceToAverage(Number(price), sma);
+        return this.analysisService.comparePriceToSma(price, sma);
     }
     async compareLatestPriceToEma(symbol, timeframe, period) {
         const price = await this.getLatestPrice(symbol, timeframe);
@@ -130,7 +76,7 @@ let MarketDataService = class MarketDataService {
         if (price === null || ema === null) {
             return null;
         }
-        return this.indicatorsService.comparePriceToAverage(Number(price), ema);
+        return this.analysisService.comparePriceToEma(price, ema);
     }
     async compareSmaToEma(symbol, timeframe, period) {
         const sma = await this.getLatestSma(symbol, timeframe, period);
@@ -138,87 +84,51 @@ let MarketDataService = class MarketDataService {
         if (sma === null || ema === null) {
             return null;
         }
-        return this.indicatorsService.compareSmaToEma(sma, ema);
+        return this.analysisService.compareSmaToEma(sma, ema);
     }
     async getTrend(symbol, timeframe, period) {
         const price = await this.getLatestPrice(symbol, timeframe);
         const sma = await this.getLatestSma(symbol, timeframe, period);
         const ema = await this.getLatestEma(symbol, timeframe, period);
-        if (price === null || sma === null || ema === null) {
+        if (price === null ||
+            sma === null ||
+            ema === null) {
             return null;
         }
-        const priceVsSma = this.indicatorsService.comparePriceToAverage(Number(price), sma);
-        const priceVsEma = this.indicatorsService.comparePriceToAverage(Number(price), ema);
-        return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+        return this.analysisService.determineTrend(price, sma, ema);
     }
     async getRsiStatus(symbol, timeframe, period) {
         const rsi = await this.getLatestRsi(symbol, timeframe);
         if (rsi === null) {
             return null;
         }
-        return this.indicatorsService.classifyRsi(rsi);
+        return this.analysisService.classifyRsi(rsi);
     }
     async getMarketCondition(symbol, timeframe, period) {
         const trend = await this.getTrend(symbol, timeframe, period);
         const rsiStatus = await this.getRsiStatus(symbol, timeframe, period);
-        if (trend === null || rsiStatus === null) {
+        if (trend === null ||
+            rsiStatus === null) {
             return null;
         }
-        return this.indicatorsService.determineMarketCondition(trend, rsiStatus);
+        return this.analysisService.determineMarketCondition(trend, rsiStatus);
     }
     async getLatestAtr(symbol, timeframe, period) {
         const candles = await this.getCandlesForAnalysis(symbol, timeframe);
-        if (candles.length < period + 1) {
-            return null;
-        }
-        const trueRanges = this.indicatorsService.calculateTrueRangesFromCandles(candles.map((candle) => ({
-            high: Number(candle.high),
-            low: Number(candle.low),
-            close: Number(candle.close),
-        })));
-        return this.indicatorsService.calculateAtr(trueRanges, period);
+        return this.analysisService.calculateAtr(candles, period);
     }
     async getLatestAdx(symbol, timeframe, period) {
         const candles = await this.getCandlesForAnalysis(symbol, timeframe);
-        return this.indicatorsService.calculateAdxFromCandles(candles.map((candle) => ({
-            high: Number(candle.high),
-            low: Number(candle.low),
-            close: Number(candle.close),
-        })), period);
+        return this.analysisService.calculateAdx(candles, period);
     }
-    async getHistoricalCandles(symbol, timeframe) {
-        return this.marketCandleRepository.find({
-            where: {
-                symbol,
-                timeframe,
-            },
-            order: {
-                time: "ASC",
-            },
-        });
+    getHistoricalCandles(symbol, timeframe) {
+        return this.storageService.getHistoricalCandles(symbol, timeframe);
     }
-    async getHistoricalCandlesUntil(symbol, timeframe, until) {
-        return this.marketCandleRepository.find({
-            where: {
-                symbol,
-                timeframe,
-                time: (0, typeorm_3.LessThanOrEqual)(until),
-            },
-            order: {
-                time: "ASC",
-            },
-        });
+    getHistoricalCandlesUntil(symbol, timeframe, until) {
+        return this.storageService.getHistoricalCandlesUntil(symbol, timeframe, until);
     }
     async buildFourHourCandles(symbol) {
-        const hourlyCandles = await this.marketCandleRepository.find({
-            where: {
-                symbol,
-                timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
-            },
-            order: {
-                time: "ASC",
-            },
-        });
+        const hourlyCandles = await this.storageService.getHistoricalCandles(symbol, timeframe_enum_1.Timeframe.ONE_HOUR);
         if (hourlyCandles.length === 0) {
             return 0;
         }
@@ -234,7 +144,7 @@ let MarketDataService = class MarketDataService {
             groups.set(key, group);
         }
         const fourHourCandles = [];
-        for (const [startTime, candles] of groups) {
+        for (const [startTime, candles,] of groups) {
             candles.sort((a, b) => a.time.getTime() -
                 b.time.getTime());
             if (candles.length !== 4) {
@@ -244,9 +154,11 @@ let MarketDataService = class MarketDataService {
             const last = candles[candles.length - 1];
             const high = Math.max(...candles.map((candle) => Number(candle.high)));
             const low = Math.min(...candles.map((candle) => Number(candle.low)));
-            const volume = candles.reduce((sum, candle) => sum + Number(candle.volume), 0);
+            const volume = candles.reduce((sum, candle) => sum +
+                Number(candle.volume), 0);
             const fourHourCandle = new market_candle_entity_1.MarketCandle();
-            fourHourCandle.symbol = symbol;
+            fourHourCandle.symbol =
+                symbol;
             fourHourCandle.timeframe =
                 timeframe_enum_1.Timeframe.FOUR_HOURS;
             fourHourCandle.time =
@@ -263,14 +175,11 @@ let MarketDataService = class MarketDataService {
                 volume.toString();
             fourHourCandles.push(fourHourCandle);
         }
-        await this.marketCandleRepository.delete({
-            symbol,
-            timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
-        });
+        await this.storageService.deleteFourHourCandles(symbol);
         if (fourHourCandles.length === 0) {
             return 0;
         }
-        await this.marketCandleRepository.save(fourHourCandles);
+        await this.storageService.saveCandles(fourHourCandles);
         return fourHourCandles.length;
     }
     async syncBinanceCandles(symbol, timeframe) {
@@ -282,14 +191,16 @@ let MarketDataService = class MarketDataService {
             [timeframe_enum_1.Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
         };
         const now = Date.now();
-        const closedCandles = candles.filter((candle) => candle.time.getTime() + timeframeMs[timeframe] <= now);
+        const closedCandles = candles.filter((candle) => candle.time.getTime() +
+            timeframeMs[timeframe] <=
+            now);
         return this.saveCandles(symbol, timeframe, closedCandles);
     }
     async saveCandles(symbol, timeframe, candles) {
         let savedCount = 0;
         for (const candle of candles) {
             try {
-                await this.createCandle({
+                await this.storageService.createCandle({
                     symbol,
                     timeframe,
                     time: candle.time.toISOString(),
@@ -314,9 +225,8 @@ let MarketDataService = class MarketDataService {
 exports.MarketDataService = MarketDataService;
 exports.MarketDataService = MarketDataService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(market_candle_entity_1.MarketCandle)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        indicators_service_1.IndicatorsService,
+    __metadata("design:paramtypes", [market_candle_storage_service_1.MarketCandleStorageService,
+        market_data_analysis_service_1.MarketDataAnalysisService,
         market_data_provider_service_1.MarketDataProviderService])
 ], MarketDataService);
 //# sourceMappingURL=market-data.service.js.map
