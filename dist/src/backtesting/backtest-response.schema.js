@@ -13,15 +13,21 @@ exports.BacktestResponseSchema = zod_1.z.object({
     totalFeeR: zod_1.z.number(),
     totalSlippageR: zod_1.z.number(),
     totalCostR: zod_1.z.number(),
-    training: zod_1.z.object({
+    training: zod_1.z
+        .object({
         totalTrades: zod_1.z.number().int().nonnegative(),
-    }).passthrough(),
-    test: zod_1.z.object({
+    })
+        .passthrough(),
+    test: zod_1.z
+        .object({
         totalTrades: zod_1.z.number().int().nonnegative(),
-    }).passthrough(),
-    trades: zod_1.z.array(zod_1.z.object({
+    })
+        .passthrough(),
+    trades: zod_1.z.array(zod_1.z
+        .object({
         result: zod_1.z.enum(["WIN", "LOSS", "OPEN"]),
         resultR: zod_1.z.number().nullable(),
-    }).passthrough()),
+    })
+        .passthrough()),
 });
 //# sourceMappingURL=backtest-response.schema.js.map

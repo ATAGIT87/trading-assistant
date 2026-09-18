@@ -79,8 +79,13 @@ export class ScannerService {
     );
 
     if (!signal) {
+      console.log(`[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`);
       return null;
     }
+
+    console.log(
+      `[Scanner] ${symbol} / ${timeframe} → ${signal.action} (confidence: ${signal.confidence})`,
+    );
 
     if (signal.action !== "BUY" && signal.action !== "SELL") {
       return signal;

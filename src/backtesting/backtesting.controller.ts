@@ -12,8 +12,8 @@ export class BacktestingController {
     @Param("symbol") symbol: string,
     @Param("timeframe") timeframe: Timeframe,
   ) {
-   const result = await this.backtestingService.run(symbol, timeframe);
+    const result = await this.backtestingService.run(symbol, timeframe);
 
-return result;
+    return result;
   }
 }

@@ -13,19 +13,25 @@ export const BacktestResponseSchema = z.object({
   totalSlippageR: z.number(),
   totalCostR: z.number(),
 
-  training: z.object({
-    totalTrades: z.number().int().nonnegative(),
-  }).passthrough(),
+  training: z
+    .object({
+      totalTrades: z.number().int().nonnegative(),
+    })
+    .passthrough(),
 
-  test: z.object({
-    totalTrades: z.number().int().nonnegative(),
-  }).passthrough(),
+  test: z
+    .object({
+      totalTrades: z.number().int().nonnegative(),
+    })
+    .passthrough(),
 
   trades: z.array(
-    z.object({
-      result: z.enum(["WIN", "LOSS", "OPEN"]),
-      resultR: z.number().nullable(),
-    }).passthrough(),
+    z
+      .object({
+        result: z.enum(["WIN", "LOSS", "OPEN"]),
+        resultR: z.number().nullable(),
+      })
+      .passthrough(),
   ),
 });
 

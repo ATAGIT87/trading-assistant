@@ -13,12 +13,8 @@ export class ScannerController {
     @Param("timeframe") timeframe: Timeframe,
     @Param("period", ParseIntPipe) period: number,
   ) {
-   const result = await this.scannerService.scan(
-  symbol,
-  timeframe,
-  period,
-);
+    const result = await this.scannerService.scan(symbol, timeframe, period);
 
-return ScannerResponseSchema.parse(result);
+    return ScannerResponseSchema.parse(result);
   }
 }
