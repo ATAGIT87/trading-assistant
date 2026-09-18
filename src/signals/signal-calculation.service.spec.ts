@@ -13,9 +13,7 @@ describe("SignalCalculationService", () => {
       calculateAdxScore: jest.fn(),
     };
 
-    service = new SignalCalculationService(
-      indicatorsServiceMock,
-    );
+    service = new SignalCalculationService(indicatorsServiceMock);
   });
 
   it("should be defined", () => {
@@ -181,31 +179,18 @@ describe("SignalCalculationService", () => {
   });
 
   it("should calculate stop loss for BUY", () => {
-    expect(
-      service.calculateStopLoss("BUY", 95000, 1107),
-    ).toBeCloseTo(93339.5, 4);
+    expect(service.calculateStopLoss("BUY", 95000, 1107)).toBeCloseTo(
+      93339.5,
+      4,
+    );
   });
 
   it("should calculate take profit for BUY", () => {
-    expect(
-      service.calculateTakeProfit(
-        "BUY",
-        10000,
-        9850,
-        2,
-      ),
-    ).toBe(10300);
+    expect(service.calculateTakeProfit("BUY", 10000, 9850, 2)).toBe(10300);
   });
 
   it("should calculate take profit for SELL", () => {
-    expect(
-      service.calculateTakeProfit(
-        "SELL",
-        10000,
-        10150,
-        2,
-      ),
-    ).toBe(9700);
+    expect(service.calculateTakeProfit("SELL", 10000, 10150, 2)).toBe(9700);
   });
 
   it("should return NO_TRADE when ADX is weak", () => {

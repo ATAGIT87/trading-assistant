@@ -58,8 +58,7 @@ let BacktestingService = class BacktestingService {
             while (i < endIndex) {
                 const historicalCandles = candles.slice(0, i + 1);
                 const signal = await this.signalsService.generateSignalFromCandles(symbol, timeframe, historicalCandles, higherTimeframeCandles);
-                if (signal?.action !== "BUY" &&
-                    signal?.action !== "SELL") {
+                if (signal?.action !== "BUY" && signal?.action !== "SELL") {
                     i++;
                     continue;
                 }
@@ -72,43 +71,23 @@ let BacktestingService = class BacktestingService {
                         : "OPEN";
                 const riskAmount = signal.stopLoss === null
                     ? 0
-                    : Math.abs(signal.entryPrice -
-                        signal.stopLoss);
-                const grossR = outcome.result === true
-                    ? 2
-                    : outcome.result === false
-                        ? -1
-                        : null;
+                    : Math.abs(signal.entryPrice - signal.stopLoss);
+                const grossR = outcome.result === true ? 2 : outcome.result === false ? -1 : null;
                 let feeR = 0;
                 let slippageR = 0;
                 let netR = grossR;
-                if (grossR !== null &&
-                    riskAmount > 0) {
+                if (grossR !== null && riskAmount > 0) {
                     const entryPrice = signal.entryPrice;
-                    const exitPrice = outcome.exitPrice ??
-                        entryPrice;
-                    const entryFee = entryPrice *
-                        this.feeRate;
-                    const exitFee = exitPrice *
-                        this.feeRate;
-                    const totalFee = entryFee +
-                        exitFee;
-                    feeR =
-                        totalFee /
-                            riskAmount;
-                    const entrySlippage = entryPrice *
-                        this.slippageRate;
-                    const exitSlippage = exitPrice *
-                        this.slippageRate;
-                    const totalSlippage = entrySlippage +
-                        exitSlippage;
-                    slippageR =
-                        totalSlippage /
-                            riskAmount;
-                    netR =
-                        grossR -
-                            feeR -
-                            slippageR;
+                    const exitPrice = outcome.exitPrice ?? entryPrice;
+                    const entryFee = entryPrice * this.feeRate;
+                    const exitFee = exitPrice * this.feeRate;
+                    const totalFee = entryFee + exitFee;
+                    feeR = totalFee / riskAmount;
+                    const entrySlippage = entryPrice * this.slippageRate;
+                    const exitSlippage = exitPrice * this.slippageRate;
+                    const totalSlippage = entrySlippage + exitSlippage;
+                    slippageR = totalSlippage / riskAmount;
+                    netR = grossR - feeR - slippageR;
                 }
                 const backtestTrade = {
                     time: candles[i].time,
@@ -125,8 +104,7 @@ let BacktestingService = class BacktestingService {
                     result,
                     exitTime: outcome.exitIndex === null
                         ? null
-                        : (futureCandles[outcome.exitIndex]?.time ??
-                            null),
+                        : (futureCandles[outcome.exitIndex]?.time ?? null),
                     riskAmount,
                     resultR: netR,
                     maeR: outcome.maeR,
@@ -136,13 +114,10 @@ let BacktestingService = class BacktestingService {
                 trades.push(backtestTrade);
                 targetTrades.push(backtestTrade);
                 if (grossR !== null) {
-                    grossTotalR +=
-                        grossR;
+                    grossTotalR += grossR;
                 }
-                totalFeeR +=
-                    feeR;
-                totalSlippageR +=
-                    slippageR;
+                totalFeeR += feeR;
+                totalSlippageR += slippageR;
                 if (netR !== null) {
                     if (netR > 0) {
                         winningTrades++;
@@ -154,22 +129,14 @@ let BacktestingService = class BacktestingService {
                 if (outcome.exitIndex === null) {
                     break;
                 }
-                i =
-                    i +
-                        outcome.exitIndex +
-                        2;
+                i = i + outcome.exitIndex + 2;
             }
         };
         await processSegment(0, splitIndex, trainingTrades);
         await processSegment(splitIndex, candles.length, testTrades);
-        const completedTrades = winningTrades +
-            losingTrades;
-        const totalR = trades.reduce((sum, trade) => sum +
-            (trade.resultR ?? 0), 0);
-        const expectancyR = completedTrades === 0
-            ? 0
-            : totalR /
-                completedTrades;
+        const completedTrades = winningTrades + losingTrades;
+        const totalR = trades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
+        const expectancyR = completedTrades === 0 ? 0 : totalR / completedTrades;
         const statistics = (0, backtest_statistics_helper_1.calculateBacktestStatistics)(trades);
         const training = (0, backtest_summary_helper_1.calculateBacktestSummary)(trainingTrades);
         const test = (0, backtest_summary_helper_1.calculateBacktestSummary)(testTrades);
@@ -178,18 +145,13 @@ let BacktestingService = class BacktestingService {
             totalTrades: trades.length,
             winningTrades,
             losingTrades,
-            winRate: completedTrades === 0
-                ? 0
-                : (winningTrades /
-                    completedTrades) *
-                    100,
+            winRate: completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
             totalR,
             expectancyR,
             grossTotalR,
             totalFeeR,
             totalSlippageR,
-            totalCostR: totalFeeR +
-                totalSlippageR,
+            totalCostR: totalFeeR + totalSlippageR,
             training,
             test,
             trades,

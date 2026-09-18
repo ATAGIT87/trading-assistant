@@ -64,8 +64,7 @@ let ScannerService = class ScannerService {
         if (!signal) {
             return null;
         }
-        if (signal.action !== "BUY" &&
-            signal.action !== "SELL") {
+        if (signal.action !== "BUY" && signal.action !== "SELL") {
             return signal;
         }
         await this.alertsService.sendSignalAlert(symbol, timeframe, signal);

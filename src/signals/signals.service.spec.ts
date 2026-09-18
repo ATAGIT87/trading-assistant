@@ -170,9 +170,7 @@ describe("SignalsService", () => {
       existingSignal,
     );
 
-    signalCalculationServiceMock.createSignal.mockReturnValue(
-      existingSignal,
-    );
+    signalCalculationServiceMock.createSignal.mockReturnValue(existingSignal);
 
     const result = await service.generateSignal(
       "BTCUSD",
@@ -197,9 +195,7 @@ describe("SignalsService", () => {
     );
 
     expect(result).toBe(signal);
-    expect(
-      signalStorageServiceMock.getSignalByCandleTime,
-    ).toHaveBeenCalledWith(
+    expect(signalStorageServiceMock.getSignalByCandleTime).toHaveBeenCalledWith(
       "BTCUSD",
       Timeframe.ONE_HOUR,
       candleTime,
@@ -247,15 +243,11 @@ describe("SignalsService", () => {
     );
 
     expect(result).toBe(signal);
-    expect(
-      signalCalculationServiceMock.createSignal,
-    ).toHaveBeenCalled();
+    expect(signalCalculationServiceMock.createSignal).toHaveBeenCalled();
   });
 
   it("should return null when indicators cannot be calculated", async () => {
-    indicatorsServiceMock.calculateIndicatorsFromCandles.mockReturnValue(
-      null,
-    );
+    indicatorsServiceMock.calculateIndicatorsFromCandles.mockReturnValue(null);
 
     const result = await service.generateSignalFromCandles(
       "BTCUSD",
