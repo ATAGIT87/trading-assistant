@@ -6,19 +6,18 @@ export declare const ScannerResponseSchema: z.ZodNullable<z.ZodObject<{
         WAIT: "WAIT";
         NO_TRADE: "NO_TRADE";
     }>;
-    confidence: z.ZodNumber;
-    entryPrice: z.ZodNumber;
-    stopLoss: z.ZodNullable<z.ZodNumber>;
-    takeProfit: z.ZodNullable<z.ZodNumber>;
+    confidence: z.ZodCoercedNumber<unknown>;
+    entryPrice: z.ZodCoercedNumber<unknown>;
+    stopLoss: z.ZodNullable<z.ZodCoercedNumber<unknown>>;
+    takeProfit: z.ZodNullable<z.ZodCoercedNumber<unknown>>;
     isStrongSetup: z.ZodBoolean;
     trend: z.ZodEnum<{
         BULLISH: "BULLISH";
         BEARISH: "BEARISH";
         NEUTRAL: "NEUTRAL";
     }>;
-    rsi: z.ZodNumber;
-    adx: z.ZodNumber;
-    rsiStatus: z.ZodString;
+    rsi: z.ZodCoercedNumber<unknown>;
+    adx: z.ZodCoercedNumber<unknown>;
     marketCondition: z.ZodString;
     candleTime: z.ZodCoercedDate<unknown>;
     reason: z.ZodString;

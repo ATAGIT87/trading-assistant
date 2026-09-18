@@ -13,7 +13,6 @@ export declare class ScannerController {
         trend: "BULLISH" | "BEARISH" | "NEUTRAL";
         rsi: number;
         adx: number;
-        rsiStatus: string;
         marketCondition: string;
         candleTime: Date;
         reason: string;
