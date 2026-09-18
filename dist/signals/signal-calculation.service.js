@@ -30,10 +30,8 @@ let SignalCalculationService = class SignalCalculationService {
         let stopLoss = null;
         let takeProfit = null;
         if (action === "BUY" || action === "SELL") {
-            stopLoss =
-                this.calculateStopLoss(action, entryPrice, atr);
-            takeProfit =
-                this.calculateTakeProfit(action, entryPrice, stopLoss, 2);
+            stopLoss = this.calculateStopLoss(action, entryPrice, atr);
+            takeProfit = this.calculateTakeProfit(action, entryPrice, stopLoss, 2);
         }
         return {
             action,
@@ -69,16 +67,12 @@ let SignalCalculationService = class SignalCalculationService {
             return "NO_TRADE";
         }
         if (higherTimeframeTrend !== null &&
-            ((trend === "BULLISH" &&
-                higherTimeframeTrend !== "BULLISH") ||
-                (trend === "BEARISH" &&
-                    higherTimeframeTrend !== "BEARISH"))) {
+            ((trend === "BULLISH" && higherTimeframeTrend !== "BULLISH") ||
+                (trend === "BEARISH" && higherTimeframeTrend !== "BEARISH"))) {
             return "NO_TRADE";
         }
-        if ((trend === "BULLISH" &&
-            marketCondition === "BEARISH_CONTINUATION") ||
-            (trend === "BEARISH" &&
-                marketCondition === "BULLISH_CONTINUATION")) {
+        if ((trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
+            (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")) {
             return "NO_TRADE";
         }
         if (marketCondition === "BULLISH_CONTINUATION") {

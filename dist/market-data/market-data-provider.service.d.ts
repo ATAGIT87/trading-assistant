@@ -36,4 +36,6 @@ export declare class MarketDataProviderService {
         close: number;
         volume: number;
     }[]>;
+    private normalizeSymbol;
+    private validateTimeframe;
 }

@@ -1,13 +1,6 @@
-import {
-  ConflictException,
-  Injectable,
-} from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import {
-  LessThanOrEqual,
-  QueryFailedError,
-  Repository,
-} from "typeorm";
+import { LessThanOrEqual, QueryFailedError, Repository } from "typeorm";
 
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { MarketCandle } from "./entities/market-candle.entity";
@@ -20,34 +13,26 @@ export class MarketCandleStorageService {
     private readonly marketCandleRepository: Repository<MarketCandle>,
   ) {}
 
-  async createCandle(
-    dto: CreateMarketCandleDto,
-  ): Promise<MarketCandle> {
+  async createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle> {
     try {
-      const candle =
-        this.marketCandleRepository.create({
-          symbol: dto.symbol,
-          timeframe: dto.timeframe,
-          time: new Date(dto.time),
-          open: dto.open.toString(),
-          high: dto.high.toString(),
-          low: dto.low.toString(),
-          close: dto.close.toString(),
-          volume: dto.volume.toString(),
-        });
+      const candle = this.marketCandleRepository.create({
+        symbol: dto.symbol,
+        timeframe: dto.timeframe,
+        time: new Date(dto.time),
+        open: dto.open.toString(),
+        high: dto.high.toString(),
+        low: dto.low.toString(),
+        close: dto.close.toString(),
+        volume: dto.volume.toString(),
+      });
 
-      return await this.marketCandleRepository.save(
-        candle,
-      );
+      return await this.marketCandleRepository.save(candle);
     } catch (error) {
       if (
         error instanceof QueryFailedError &&
-        (error as any).driverError?.code ===
-          "23505"
+        (error as any).driverError?.code === "23505"
       ) {
-        throw new ConflictException(
-          "Candle already exists",
-        );
+        throw new ConflictException("Candle already exists");
       }
 
       throw error;
@@ -58,9 +43,7 @@ export class MarketCandleStorageService {
     return this.marketCandleRepository.find();
   }
 
-  findCandlesBySymbol(
-    symbol: string,
-  ): Promise<MarketCandle[]> {
+  findCandlesBySymbol(symbol: string): Promise<MarketCandle[]> {
     return this.marketCandleRepository.find({
       where: {
         symbol,
@@ -147,20 +130,14 @@ export class MarketCandleStorageService {
     });
   }
 
-  async deleteFourHourCandles(
-    symbol: string,
-  ): Promise<void> {
+  async deleteFourHourCandles(symbol: string): Promise<void> {
     await this.marketCandleRepository.delete({
       symbol,
       timeframe: Timeframe.FOUR_HOURS,
     });
   }
 
-  async saveCandles(
-    candles: MarketCandle[],
-  ): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.save(
-      candles,
-    );
+  async saveCandles(candles: MarketCandle[]): Promise<MarketCandle[]> {
+    return this.marketCandleRepository.save(candles);
   }
 }

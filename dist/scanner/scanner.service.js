@@ -47,8 +47,7 @@ let ScannerService = class ScannerService {
             return null;
         }
         if (existingSignal ||
-            (signal.action !== "BUY" &&
-                signal.action !== "SELL")) {
+            (signal.action !== "BUY" && signal.action !== "SELL")) {
             return signal;
         }
         await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
@@ -64,8 +63,7 @@ let ScannerService = class ScannerService {
                 now.getMinutes() % 15 !== 0) {
                 continue;
             }
-            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR &&
-                now.getMinutes() !== 0) {
+            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
                 continue;
             }
             console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);

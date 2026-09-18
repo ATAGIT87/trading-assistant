@@ -7,9 +7,7 @@ const STRONG_SETUP_THRESHOLD = 75;
 
 @Injectable()
 export class SignalCalculationService {
-  constructor(
-    private readonly indicatorsService: IndicatorsService,
-  ) {}
+  constructor(private readonly indicatorsService: IndicatorsService) {}
 
   createSignal(
     trend: TradingSignal["trend"],
@@ -24,8 +22,7 @@ export class SignalCalculationService {
     higherTimeframeTrend: TradingSignal["trend"] | null,
     candleTime: Date,
   ): TradingSignal {
-    const trendScore =
-      this.indicatorsService.calculateTrendScore(trend);
+    const trendScore = this.indicatorsService.calculateTrendScore(trend);
 
     const averageAlignmentScore =
       this.indicatorsService.calculateAverageAlignmentScore(
@@ -33,11 +30,7 @@ export class SignalCalculationService {
         priceVsEma,
       );
 
-    const rsiScore =
-      this.indicatorsService.calculateRsiScore(
-        trend,
-        rsi,
-      );
+    const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
 
     const marketConditionScore =
       this.indicatorsService.calculateMarketConditionScore(
@@ -45,49 +38,34 @@ export class SignalCalculationService {
         marketCondition,
       );
 
-    const adxScore =
-      this.indicatorsService.calculateAdxScore(adx);
+    const adxScore = this.indicatorsService.calculateAdxScore(adx);
 
-    const confidence =
-      this.calculateConfidence(
-        trendScore,
-        averageAlignmentScore,
-        rsiScore,
-        marketConditionScore,
-        adxScore,
-      );
+    const confidence = this.calculateConfidence(
+      trendScore,
+      averageAlignmentScore,
+      rsiScore,
+      marketConditionScore,
+      adxScore,
+    );
 
-    const isStrongSetup =
-      confidence >= STRONG_SETUP_THRESHOLD;
+    const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
 
-    const action =
-      this.determineAction(
-        higherTimeframeTrend,
-        trend,
-        marketCondition,
-        isStrongSetup,
-        adx,
-        atr,
-      );
+    const action = this.determineAction(
+      higherTimeframeTrend,
+      trend,
+      marketCondition,
+      isStrongSetup,
+      adx,
+      atr,
+    );
 
     let stopLoss: number | null = null;
     let takeProfit: number | null = null;
 
     if (action === "BUY" || action === "SELL") {
-      stopLoss =
-        this.calculateStopLoss(
-          action,
-          entryPrice,
-          atr,
-        );
+      stopLoss = this.calculateStopLoss(action, entryPrice, atr);
 
-      takeProfit =
-        this.calculateTakeProfit(
-          action,
-          entryPrice,
-          stopLoss,
-          2,
-        );
+      takeProfit = this.calculateTakeProfit(action, entryPrice, stopLoss, 2);
     }
 
     return {
@@ -138,32 +116,24 @@ export class SignalCalculationService {
 
     if (
       higherTimeframeTrend !== null &&
-      ((trend === "BULLISH" &&
-        higherTimeframeTrend !== "BULLISH") ||
-        (trend === "BEARISH" &&
-          higherTimeframeTrend !== "BEARISH"))
+      ((trend === "BULLISH" && higherTimeframeTrend !== "BULLISH") ||
+        (trend === "BEARISH" && higherTimeframeTrend !== "BEARISH"))
     ) {
       return "NO_TRADE";
     }
 
     if (
-      (trend === "BULLISH" &&
-        marketCondition === "BEARISH_CONTINUATION") ||
-      (trend === "BEARISH" &&
-        marketCondition === "BULLISH_CONTINUATION")
+      (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
+      (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
     ) {
       return "NO_TRADE";
     }
 
-    if (
-      marketCondition === "BULLISH_CONTINUATION"
-    ) {
+    if (marketCondition === "BULLISH_CONTINUATION") {
       return "BUY";
     }
 
-    if (
-      marketCondition === "BEARISH_CONTINUATION"
-    ) {
+    if (marketCondition === "BEARISH_CONTINUATION") {
       return "SELL";
     }
 
@@ -207,11 +177,9 @@ export class SignalCalculationService {
     stopLoss: number,
     riskRewardRatio: number,
   ): number {
-    const risk =
-      Math.abs(entryPrice - stopLoss);
+    const risk = Math.abs(entryPrice - stopLoss);
 
-    const reward =
-      risk * riskRewardRatio;
+    const reward = risk * riskRewardRatio;
 
     if (action === "BUY") {
       return entryPrice + reward;

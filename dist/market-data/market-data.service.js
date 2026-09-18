@@ -90,9 +90,7 @@ let MarketDataService = class MarketDataService {
         const price = await this.getLatestPrice(symbol, timeframe);
         const sma = await this.getLatestSma(symbol, timeframe, period);
         const ema = await this.getLatestEma(symbol, timeframe, period);
-        if (price === null ||
-            sma === null ||
-            ema === null) {
+        if (price === null || sma === null || ema === null) {
             return null;
         }
         return this.analysisService.determineTrend(price, sma, ema);
@@ -107,8 +105,7 @@ let MarketDataService = class MarketDataService {
     async getMarketCondition(symbol, timeframe, period) {
         const trend = await this.getTrend(symbol, timeframe, period);
         const rsiStatus = await this.getRsiStatus(symbol, timeframe, period);
-        if (trend === null ||
-            rsiStatus === null) {
+        if (trend === null || rsiStatus === null) {
             return null;
         }
         return this.analysisService.determineMarketCondition(trend, rsiStatus);
@@ -144,9 +141,8 @@ let MarketDataService = class MarketDataService {
             groups.set(key, group);
         }
         const fourHourCandles = [];
-        for (const [startTime, candles,] of groups) {
-            candles.sort((a, b) => a.time.getTime() -
-                b.time.getTime());
+        for (const [startTime, candles] of groups) {
+            candles.sort((a, b) => a.time.getTime() - b.time.getTime());
             if (candles.length !== 4) {
                 continue;
             }
@@ -154,25 +150,16 @@ let MarketDataService = class MarketDataService {
             const last = candles[candles.length - 1];
             const high = Math.max(...candles.map((candle) => Number(candle.high)));
             const low = Math.min(...candles.map((candle) => Number(candle.low)));
-            const volume = candles.reduce((sum, candle) => sum +
-                Number(candle.volume), 0);
+            const volume = candles.reduce((sum, candle) => sum + Number(candle.volume), 0);
             const fourHourCandle = new market_candle_entity_1.MarketCandle();
-            fourHourCandle.symbol =
-                symbol;
-            fourHourCandle.timeframe =
-                timeframe_enum_1.Timeframe.FOUR_HOURS;
-            fourHourCandle.time =
-                new Date(startTime);
-            fourHourCandle.open =
-                first.open;
-            fourHourCandle.high =
-                high.toString();
-            fourHourCandle.low =
-                low.toString();
-            fourHourCandle.close =
-                last.close;
-            fourHourCandle.volume =
-                volume.toString();
+            fourHourCandle.symbol = symbol;
+            fourHourCandle.timeframe = timeframe_enum_1.Timeframe.FOUR_HOURS;
+            fourHourCandle.time = new Date(startTime);
+            fourHourCandle.open = first.open;
+            fourHourCandle.high = high.toString();
+            fourHourCandle.low = low.toString();
+            fourHourCandle.close = last.close;
+            fourHourCandle.volume = volume.toString();
             fourHourCandles.push(fourHourCandle);
         }
         await this.storageService.deleteFourHourCandles(symbol);
@@ -191,9 +178,7 @@ let MarketDataService = class MarketDataService {
             [timeframe_enum_1.Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
         };
         const now = Date.now();
-        const closedCandles = candles.filter((candle) => candle.time.getTime() +
-            timeframeMs[timeframe] <=
-            now);
+        const closedCandles = candles.filter((candle) => candle.time.getTime() + timeframeMs[timeframe] <= now);
         return this.saveCandles(symbol, timeframe, closedCandles);
     }
     async saveCandles(symbol, timeframe, candles) {

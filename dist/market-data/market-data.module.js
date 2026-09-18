@@ -21,23 +21,15 @@ let MarketDataModule = class MarketDataModule {
 exports.MarketDataModule = MarketDataModule;
 exports.MarketDataModule = MarketDataModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([market_candle_entity_1.MarketCandle]),
-            indicators_module_1.IndicatorsModule,
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([market_candle_entity_1.MarketCandle]), indicators_module_1.IndicatorsModule],
         providers: [
             market_data_service_1.MarketDataService,
             market_data_provider_service_1.MarketDataProviderService,
             market_candle_storage_service_1.MarketCandleStorageService,
             market_data_analysis_service_1.MarketDataAnalysisService,
         ],
-        exports: [
-            market_data_service_1.MarketDataService,
-            market_data_provider_service_1.MarketDataProviderService,
-        ],
-        controllers: [
-            market_data_controller_1.MarketDataController,
-        ],
+        exports: [market_data_service_1.MarketDataService, market_data_provider_service_1.MarketDataProviderService],
+        controllers: [market_data_controller_1.MarketDataController],
     })
 ], MarketDataModule);
 //# sourceMappingURL=market-data.module.js.map

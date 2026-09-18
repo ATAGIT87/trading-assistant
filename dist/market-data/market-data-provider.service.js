@@ -87,7 +87,8 @@ let MarketDataProviderService = class MarketDataProviderService {
         return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
     }
     async getBinanceCandles(symbol, timeframe, limit = 1000) {
-        const normalizedSymbol = symbol.toUpperCase();
+        const normalizedSymbol = this.normalizeSymbol(symbol);
+        this.validateTimeframe(timeframe);
         const binanceSymbolMap = {
             BTCUSD: "BTCUSDT",
             ETHUSD: "ETHUSDT",
@@ -96,9 +97,8 @@ let MarketDataProviderService = class MarketDataProviderService {
         if (!binanceSymbol) {
             throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
         }
-        const supportedTimeframes = ["15m", "1h"];
-        if (!supportedTimeframes.includes(timeframe)) {
-            throw new Error(`Unsupported timeframe: ${timeframe}`);
+        if (limit < 1 || limit > 1000) {
+            throw new Error(`Invalid candle limit: ${limit}. Must be between 1 and 1000.`);
         }
         const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${limit}`);
         if (!response.ok) {
@@ -117,6 +117,19 @@ let MarketDataProviderService = class MarketDataProviderService {
     }
     async getBinanceHourlyCandles(symbol, limit = 1000) {
         return this.getBinanceCandles(symbol, "1h", limit);
+    }
+    normalizeSymbol(symbol) {
+        const normalizedSymbol = symbol.trim().toUpperCase();
+        if (!normalizedSymbol) {
+            throw new Error("Symbol is required");
+        }
+        return normalizedSymbol;
+    }
+    validateTimeframe(timeframe) {
+        const supportedTimeframes = ["15m", "1h", "4h", "1d"];
+        if (!supportedTimeframes.includes(timeframe)) {
+            throw new Error(`Unsupported timeframe: ${timeframe}`);
+        }
     }
 };
 exports.MarketDataProviderService = MarketDataProviderService;

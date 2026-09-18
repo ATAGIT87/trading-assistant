@@ -10,22 +10,14 @@ import { MarketDataAnalysisService } from "./market-data-analysis.service";
 import { IndicatorsModule } from "../indicators/indicators.module";
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([MarketCandle]),
-    IndicatorsModule,
-  ],
+  imports: [TypeOrmModule.forFeature([MarketCandle]), IndicatorsModule],
   providers: [
     MarketDataService,
     MarketDataProviderService,
     MarketCandleStorageService,
     MarketDataAnalysisService,
   ],
-  exports: [
-    MarketDataService,
-    MarketDataProviderService,
-  ],
-  controllers: [
-    MarketDataController,
-  ],
+  exports: [MarketDataService, MarketDataProviderService],
+  controllers: [MarketDataController],
 })
 export class MarketDataModule {}

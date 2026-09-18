@@ -187,8 +187,9 @@ export class MarketDataProviderService {
       volume: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
+    const normalizedSymbol = this.normalizeSymbol(symbol);
 
+    this.validateTimeframe(timeframe);
     const binanceSymbolMap: Record<string, string> = {
       BTCUSD: "BTCUSDT",
       ETHUSD: "ETHUSDT",
@@ -200,10 +201,10 @@ export class MarketDataProviderService {
       throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
     }
 
-    const supportedTimeframes = ["15m", "1h"];
-
-    if (!supportedTimeframes.includes(timeframe)) {
-      throw new Error(`Unsupported timeframe: ${timeframe}`);
+    if (limit < 1 || limit > 1000) {
+      throw new Error(
+        `Invalid candle limit: ${limit}. Must be between 1 and 1000.`,
+      );
     }
 
     const response = await fetch(
@@ -229,8 +230,24 @@ export class MarketDataProviderService {
       volume: Number(candle[5]),
     }));
   }
-
   async getBinanceHourlyCandles(symbol: string, limit = 1000) {
     return this.getBinanceCandles(symbol, "1h", limit);
+  }
+  private normalizeSymbol(symbol: string): string {
+    const normalizedSymbol = symbol.trim().toUpperCase();
+
+    if (!normalizedSymbol) {
+      throw new Error("Symbol is required");
+    }
+
+    return normalizedSymbol;
+  }
+
+  private validateTimeframe(timeframe: string): void {
+    const supportedTimeframes = ["15m", "1h", "4h", "1d"];
+
+    if (!supportedTimeframes.includes(timeframe)) {
+      throw new Error(`Unsupported timeframe: ${timeframe}`);
+    }
   }
 }

@@ -1,7 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-} from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
 
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketCandle } from "./entities/market-candle.entity";
@@ -18,24 +15,16 @@ export class MarketDataService {
     private readonly marketDataProviderService: MarketDataProviderService,
   ) {}
 
-  createCandle(
-    dto: CreateMarketCandleDto,
-  ): Promise<MarketCandle> {
-    return this.storageService.createCandle(
-      dto,
-    );
+  createCandle(dto: CreateMarketCandleDto): Promise<MarketCandle> {
+    return this.storageService.createCandle(dto);
   }
 
   findAllCandles(): Promise<MarketCandle[]> {
     return this.storageService.findAllCandles();
   }
 
-  findCandlesBySymbol(
-    symbol: string,
-  ): Promise<MarketCandle[]> {
-    return this.storageService.findCandlesBySymbol(
-      symbol,
-    );
+  findCandlesBySymbol(symbol: string): Promise<MarketCandle[]> {
+    return this.storageService.findCandlesBySymbol(symbol);
   }
 
   findCandlesBySymbolAndTimeframe(
@@ -52,21 +41,17 @@ export class MarketDataService {
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle | null> {
-    return this.storageService.findLatestCandle(
-      symbol,
-      timeframe,
-    );
+    return this.storageService.findLatestCandle(symbol, timeframe);
   }
 
   async getLatestPrice(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number | null> {
-    const candle =
-      await this.storageService.findLatestCandle(
-        symbol,
-        timeframe,
-      );
+    const candle = await this.storageService.findLatestCandle(
+      symbol,
+      timeframe,
+    );
 
     if (!candle) {
       return null;
@@ -79,25 +64,16 @@ export class MarketDataService {
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle[]> {
-    return this.storageService.getCandlesForAnalysis(
-      symbol,
-      timeframe,
-    );
+    return this.storageService.getCandlesForAnalysis(symbol, timeframe);
   }
 
   async getLatestRsi(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number | null> {
-    const candles =
-      await this.getCandlesForAnalysis(
-        symbol,
-        timeframe,
-      );
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-    return this.analysisService.getLatestRsi(
-      candles,
-    );
+    return this.analysisService.getLatestRsi(candles);
   }
 
   async getLatestSma(
@@ -105,16 +81,9 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles =
-      await this.getCandlesForAnalysis(
-        symbol,
-        timeframe,
-      );
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-    return this.analysisService.getLatestSma(
-      candles,
-      period,
-    );
+    return this.analysisService.getLatestSma(candles, period);
   }
 
   async getLatestEma(
@@ -122,215 +91,111 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles =
-      await this.getCandlesForAnalysis(
-        symbol,
-        timeframe,
-      );
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-    return this.analysisService.getLatestEma(
-      candles,
-      period,
-    );
+    return this.analysisService.getLatestEma(candles, period);
   }
 
   async compareLatestPriceToSma(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<
-    "ABOVE" | "BELOW" | "EQUAL" | null
-  > {
-    const price =
-      await this.getLatestPrice(
-        symbol,
-        timeframe,
-      );
+  ): Promise<"ABOVE" | "BELOW" | "EQUAL" | null> {
+    const price = await this.getLatestPrice(symbol, timeframe);
 
-    const sma =
-      await this.getLatestSma(
-        symbol,
-        timeframe,
-        period,
-      );
+    const sma = await this.getLatestSma(symbol, timeframe, period);
 
     if (price === null || sma === null) {
       return null;
     }
 
-    return this.analysisService.comparePriceToSma(
-      price,
-      sma,
-    );
+    return this.analysisService.comparePriceToSma(price, sma);
   }
 
   async compareLatestPriceToEma(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<
-    "ABOVE" | "BELOW" | "EQUAL" | null
-  > {
-    const price =
-      await this.getLatestPrice(
-        symbol,
-        timeframe,
-      );
+  ): Promise<"ABOVE" | "BELOW" | "EQUAL" | null> {
+    const price = await this.getLatestPrice(symbol, timeframe);
 
-    const ema =
-      await this.getLatestEma(
-        symbol,
-        timeframe,
-        period,
-      );
+    const ema = await this.getLatestEma(symbol, timeframe, period);
 
     if (price === null || ema === null) {
       return null;
     }
 
-    return this.analysisService.comparePriceToEma(
-      price,
-      ema,
-    );
+    return this.analysisService.comparePriceToEma(price, ema);
   }
 
   async compareSmaToEma(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ):
-    Promise<
-      | "SMA_ABOVE_EMA"
-      | "SMA_BELOW_EMA"
-      | "SMA_EQUAL_EMA"
-      | null
-    > {
-    const sma =
-      await this.getLatestSma(
-        symbol,
-        timeframe,
-        period,
-      );
+  ): Promise<"SMA_ABOVE_EMA" | "SMA_BELOW_EMA" | "SMA_EQUAL_EMA" | null> {
+    const sma = await this.getLatestSma(symbol, timeframe, period);
 
-    const ema =
-      await this.getLatestEma(
-        symbol,
-        timeframe,
-        period,
-      );
+    const ema = await this.getLatestEma(symbol, timeframe, period);
 
     if (sma === null || ema === null) {
       return null;
     }
 
-    return this.analysisService.compareSmaToEma(
-      sma,
-      ema,
-    );
+    return this.analysisService.compareSmaToEma(sma, ema);
   }
 
   async getTrend(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ): Promise<
-    "BULLISH" | "BEARISH" | "NEUTRAL" | null
-  > {
-    const price =
-      await this.getLatestPrice(
-        symbol,
-        timeframe,
-      );
+  ): Promise<"BULLISH" | "BEARISH" | "NEUTRAL" | null> {
+    const price = await this.getLatestPrice(symbol, timeframe);
 
-    const sma =
-      await this.getLatestSma(
-        symbol,
-        timeframe,
-        period,
-      );
+    const sma = await this.getLatestSma(symbol, timeframe, period);
 
-    const ema =
-      await this.getLatestEma(
-        symbol,
-        timeframe,
-        period,
-      );
+    const ema = await this.getLatestEma(symbol, timeframe, period);
 
-    if (
-      price === null ||
-      sma === null ||
-      ema === null
-    ) {
+    if (price === null || sma === null || ema === null) {
       return null;
     }
 
-    return this.analysisService.determineTrend(
-      price,
-      sma,
-      ema,
-    );
+    return this.analysisService.determineTrend(price, sma, ema);
   }
 
   async getRsiStatus(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ):
-    Promise<
-      "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" | null
-    > {
-    const rsi =
-      await this.getLatestRsi(
-        symbol,
-        timeframe,
-      );
+  ): Promise<"OVERSOLD" | "OVERBOUGHT" | "NEUTRAL" | null> {
+    const rsi = await this.getLatestRsi(symbol, timeframe);
 
     if (rsi === null) {
       return null;
     }
 
-    return this.analysisService.classifyRsi(
-      rsi,
-    );
+    return this.analysisService.classifyRsi(rsi);
   }
 
   async getMarketCondition(
     symbol: string,
     timeframe: Timeframe,
     period: number,
-  ):
-    Promise<
-      | "POSSIBLE_REVERSAL"
-      | "BEARISH_CONTINUATION"
-      | "BULLISH_CONTINUATION"
-      | "NEUTRAL"
-      | null
-    > {
-    const trend =
-      await this.getTrend(
-        symbol,
-        timeframe,
-        period,
-      );
+  ): Promise<
+    | "POSSIBLE_REVERSAL"
+    | "BEARISH_CONTINUATION"
+    | "BULLISH_CONTINUATION"
+    | "NEUTRAL"
+    | null
+  > {
+    const trend = await this.getTrend(symbol, timeframe, period);
 
-    const rsiStatus =
-      await this.getRsiStatus(
-        symbol,
-        timeframe,
-        period,
-      );
+    const rsiStatus = await this.getRsiStatus(symbol, timeframe, period);
 
-    if (
-      trend === null ||
-      rsiStatus === null
-    ) {
+    if (trend === null || rsiStatus === null) {
       return null;
     }
 
-    return this.analysisService.determineMarketCondition(
-      trend,
-      rsiStatus,
-    );
+    return this.analysisService.determineMarketCondition(trend, rsiStatus);
   }
 
   async getLatestAtr(
@@ -338,16 +203,9 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles =
-      await this.getCandlesForAnalysis(
-        symbol,
-        timeframe,
-      );
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-    return this.analysisService.calculateAtr(
-      candles,
-      period,
-    );
+    return this.analysisService.calculateAtr(candles, period);
   }
 
   async getLatestAdx(
@@ -355,26 +213,16 @@ export class MarketDataService {
     timeframe: Timeframe,
     period: number,
   ): Promise<number | null> {
-    const candles =
-      await this.getCandlesForAnalysis(
-        symbol,
-        timeframe,
-      );
+    const candles = await this.getCandlesForAnalysis(symbol, timeframe);
 
-    return this.analysisService.calculateAdx(
-      candles,
-      period,
-    );
+    return this.analysisService.calculateAdx(candles, period);
   }
 
   getHistoricalCandles(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<MarketCandle[]> {
-    return this.storageService.getHistoricalCandles(
-      symbol,
-      timeframe,
-    );
+    return this.storageService.getHistoricalCandles(symbol, timeframe);
   }
 
   getHistoricalCandlesUntil(
@@ -389,137 +237,84 @@ export class MarketDataService {
     );
   }
 
-  async buildFourHourCandles(
-    symbol: string,
-  ): Promise<number> {
-    const hourlyCandles =
-      await this.storageService.getHistoricalCandles(
-        symbol,
-        Timeframe.ONE_HOUR,
-      );
+  async buildFourHourCandles(symbol: string): Promise<number> {
+    const hourlyCandles = await this.storageService.getHistoricalCandles(
+      symbol,
+      Timeframe.ONE_HOUR,
+    );
 
     if (hourlyCandles.length === 0) {
       return 0;
     }
 
-    const groups =
-      new Map<number, MarketCandle[]>();
+    const groups = new Map<number, MarketCandle[]>();
 
     for (const candle of hourlyCandles) {
-      const time =
-        new Date(candle.time);
+      const time = new Date(candle.time);
 
-      const alignedHour =
-        Math.floor(
-          time.getUTCHours() / 4,
-        ) * 4;
+      const alignedHour = Math.floor(time.getUTCHours() / 4) * 4;
 
-      const startTime =
-        new Date(time);
+      const startTime = new Date(time);
 
-      startTime.setUTCHours(
-        alignedHour,
-        0,
-        0,
-        0,
-      );
+      startTime.setUTCHours(alignedHour, 0, 0, 0);
 
-      const key =
-        startTime.getTime();
+      const key = startTime.getTime();
 
-      const group =
-        groups.get(key) ?? [];
+      const group = groups.get(key) ?? [];
 
       group.push(candle);
       groups.set(key, group);
     }
 
-    const fourHourCandles: MarketCandle[] =
-      [];
+    const fourHourCandles: MarketCandle[] = [];
 
-    for (const [
-      startTime,
-      candles,
-    ] of groups) {
-      candles.sort(
-        (a, b) =>
-          a.time.getTime() -
-          b.time.getTime(),
-      );
+    for (const [startTime, candles] of groups) {
+      candles.sort((a, b) => a.time.getTime() - b.time.getTime());
 
       if (candles.length !== 4) {
         continue;
       }
 
       const first = candles[0];
-      const last =
-        candles[candles.length - 1];
+      const last = candles[candles.length - 1];
 
-      const high = Math.max(
-        ...candles.map((candle) =>
-          Number(candle.high),
-        ),
+      const high = Math.max(...candles.map((candle) => Number(candle.high)));
+
+      const low = Math.min(...candles.map((candle) => Number(candle.low)));
+
+      const volume = candles.reduce(
+        (sum, candle) => sum + Number(candle.volume),
+        0,
       );
 
-      const low = Math.min(
-        ...candles.map((candle) =>
-          Number(candle.low),
-        ),
-      );
+      const fourHourCandle = new MarketCandle();
 
-      const volume =
-        candles.reduce(
-          (sum, candle) =>
-            sum +
-            Number(candle.volume),
-          0,
-        );
+      fourHourCandle.symbol = symbol;
 
-      const fourHourCandle =
-        new MarketCandle();
+      fourHourCandle.timeframe = Timeframe.FOUR_HOURS;
 
-      fourHourCandle.symbol =
-        symbol;
+      fourHourCandle.time = new Date(startTime);
 
-      fourHourCandle.timeframe =
-        Timeframe.FOUR_HOURS;
+      fourHourCandle.open = first.open;
 
-      fourHourCandle.time =
-        new Date(startTime);
+      fourHourCandle.high = high.toString();
 
-      fourHourCandle.open =
-        first.open;
+      fourHourCandle.low = low.toString();
 
-      fourHourCandle.high =
-        high.toString();
+      fourHourCandle.close = last.close;
 
-      fourHourCandle.low =
-        low.toString();
+      fourHourCandle.volume = volume.toString();
 
-      fourHourCandle.close =
-        last.close;
-
-      fourHourCandle.volume =
-        volume.toString();
-
-      fourHourCandles.push(
-        fourHourCandle,
-      );
+      fourHourCandles.push(fourHourCandle);
     }
 
-    await this.storageService.deleteFourHourCandles(
-      symbol,
-    );
+    await this.storageService.deleteFourHourCandles(symbol);
 
-    if (
-      fourHourCandles.length === 0
-    ) {
+    if (fourHourCandles.length === 0) {
       return 0;
     }
 
-    await this.storageService.saveCandles(
-      fourHourCandles,
-    );
+    await this.storageService.saveCandles(fourHourCandles);
 
     return fourHourCandles.length;
   }
@@ -528,43 +323,29 @@ export class MarketDataService {
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number> {
-    const candles =
-      await this.marketDataProviderService.getBinanceCandles(
-        symbol,
-        timeframe,
-        1000,
-      );
+    const candles = await this.marketDataProviderService.getBinanceCandles(
+      symbol,
+      timeframe,
+      1000,
+    );
 
-    const timeframeMs:
-      Record<Timeframe, number> = {
-      [Timeframe.FIFTEEN_MINUTES]:
-        15 * 60 * 1000,
+    const timeframeMs: Record<Timeframe, number> = {
+      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
 
-      [Timeframe.ONE_HOUR]:
-        60 * 60 * 1000,
+      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
 
-      [Timeframe.FOUR_HOURS]:
-        4 * 60 * 60 * 1000,
+      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
 
-      [Timeframe.ONE_DAY]:
-        24 * 60 * 60 * 1000,
+      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
     };
 
     const now = Date.now();
 
-    const closedCandles =
-      candles.filter(
-        (candle) =>
-          candle.time.getTime() +
-            timeframeMs[timeframe] <=
-          now,
-      );
-
-    return this.saveCandles(
-      symbol,
-      timeframe,
-      closedCandles,
+    const closedCandles = candles.filter(
+      (candle) => candle.time.getTime() + timeframeMs[timeframe] <= now,
     );
+
+    return this.saveCandles(symbol, timeframe, closedCandles);
   }
 
   async saveCandles(
@@ -596,9 +377,7 @@ export class MarketDataService {
 
         savedCount++;
       } catch (error) {
-        if (
-          error instanceof ConflictException
-        ) {
+        if (error instanceof ConflictException) {
           continue;
         }
 

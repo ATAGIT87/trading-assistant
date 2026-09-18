@@ -39,8 +39,7 @@ let MarketCandleStorageService = class MarketCandleStorageService {
         }
         catch (error) {
             if (error instanceof typeorm_2.QueryFailedError &&
-                error.driverError?.code ===
-                    "23505") {
+                error.driverError?.code === "23505") {
                 throw new common_1.ConflictException("Candle already exists");
             }
             throw error;
