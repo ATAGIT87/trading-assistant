@@ -24,12 +24,26 @@ let SignalTimeframeService = class SignalTimeframeService {
         this.marketDataService = marketDataService;
         this.indicatorsService = indicatorsService;
     }
-    async getHigherTimeframeTrend(symbol, timeframe, period) {
+    async getHigherTimeframeTrend(symbol, timeframe, period, until = new Date()) {
         const higherTimeframe = this.getHigherTimeframe(timeframe);
         if (higherTimeframe === null) {
             return null;
         }
-        return this.marketDataService.getTrend(symbol, higherTimeframe, period);
+        const candles = await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe);
+        const completedCandles = candles.filter((candle) => this.isCompletedCandle(candle.time, until, higherTimeframe));
+        if (completedCandles.length < 28) {
+            return null;
+        }
+        const latestClose = Number(completedCandles[completedCandles.length - 1].close);
+        const closes = completedCandles.map((candle) => Number(candle.close));
+        const sma = this.indicatorsService.calculateSma(closes, 14);
+        const ema = this.indicatorsService.calculateEma(closes, 14);
+        if (sma === null || ema === null) {
+            return null;
+        }
+        const priceVsSma = this.indicatorsService.comparePriceToAverage(latestClose, sma);
+        const priceVsEma = this.indicatorsService.comparePriceToAverage(latestClose, ema);
+        return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
     }
     async getHigherTimeframeTrendFromCandles(symbol, timeframe, until, preloadedCandles) {
         const higherTimeframe = this.getHigherTimeframe(timeframe);
@@ -38,9 +52,7 @@ let SignalTimeframeService = class SignalTimeframeService {
         }
         const candles = preloadedCandles ??
             (await this.marketDataService.getHistoricalCandlesUntil(symbol, higherTimeframe, until));
-        const candlesUntil = preloadedCandles
-            ? candles.filter((candle) => candle.time.getTime() <= until.getTime())
-            : candles;
+        const candlesUntil = candles.filter((candle) => this.isCompletedCandle(candle.time, until, higherTimeframe));
         if (candlesUntil.length < 28) {
             return null;
         }
@@ -54,6 +66,24 @@ let SignalTimeframeService = class SignalTimeframeService {
         const priceVsSma = this.indicatorsService.comparePriceToAverage(latestClose, sma);
         const priceVsEma = this.indicatorsService.comparePriceToAverage(latestClose, ema);
         return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+    }
+    isCompletedCandle(candleTime, signalTime, candleTimeframe) {
+        const candleEndTime = new Date(candleTime.getTime() + this.getTimeframeDurationMs(candleTimeframe));
+        return candleEndTime.getTime() < signalTime.getTime();
+    }
+    getTimeframeDurationMs(timeframe) {
+        switch (timeframe) {
+            case timeframe_enum_1.Timeframe.FIFTEEN_MINUTES:
+                return 15 * 60 * 1000;
+            case timeframe_enum_1.Timeframe.ONE_HOUR:
+                return 60 * 60 * 1000;
+            case timeframe_enum_1.Timeframe.FOUR_HOURS:
+                return 4 * 60 * 60 * 1000;
+            case timeframe_enum_1.Timeframe.ONE_DAY:
+                return 24 * 60 * 60 * 1000;
+            default:
+                return 0;
+        }
     }
     getHigherTimeframe(timeframe) {
         if (timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES) {

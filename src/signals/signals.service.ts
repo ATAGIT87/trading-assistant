@@ -26,6 +26,17 @@ export class SignalsService {
     timeframe: Timeframe,
     period: number,
   ): Promise<TradingSignal | null> {
+    const candles = await this.marketDataService.getHistoricalCandles(
+      symbol,
+      timeframe,
+    );
+
+    if (candles.length === 0) {
+      return null;
+    }
+
+    const latestCandle = candles[candles.length - 1];
+
     const trend = await this.marketDataService.getTrend(
       symbol,
       timeframe,
@@ -37,6 +48,7 @@ export class SignalsService {
         symbol,
         timeframe,
         period,
+        latestCandle.time,
       );
 
     const priceVsSma = await this.marketDataService.compareLatestPriceToSma(
@@ -81,17 +93,6 @@ export class SignalsService {
       timeframe,
       period,
     );
-
-    const candles = await this.marketDataService.getHistoricalCandles(
-      symbol,
-      timeframe,
-    );
-
-    if (candles.length === 0) {
-      return null;
-    }
-
-    const latestCandle = candles[candles.length - 1];
 
     if (
       trend === null ||

@@ -20,8 +20,27 @@ export class BacktestingService {
     private readonly signalsService: SignalsService,
     private readonly configService: ConfigService,
   ) {
-    this.feeRate = 0;
-    this.slippageRate = 0;
+    this.feeRate = this.getNumericConfigValue(
+      "BACKTESTING_FEE_RATE",
+      0.0005,
+    );
+    this.slippageRate = this.getNumericConfigValue(
+      "BACKTESTING_SLIPPAGE_RATE",
+      0.0005,
+    );
+  }
+
+  private getNumericConfigValue(
+    key: string,
+    fallback: number,
+  ): number {
+    const value = Number(this.configService.get<number | string>(key, fallback));
+
+    if (!Number.isFinite(value) || value < 0) {
+      return fallback;
+    }
+
+    return value;
   }
 
   async run(

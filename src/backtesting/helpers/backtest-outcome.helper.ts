@@ -61,9 +61,9 @@ export function findTradeOutcome(
 
       if (hitStopLoss && hitTakeProfit) {
         return {
-          result: null,
-          exitIndex: null,
-          exitPrice: null,
+          result: false,
+          exitIndex: i,
+          exitPrice: signal.stopLoss,
           maeR: maxMae,
           mfeR: maxMfe,
           durationCandles: i + 1,
@@ -107,9 +107,9 @@ export function findTradeOutcome(
 
       if (hitStopLoss && hitTakeProfit) {
         return {
-          result: null,
-          exitIndex: null,
-          exitPrice: null,
+          result: false,
+          exitIndex: i,
+          exitPrice: signal.stopLoss,
           maeR: maxMae,
           mfeR: maxMfe,
           durationCandles: i + 1,

@@ -7,7 +7,9 @@ export declare class SignalTimeframeService {
     private readonly marketDataService;
     private readonly indicatorsService;
     constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService);
-    getHigherTimeframeTrend(symbol: string, timeframe: Timeframe, period: number): Promise<TradingSignal["trend"] | null>;
+    getHigherTimeframeTrend(symbol: string, timeframe: Timeframe, period: number, until?: Date): Promise<TradingSignal["trend"] | null>;
     getHigherTimeframeTrendFromCandles(symbol: string, timeframe: Timeframe, until: Date, preloadedCandles?: MarketCandle[]): Promise<TradingSignal["trend"] | null>;
+    private isCompletedCandle;
+    private getTimeframeDurationMs;
     private getHigherTimeframe;
 }

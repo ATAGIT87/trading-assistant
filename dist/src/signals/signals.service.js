@@ -33,8 +33,13 @@ let SignalsService = class SignalsService {
         this.signalTimeframeService = signalTimeframeService;
     }
     async generateSignal(symbol, timeframe, period) {
+        const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
+        if (candles.length === 0) {
+            return null;
+        }
+        const latestCandle = candles[candles.length - 1];
         const trend = await this.marketDataService.getTrend(symbol, timeframe, period);
-        const higherTimeframeTrend = await this.signalTimeframeService.getHigherTimeframeTrend(symbol, timeframe, period);
+        const higherTimeframeTrend = await this.signalTimeframeService.getHigherTimeframeTrend(symbol, timeframe, period, latestCandle.time);
         const priceVsSma = await this.marketDataService.compareLatestPriceToSma(symbol, timeframe, period);
         const priceVsEma = await this.marketDataService.compareLatestPriceToEma(symbol, timeframe, period);
         const rsi = await this.marketDataService.getLatestRsi(symbol, timeframe);
@@ -43,11 +48,6 @@ let SignalsService = class SignalsService {
         const entryPrice = await this.marketDataService.getLatestPrice(symbol, timeframe);
         const atr = await this.marketDataService.getLatestAtr(symbol, timeframe, period);
         const adx = await this.marketDataService.getLatestAdx(symbol, timeframe, period);
-        const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
-        if (candles.length === 0) {
-            return null;
-        }
-        const latestCandle = candles[candles.length - 1];
         if (trend === null ||
             priceVsSma === null ||
             priceVsEma === null ||

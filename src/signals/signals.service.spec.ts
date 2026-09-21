@@ -258,3 +258,43 @@ describe("SignalsService", () => {
     expect(result).toBeNull();
   });
 });
+
+describe("SignalTimeframeService", () => {
+  it("should ignore the current higher-timeframe candle at the signal timestamp", async () => {
+    const marketDataServiceMock = {
+      getHistoricalCandlesUntil: jest.fn(),
+    };
+
+    const indicatorsServiceMock = {
+      calculateSma: jest.fn().mockReturnValue(100),
+      calculateEma: jest.fn().mockReturnValue(100),
+      comparePriceToAverage: jest.fn().mockReturnValue("BELOW"),
+      determineTrend: jest.fn().mockReturnValue("BEARISH"),
+    };
+
+    const service = new SignalTimeframeService(
+      marketDataServiceMock as any,
+      indicatorsServiceMock as any,
+    );
+
+    const baseTime = Date.UTC(2026, 0, 1, 0, 0, 0);
+    const candles = Array.from({ length: 30 }, (_, index) => ({
+      time: new Date(baseTime + index * 60 * 60 * 1000),
+      close: String(100 + index),
+    }));
+    const signalTime = candles[candles.length - 1].time;
+
+    marketDataServiceMock.getHistoricalCandlesUntil.mockResolvedValue(candles);
+
+    const result = await service.getHigherTimeframeTrendFromCandles(
+      "BTCUSD",
+      Timeframe.FIFTEEN_MINUTES,
+      signalTime,
+      candles,
+    );
+
+    expect(indicatorsServiceMock.calculateSma).toHaveBeenCalledTimes(1);
+    expect(indicatorsServiceMock.calculateSma.mock.calls[0][0]).toHaveLength(28);
+    expect(result).toBe("BEARISH");
+  });
+});

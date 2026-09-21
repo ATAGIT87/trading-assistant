@@ -29,8 +29,15 @@ let BacktestingService = class BacktestingService {
         this.marketDataService = marketDataService;
         this.signalsService = signalsService;
         this.configService = configService;
-        this.feeRate = 0;
-        this.slippageRate = 0;
+        this.feeRate = this.getNumericConfigValue("BACKTESTING_FEE_RATE", 0.0005);
+        this.slippageRate = this.getNumericConfigValue("BACKTESTING_SLIPPAGE_RATE", 0.0005);
+    }
+    getNumericConfigValue(key, fallback) {
+        const value = Number(this.configService.get(key, fallback));
+        if (!Number.isFinite(value) || value < 0) {
+            return fallback;
+        }
+        return value;
     }
     async run(symbol, timeframe, useHigherTimeframeConfirmation = true, excludeHighAdxSell = false) {
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
