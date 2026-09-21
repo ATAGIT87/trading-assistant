@@ -6,6 +6,7 @@ import { IndicatorsService } from "../indicators/indicators.service";
 import { SignalStorageService } from "./signal-storage.service";
 import { SignalCalculationService } from "./signal-calculation.service";
 import { SignalTimeframeService } from "./signal-timeframe.service";
+import { StrategyV2Service } from "./strategy-v2.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 
 describe("SignalsService", () => {
@@ -67,6 +68,12 @@ describe("SignalsService", () => {
         {
           provide: SignalTimeframeService,
           useValue: signalTimeframeServiceMock,
+        },
+        {
+          provide: StrategyV2Service,
+          useValue: {
+            evaluateCandles: jest.fn(),
+          },
         },
       ],
     }).compile();

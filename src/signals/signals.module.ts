@@ -11,6 +11,7 @@ import { MarketDataService } from "../market-data/market-data.service";
 import { SignalStorageService } from "./signal-storage.service";
 import { SignalCalculationService } from "./signal-calculation.service";
 import { SignalTimeframeService } from "./signal-timeframe.service";
+import { StrategyV2Service } from "./strategy-v2.service";
 
 @Module({
   imports: [
@@ -23,12 +24,13 @@ import { SignalTimeframeService } from "./signal-timeframe.service";
     SignalStorageService,
     SignalCalculationService,
     SignalTimeframeService,
+    StrategyV2Service,
     {
       provide: MARKET_DATA_SERVICE,
       useExisting: MarketDataService,
     },
   ],
-  exports: [SignalsService],
+  exports: [SignalsService, StrategyV2Service],
   controllers: [SignalsController],
 })
 export class SignalsModule {}

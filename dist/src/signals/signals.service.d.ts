@@ -6,14 +6,17 @@ import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { SignalStorageService } from "./signal-storage.service";
 import { SignalCalculationService } from "./signal-calculation.service";
 import { SignalTimeframeService } from "./signal-timeframe.service";
+import { StrategyV2Service } from "./strategy-v2.service";
 export declare class SignalsService {
     private readonly marketDataService;
     private readonly indicatorsService;
     private readonly signalStorageService;
     private readonly signalCalculationService;
     private readonly signalTimeframeService;
-    constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService, signalStorageService: SignalStorageService, signalCalculationService: SignalCalculationService, signalTimeframeService: SignalTimeframeService);
+    private readonly strategyV2Service;
+    constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService, signalStorageService: SignalStorageService, signalCalculationService: SignalCalculationService, signalTimeframeService: SignalTimeframeService, strategyV2Service: StrategyV2Service);
     generateSignal(symbol: string, timeframe: Timeframe, period: number): Promise<TradingSignal | null>;
     generateSignalFromCandles(symbol: string, timeframe: Timeframe, candles: MarketCandle[], higherTimeframeCandles?: MarketCandle[], useHigherTimeframeConfirmation?: boolean, excludeHighAdxSell?: boolean): Promise<TradingSignal | null>;
+    generateSignalV2(symbol: string, timeframe: Timeframe, period: number, higherTimeframeTrend?: TradingSignal["trend"]): Promise<TradingSignal | null>;
     getSignalByCandleTime(symbol: string, timeframe: Timeframe, candleTime: Date): Promise<import("./entities/signal.entity").Signal | null>;
 }

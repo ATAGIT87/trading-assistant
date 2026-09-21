@@ -9,6 +9,7 @@ import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { SignalStorageService } from "./signal-storage.service";
 import { SignalCalculationService } from "./signal-calculation.service";
 import { SignalTimeframeService } from "./signal-timeframe.service";
+import { StrategyV2Service } from "./strategy-v2.service";
 
 @Injectable()
 export class SignalsService {
@@ -19,6 +20,7 @@ export class SignalsService {
     private readonly signalStorageService: SignalStorageService,
     private readonly signalCalculationService: SignalCalculationService,
     private readonly signalTimeframeService: SignalTimeframeService,
+    private readonly strategyV2Service: StrategyV2Service,
   ) {}
 
   async generateSignal(
@@ -192,6 +194,35 @@ export class SignalsService {
       latestCandle.time,
       excludeHighAdxSell,
     );
+  }
+
+  async generateSignalV2(
+    symbol: string,
+    timeframe: Timeframe,
+    period: number,
+    higherTimeframeTrend?: TradingSignal["trend"],
+  ): Promise<TradingSignal | null> {
+    const candles = await this.marketDataService.getHistoricalCandles(
+      symbol,
+      timeframe,
+    );
+
+    if (candles.length === 0) {
+      return null;
+    }
+
+    const signal = this.strategyV2Service.evaluateCandles(
+      candles,
+      0,
+      candles.length,
+      higherTimeframeTrend,
+    );
+
+    if (signal.action === "WAIT" || signal.action === "BUY" || signal.action === "SELL") {
+      return signal;
+    }
+
+    return signal;
   }
 
   async getSignalByCandleTime(

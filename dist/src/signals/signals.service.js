@@ -19,18 +19,21 @@ const market_data_token_1 = require("./market-data.token");
 const signal_storage_service_1 = require("./signal-storage.service");
 const signal_calculation_service_1 = require("./signal-calculation.service");
 const signal_timeframe_service_1 = require("./signal-timeframe.service");
+const strategy_v2_service_1 = require("./strategy-v2.service");
 let SignalsService = class SignalsService {
     marketDataService;
     indicatorsService;
     signalStorageService;
     signalCalculationService;
     signalTimeframeService;
-    constructor(marketDataService, indicatorsService, signalStorageService, signalCalculationService, signalTimeframeService) {
+    strategyV2Service;
+    constructor(marketDataService, indicatorsService, signalStorageService, signalCalculationService, signalTimeframeService, strategyV2Service) {
         this.marketDataService = marketDataService;
         this.indicatorsService = indicatorsService;
         this.signalStorageService = signalStorageService;
         this.signalCalculationService = signalCalculationService;
         this.signalTimeframeService = signalTimeframeService;
+        this.strategyV2Service = strategyV2Service;
     }
     async generateSignal(symbol, timeframe, period) {
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
@@ -79,6 +82,17 @@ let SignalsService = class SignalsService {
         const { trend, priceVsSma, priceVsEma, rsi, rsiStatus, marketCondition, atr, adx, } = indicators;
         return this.signalCalculationService.createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend, latestCandle.time, excludeHighAdxSell);
     }
+    async generateSignalV2(symbol, timeframe, period, higherTimeframeTrend) {
+        const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
+        if (candles.length === 0) {
+            return null;
+        }
+        const signal = this.strategyV2Service.evaluateCandles(candles, 0, candles.length, higherTimeframeTrend);
+        if (signal.action === "WAIT" || signal.action === "BUY" || signal.action === "SELL") {
+            return signal;
+        }
+        return signal;
+    }
     async getSignalByCandleTime(symbol, timeframe, candleTime) {
         return this.signalStorageService.getSignalByCandleTime(symbol, timeframe, candleTime);
     }
@@ -90,6 +104,7 @@ exports.SignalsService = SignalsService = __decorate([
     __metadata("design:paramtypes", [Object, indicators_service_1.IndicatorsService,
         signal_storage_service_1.SignalStorageService,
         signal_calculation_service_1.SignalCalculationService,
-        signal_timeframe_service_1.SignalTimeframeService])
+        signal_timeframe_service_1.SignalTimeframeService,
+        strategy_v2_service_1.StrategyV2Service])
 ], SignalsService);
 //# sourceMappingURL=signals.service.js.map

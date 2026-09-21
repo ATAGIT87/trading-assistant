@@ -19,6 +19,7 @@ const market_data_service_1 = require("../market-data/market-data.service");
 const signal_storage_service_1 = require("./signal-storage.service");
 const signal_calculation_service_1 = require("./signal-calculation.service");
 const signal_timeframe_service_1 = require("./signal-timeframe.service");
+const strategy_v2_service_1 = require("./strategy-v2.service");
 let SignalsModule = class SignalsModule {
 };
 exports.SignalsModule = SignalsModule;
@@ -34,12 +35,13 @@ exports.SignalsModule = SignalsModule = __decorate([
             signal_storage_service_1.SignalStorageService,
             signal_calculation_service_1.SignalCalculationService,
             signal_timeframe_service_1.SignalTimeframeService,
+            strategy_v2_service_1.StrategyV2Service,
             {
                 provide: market_data_token_1.MARKET_DATA_SERVICE,
                 useExisting: market_data_service_1.MarketDataService,
             },
         ],
-        exports: [signals_service_1.SignalsService],
+        exports: [signals_service_1.SignalsService, strategy_v2_service_1.StrategyV2Service],
         controllers: [signals_controller_1.SignalsController],
     })
 ], SignalsModule);
