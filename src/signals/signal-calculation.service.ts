@@ -51,15 +51,15 @@ export class SignalCalculationService {
 
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
 
-   const action = this.determineAction(
-  higherTimeframeTrend,
-  trend,
-  marketCondition,
-  isStrongSetup,
-  adx,
-  atr,
-  excludeHighAdxSell,
-);
+    const action = this.determineAction(
+      higherTimeframeTrend,
+      trend,
+      marketCondition,
+      isStrongSetup,
+      adx,
+      atr,
+      excludeHighAdxSell,
+    );
 
     let stopLoss: number | null = null;
     let takeProfit: number | null = null;
@@ -132,7 +132,11 @@ export class SignalCalculationService {
       return "NO_TRADE";
     }
 
-    if (excludeHighAdxSell && adx >= 40 && marketCondition === "BEARISH_CONTINUATION") {
+    if (
+      excludeHighAdxSell &&
+      adx >= 40 &&
+      marketCondition === "BEARISH_CONTINUATION"
+    ) {
       return "NO_TRADE";
     }
 

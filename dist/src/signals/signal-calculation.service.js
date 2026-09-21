@@ -75,7 +75,9 @@ let SignalCalculationService = class SignalCalculationService {
             (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")) {
             return "NO_TRADE";
         }
-        if (excludeHighAdxSell && adx >= 40 && marketCondition === "BEARISH_CONTINUATION") {
+        if (excludeHighAdxSell &&
+            adx >= 40 &&
+            marketCondition === "BEARISH_CONTINUATION") {
             return "NO_TRADE";
         }
         if (marketCondition === "BULLISH_CONTINUATION") {

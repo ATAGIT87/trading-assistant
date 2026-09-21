@@ -11,8 +11,7 @@ function analyzeSellTrades(trades) {
         { name: "ADX >= 40", min: 40, max: Infinity },
     ];
     const analysis = ranges.map((range) => {
-        const rangeTrades = sellTrades.filter((trade) => trade.adx >= range.min &&
-            trade.adx < range.max);
+        const rangeTrades = sellTrades.filter((trade) => trade.adx >= range.min && trade.adx < range.max);
         const wins = rangeTrades.filter((trade) => trade.result === "WIN").length;
         const losses = rangeTrades.filter((trade) => trade.result === "LOSS").length;
         const totalR = rangeTrades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
@@ -22,9 +21,7 @@ function analyzeSellTrades(trades) {
             trades: rangeTrades.length,
             wins,
             losses,
-            winRate: completedTrades === 0
-                ? 0
-                : (wins / completedTrades) * 100,
+            winRate: completedTrades === 0 ? 0 : (wins / completedTrades) * 100,
             totalR,
         };
     });
@@ -47,8 +44,7 @@ function analyzeSellTrades(trades) {
         { name: "RSI 35-40", min: 35, max: 40 },
         { name: "RSI >= 40", min: 40, max: 100 },
     ].map((range) => {
-        const rangeTrades = highAdxSellTrades.filter((trade) => trade.rsi >= range.min &&
-            trade.rsi < range.max);
+        const rangeTrades = highAdxSellTrades.filter((trade) => trade.rsi >= range.min && trade.rsi < range.max);
         const wins = rangeTrades.filter((trade) => trade.result === "WIN").length;
         const losses = rangeTrades.filter((trade) => trade.result === "LOSS").length;
         const totalR = rangeTrades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
@@ -58,9 +54,7 @@ function analyzeSellTrades(trades) {
             trades: rangeTrades.length,
             wins,
             losses,
-            winRate: completedTrades === 0
-                ? 0
-                : (wins / completedTrades) * 100,
+            winRate: completedTrades === 0 ? 0 : (wins / completedTrades) * 100,
             totalR,
         };
     });

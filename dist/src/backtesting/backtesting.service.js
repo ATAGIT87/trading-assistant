@@ -150,9 +150,7 @@ let BacktestingService = class BacktestingService {
             totalTrades: trades.length,
             winningTrades,
             losingTrades,
-            winRate: completedTrades === 0
-                ? 0
-                : (winningTrades / completedTrades) * 100,
+            winRate: completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
             totalR,
             expectancyR,
             grossTotalR,

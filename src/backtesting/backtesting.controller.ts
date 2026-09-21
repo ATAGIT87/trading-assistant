@@ -9,22 +9,23 @@ export class BacktestingController {
   constructor(private readonly backtestingService: BacktestingService) {}
 
   @Get(":symbol/:timeframe")
-async runBacktest(
-  @Param("symbol") symbol: string,
-  @Param("timeframe") timeframe: Timeframe,
-  @Query("useHigherTimeframeConfirmation") useHigherTimeframeConfirmation = "true",
-  @Query("excludeHighAdxSell") excludeHighAdxSell = "false",
-) {
-  const useHTF = useHigherTimeframeConfirmation !== "false";
-  const excludeHighAdxSellFilter = excludeHighAdxSell !== "false";
+  async runBacktest(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+    @Query("useHigherTimeframeConfirmation")
+    useHigherTimeframeConfirmation = "true",
+    @Query("excludeHighAdxSell") excludeHighAdxSell = "false",
+  ) {
+    const useHTF = useHigherTimeframeConfirmation !== "false";
+    const excludeHighAdxSellFilter = excludeHighAdxSell !== "false";
 
-  const result = await this.backtestingService.run(
-    symbol,
-    timeframe,
-    useHTF,
-    excludeHighAdxSellFilter,
-  );
+    const result = await this.backtestingService.run(
+      symbol,
+      timeframe,
+      useHTF,
+      excludeHighAdxSellFilter,
+    );
 
-  return BacktestResponseSchema.parse(result);
-}
+    return BacktestResponseSchema.parse(result);
+  }
 }

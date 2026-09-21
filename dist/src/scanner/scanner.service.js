@@ -85,8 +85,7 @@ let ScannerService = class ScannerService {
                 now.getMinutes() % 15 !== 0) {
                 continue;
             }
-            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR &&
-                now.getMinutes() !== 0) {
+            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
                 continue;
             }
             if (asset.timeframe !== timeframe_enum_1.Timeframe.FIFTEEN_MINUTES &&

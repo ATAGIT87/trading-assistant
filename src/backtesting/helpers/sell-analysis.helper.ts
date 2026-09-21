@@ -13,14 +13,10 @@ export function analyzeSellTrades(trades: BacktestTrade[]) {
 
   const analysis = ranges.map((range) => {
     const rangeTrades = sellTrades.filter(
-      (trade) =>
-        trade.adx >= range.min &&
-        trade.adx < range.max,
+      (trade) => trade.adx >= range.min && trade.adx < range.max,
     );
 
-    const wins = rangeTrades.filter(
-      (trade) => trade.result === "WIN",
-    ).length;
+    const wins = rangeTrades.filter((trade) => trade.result === "WIN").length;
 
     const losses = rangeTrades.filter(
       (trade) => trade.result === "LOSS",
@@ -38,17 +34,12 @@ export function analyzeSellTrades(trades: BacktestTrade[]) {
       trades: rangeTrades.length,
       wins,
       losses,
-      winRate:
-        completedTrades === 0
-          ? 0
-          : (wins / completedTrades) * 100,
+      winRate: completedTrades === 0 ? 0 : (wins / completedTrades) * 100,
       totalR,
     };
   });
 
-  const highAdxSellTrades = sellTrades.filter(
-    (trade) => trade.adx >= 40,
-  );
+  const highAdxSellTrades = sellTrades.filter((trade) => trade.adx >= 40);
 
   console.log("\n========== SELL ADX >= 40 ==========");
 
@@ -74,14 +65,10 @@ export function analyzeSellTrades(trades: BacktestTrade[]) {
     { name: "RSI >= 40", min: 40, max: 100 },
   ].map((range) => {
     const rangeTrades = highAdxSellTrades.filter(
-      (trade) =>
-        trade.rsi >= range.min &&
-        trade.rsi < range.max,
+      (trade) => trade.rsi >= range.min && trade.rsi < range.max,
     );
 
-    const wins = rangeTrades.filter(
-      (trade) => trade.result === "WIN",
-    ).length;
+    const wins = rangeTrades.filter((trade) => trade.result === "WIN").length;
 
     const losses = rangeTrades.filter(
       (trade) => trade.result === "LOSS",
@@ -99,23 +86,16 @@ export function analyzeSellTrades(trades: BacktestTrade[]) {
       trades: rangeTrades.length,
       wins,
       losses,
-      winRate:
-        completedTrades === 0
-          ? 0
-          : (wins / completedTrades) * 100,
+      winRate: completedTrades === 0 ? 0 : (wins / completedTrades) * 100,
       totalR,
     };
   });
 
-  console.log(
-    "\n========== SELL ADX >= 40 / RSI ==========",
-  );
+  console.log("\n========== SELL ADX >= 40 / RSI ==========");
 
   console.table(highAdxSellRsiAnalysis);
 
-  console.log(
-    "==========================================\n",
-  );
+  console.log("==========================================\n");
 
   console.log("\n========== SELL ANALYSIS ==========");
 

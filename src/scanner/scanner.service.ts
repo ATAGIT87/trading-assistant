@@ -50,9 +50,7 @@ export class ScannerService {
     );
 
     if (candles.length === 0) {
-      console.log(
-        `[Scanner] ${symbol} / ${timeframe} → NO_CANDLES`,
-      );
+      console.log(`[Scanner] ${symbol} / ${timeframe} → NO_CANDLES`);
       return null;
     }
 
@@ -70,12 +68,11 @@ export class ScannerService {
       return null;
     }
 
-    const existingSignal =
-      await this.signalsService.getSignalByCandleTime(
-        symbol,
-        timeframe,
-        latestCandle.time,
-      );
+    const existingSignal = await this.signalsService.getSignalByCandleTime(
+      symbol,
+      timeframe,
+      latestCandle.time,
+    );
 
     if (existingSignal) {
       console.log(
@@ -92,9 +89,7 @@ export class ScannerService {
     );
 
     if (!signal) {
-      console.log(
-        `[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`,
-      );
+      console.log(`[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`);
 
       return null;
     }
@@ -107,11 +102,7 @@ export class ScannerService {
       return signal;
     }
 
-    await this.alertsService.sendSignalAlert(
-      symbol,
-      timeframe,
-      signal,
-    );
+    await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
 
     return signal;
   }
@@ -134,10 +125,7 @@ export class ScannerService {
         continue;
       }
 
-      if (
-        asset.timeframe === Timeframe.ONE_HOUR &&
-        now.getMinutes() !== 0
-      ) {
+      if (asset.timeframe === Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
         continue;
       }
 
@@ -152,9 +140,7 @@ export class ScannerService {
         continue;
       }
 
-      console.log(
-        `[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`,
-      );
+      console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);
 
       try {
         await this.scan(asset.symbol, asset.timeframe);

@@ -137,28 +137,27 @@ export class SignalsService {
   }
 
   async generateSignalFromCandles(
-  symbol: string,
-  timeframe: Timeframe,
-  candles: MarketCandle[],
-  higherTimeframeCandles?: MarketCandle[],
-  useHigherTimeframeConfirmation = true,
-  excludeHighAdxSell = false,
-): Promise<TradingSignal | null> {
-  const indicators = this.indicatorsService.calculateIndicatorsFromCandles(
-    candles,
-    14,
-  );
+    symbol: string,
+    timeframe: Timeframe,
+    candles: MarketCandle[],
+    higherTimeframeCandles?: MarketCandle[],
+    useHigherTimeframeConfirmation = true,
+    excludeHighAdxSell = false,
+  ): Promise<TradingSignal | null> {
+    const indicators = this.indicatorsService.calculateIndicatorsFromCandles(
+      candles,
+      14,
+    );
 
-  if (indicators === null) {
-    return null;
-  }
+    if (indicators === null) {
+      return null;
+    }
 
-  const latestCandle = candles[candles.length - 1];
+    const latestCandle = candles[candles.length - 1];
 
-  const entryPrice = Number(latestCandle.close);
+    const entryPrice = Number(latestCandle.close);
 
-  const higherTimeframeTrend =
-    useHigherTimeframeConfirmation
+    const higherTimeframeTrend = useHigherTimeframeConfirmation
       ? await this.signalTimeframeService.getHigherTimeframeTrendFromCandles(
           symbol,
           timeframe,
@@ -167,32 +166,32 @@ export class SignalsService {
         )
       : null;
 
-  const {
-    trend,
-    priceVsSma,
-    priceVsEma,
-    rsi,
-    rsiStatus,
-    marketCondition,
-    atr,
-    adx,
-  } = indicators;
+    const {
+      trend,
+      priceVsSma,
+      priceVsEma,
+      rsi,
+      rsiStatus,
+      marketCondition,
+      atr,
+      adx,
+    } = indicators;
 
-  return this.signalCalculationService.createSignal(
-    trend,
-    entryPrice,
-    atr,
-    priceVsSma,
-    priceVsEma,
-    rsi,
-    adx,
-    rsiStatus,
-    marketCondition,
-    higherTimeframeTrend,
-    latestCandle.time,
-    excludeHighAdxSell,
-  );
-}
+    return this.signalCalculationService.createSignal(
+      trend,
+      entryPrice,
+      atr,
+      priceVsSma,
+      priceVsEma,
+      rsi,
+      adx,
+      rsiStatus,
+      marketCondition,
+      higherTimeframeTrend,
+      latestCandle.time,
+      excludeHighAdxSell,
+    );
+  }
 
   async getSignalByCandleTime(
     symbol: string,
