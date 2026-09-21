@@ -1,0 +1,114 @@
+### =========================
+### ASSETS
+### =========================
+
+### Get Assets
+GET http://localhost:3000/assets
+
+### Get Active Assets
+GET http://localhost:3000/assets/active
+
+### Create ETHUSD Asset
+POST http://localhost:3000/assets
+Content-Type: application/json
+
+{
+  "symbol": "ETHUSD",
+  "name": "Ethereum / US Dollar",
+  "type": "CRYPTO",
+  "timeframe": "15m"
+}
+
+
+### =========================
+### MARKET DATA
+### =========================
+
+### Sync ETHUSD 15m from Binance
+POST http://localhost:3000/market-data/sync-binance/ETHUSD/15m
+
+### Get ETHUSD 15m Candles
+GET http://localhost:3000/market-data/candles/ETHUSD/15m
+
+### Get Latest ETHUSD 15m Candle
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/latest
+
+
+### =========================
+### INDICATORS
+### =========================
+
+### Latest RSI
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/rsi
+
+### Latest SMA
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/sma/14
+
+### Latest EMA
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/ema/14
+
+### Price vs SMA
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/price-vs-sma/14
+
+### Price vs EMA
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/price-vs-ema/14
+
+### SMA vs EMA
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/sma-vs-ema/14
+
+### Trend
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/trend/14
+
+### RSI Status
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/rsi-status/14
+
+### Market Condition
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/market-condition/14
+
+### ATR
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/atr/14
+
+### ADX
+GET http://localhost:3000/market-data/candles/ETHUSD/15m/adx/14
+
+
+### =========================
+### SIGNALS
+### =========================
+
+### Generate ETHUSD 15m Signal
+GET http://localhost:3000/signals/ETHUSD/15m/14
+
+### Signal History
+GET http://localhost:3000/signals/history/ETHUSD/15m
+
+### Latest Signal
+GET http://localhost:3000/signals/latest/ETHUSD/15m
+
+
+### =========================
+### SCANNER
+### =========================
+
+### Run ETHUSD 15m Scanner
+GET http://localhost:3000/scanner/ETHUSD/15m
+
+
+### =========================
+### BACKTESTING
+### =========================
+
+### 
+GET http://localhost:3000/backtesting/BTCUSD/1d
+
+### 
+POST http://localhost:3000/market-data/sync-binance/ETHUSD/15m
+
+
+###
+POST http://localhost:3000/market-data/sync-binance/ETHUSD/15m
+###
+GET http://localhost:3000/backtesting/ETHUSD/15m
+
+###
+http://localhost:3000/backtesting/ETHUSD/15m?useHigherTimeframeConfirmation=true&excludeHighAdxSell=false
