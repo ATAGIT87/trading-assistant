@@ -49,15 +49,18 @@ let ScannerService = class ScannerService {
         }
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
         if (candles.length === 0) {
+            console.log(`[Scanner] ${symbol} / ${timeframe} → NO_CANDLES`);
             return null;
         }
         const latestCandle = candles[candles.length - 1];
+        console.log(`[Scanner] Latest candle: ${symbol} / ${timeframe} → ${latestCandle.time.toISOString()} | close: ${latestCandle.close}`);
         if (!this.isMarketDataFresh(latestCandle.time, timeframe)) {
             console.log(`[Scanner] Skipping stale market data: ${symbol} / ${timeframe} / ${latestCandle.time.toISOString()}`);
             return null;
         }
         const existingSignal = await this.signalsService.getSignalByCandleTime(symbol, timeframe, latestCandle.time);
         if (existingSignal) {
+            console.log(`[Scanner] ${symbol} / ${timeframe} → ${existingSignal.action} (existing signal, confidence: ${existingSignal.confidence}, candle: ${latestCandle.time.toISOString()}, close: ${latestCandle.close})`);
             return existingSignal;
         }
         const signal = await this.signalsService.generateSignal(symbol, timeframe, period);
@@ -65,7 +68,7 @@ let ScannerService = class ScannerService {
             console.log(`[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`);
             return null;
         }
-        console.log(`[Scanner] ${symbol} / ${timeframe} → ${signal.action} (confidence: ${signal.confidence})`);
+        console.log(`[Scanner] ${symbol} / ${timeframe} → ${signal.action} (confidence: ${signal.confidence}, candle: ${latestCandle.time.toISOString()}, close: ${latestCandle.close})`);
         if (signal.action !== "BUY" && signal.action !== "SELL") {
             return signal;
         }
@@ -82,7 +85,8 @@ let ScannerService = class ScannerService {
                 now.getMinutes() % 15 !== 0) {
                 continue;
             }
-            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
+            if (asset.timeframe === timeframe_enum_1.Timeframe.ONE_HOUR &&
+                now.getMinutes() !== 0) {
                 continue;
             }
             if (asset.timeframe !== timeframe_enum_1.Timeframe.FIFTEEN_MINUTES &&

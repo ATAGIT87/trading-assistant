@@ -21,6 +21,7 @@ export class SignalCalculationService {
     marketCondition: TradingSignal["marketCondition"],
     higherTimeframeTrend: TradingSignal["trend"] | null,
     candleTime: Date,
+    excludeHighAdxSell: boolean,
   ): TradingSignal {
     const trendScore = this.indicatorsService.calculateTrendScore(trend);
 
@@ -50,14 +51,15 @@ export class SignalCalculationService {
 
     const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
 
-    const action = this.determineAction(
-      higherTimeframeTrend,
-      trend,
-      marketCondition,
-      isStrongSetup,
-      adx,
-      atr,
-    );
+   const action = this.determineAction(
+  higherTimeframeTrend,
+  trend,
+  marketCondition,
+  isStrongSetup,
+  adx,
+  atr,
+  excludeHighAdxSell,
+);
 
     let stopLoss: number | null = null;
     let takeProfit: number | null = null;
@@ -97,6 +99,7 @@ export class SignalCalculationService {
     isStrongSetup: boolean,
     adx: number,
     atr: number,
+    excludeHighAdxSell: boolean,
   ): TradingSignal["action"] {
     if (!isStrongSetup) {
       return "NO_TRADE";
@@ -126,6 +129,10 @@ export class SignalCalculationService {
       (trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
       (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")
     ) {
+      return "NO_TRADE";
+    }
+
+    if (excludeHighAdxSell && adx >= 40 && marketCondition === "BEARISH_CONTINUATION") {
       return "NO_TRADE";
     }
 

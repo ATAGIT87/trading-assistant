@@ -14,6 +14,6 @@ export declare class SignalsService {
     private readonly signalTimeframeService;
     constructor(marketDataService: MarketDataPort, indicatorsService: IndicatorsService, signalStorageService: SignalStorageService, signalCalculationService: SignalCalculationService, signalTimeframeService: SignalTimeframeService);
     generateSignal(symbol: string, timeframe: Timeframe, period: number): Promise<TradingSignal | null>;
-    generateSignalFromCandles(symbol: string, timeframe: Timeframe, candles: MarketCandle[], higherTimeframeCandles?: MarketCandle[]): Promise<TradingSignal | null>;
+    generateSignalFromCandles(symbol: string, timeframe: Timeframe, candles: MarketCandle[], higherTimeframeCandles?: MarketCandle[], useHigherTimeframeConfirmation?: boolean, excludeHighAdxSell?: boolean): Promise<TradingSignal | null>;
     getSignalByCandleTime(symbol: string, timeframe: Timeframe, candleTime: Date): Promise<import("./entities/signal.entity").Signal | null>;
 }
