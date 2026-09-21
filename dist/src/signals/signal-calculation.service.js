@@ -18,7 +18,7 @@ let SignalCalculationService = class SignalCalculationService {
     constructor(indicatorsService) {
         this.indicatorsService = indicatorsService;
     }
-    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend, candleTime) {
+    createSignal(trend, entryPrice, atr, priceVsSma, priceVsEma, rsi, adx, rsiStatus, marketCondition, higherTimeframeTrend, candleTime, excludeHighAdxSell) {
         const trendScore = this.indicatorsService.calculateTrendScore(trend);
         const averageAlignmentScore = this.indicatorsService.calculateAverageAlignmentScore(priceVsSma, priceVsEma);
         const rsiScore = this.indicatorsService.calculateRsiScore(trend, rsi);
@@ -26,7 +26,7 @@ let SignalCalculationService = class SignalCalculationService {
         const adxScore = this.indicatorsService.calculateAdxScore(adx);
         const confidence = this.calculateConfidence(trendScore, averageAlignmentScore, rsiScore, marketConditionScore, adxScore);
         const isStrongSetup = confidence >= STRONG_SETUP_THRESHOLD;
-        const action = this.determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr);
+        const action = this.determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr, excludeHighAdxSell);
         let stopLoss = null;
         let takeProfit = null;
         if (action === "BUY" || action === "SELL") {
@@ -53,7 +53,7 @@ let SignalCalculationService = class SignalCalculationService {
                     : `No valid trading setup. Trend: ${trend}, Higher timeframe trend: ${higherTimeframeTrend ?? "N/A"}, RSI: ${rsi}, ADX: ${adx}, Market condition: ${marketCondition}.`,
         };
     }
-    determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr) {
+    determineAction(higherTimeframeTrend, trend, marketCondition, isStrongSetup, adx, atr, excludeHighAdxSell) {
         if (!isStrongSetup) {
             return "NO_TRADE";
         }
@@ -73,6 +73,9 @@ let SignalCalculationService = class SignalCalculationService {
         }
         if ((trend === "BULLISH" && marketCondition === "BEARISH_CONTINUATION") ||
             (trend === "BEARISH" && marketCondition === "BULLISH_CONTINUATION")) {
+            return "NO_TRADE";
+        }
+        if (excludeHighAdxSell && adx >= 40 && marketCondition === "BEARISH_CONTINUATION") {
             return "NO_TRADE";
         }
         if (marketCondition === "BULLISH_CONTINUATION") {

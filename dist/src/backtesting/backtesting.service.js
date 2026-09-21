@@ -18,6 +18,7 @@ const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const backtest_outcome_helper_1 = require("./helpers/backtest-outcome.helper");
 const backtest_summary_helper_1 = require("./helpers/backtest-summary.helper");
 const backtest_statistics_helper_1 = require("./helpers/backtest-statistics.helper");
+const sell_analysis_helper_1 = require("./helpers/sell-analysis.helper");
 let BacktestingService = class BacktestingService {
     marketDataService;
     signalsService;
@@ -31,7 +32,7 @@ let BacktestingService = class BacktestingService {
         this.feeRate = 0;
         this.slippageRate = 0;
     }
-    async run(symbol, timeframe) {
+    async run(symbol, timeframe, useHigherTimeframeConfirmation = true, excludeHighAdxSell = false) {
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
         const higherTimeframe = timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES
             ? timeframe_enum_1.Timeframe.ONE_HOUR
@@ -40,9 +41,9 @@ let BacktestingService = class BacktestingService {
                 : timeframe === timeframe_enum_1.Timeframe.FOUR_HOURS
                     ? timeframe_enum_1.Timeframe.ONE_DAY
                     : null;
-        const higherTimeframeCandles = higherTimeframe === null
-            ? []
-            : await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe);
+        const higherTimeframeCandles = useHigherTimeframeConfirmation && higherTimeframe !== null
+            ? await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe)
+            : [];
         const period = 14;
         const splitIndex = Math.floor(candles.length * 0.7);
         const trades = [];
@@ -57,7 +58,7 @@ let BacktestingService = class BacktestingService {
             let i = Math.max(startIndex, period * 2 - 1);
             while (i < endIndex) {
                 const historicalCandles = candles.slice(0, i + 1);
-                const signal = await this.signalsService.generateSignalFromCandles(symbol, timeframe, historicalCandles, higherTimeframeCandles);
+                const signal = await this.signalsService.generateSignalFromCandles(symbol, timeframe, historicalCandles, higherTimeframeCandles, useHigherTimeframeConfirmation, excludeHighAdxSell);
                 if (signal?.action !== "BUY" && signal?.action !== "SELL") {
                     i++;
                     continue;
@@ -140,12 +141,18 @@ let BacktestingService = class BacktestingService {
         const statistics = (0, backtest_statistics_helper_1.calculateBacktestStatistics)(trades);
         const training = (0, backtest_summary_helper_1.calculateBacktestSummary)(trainingTrades);
         const test = (0, backtest_summary_helper_1.calculateBacktestSummary)(testTrades);
+        const sellAnalysis = (0, sell_analysis_helper_1.analyzeSellTrades)(trades);
+        console.log("\n========== SELL ANALYSIS ==========");
+        console.table(sellAnalysis);
+        console.log("===================================\n");
         return {
             ...statistics,
             totalTrades: trades.length,
             winningTrades,
             losingTrades,
-            winRate: completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+            winRate: completedTrades === 0
+                ? 0
+                : (winningTrades / completedTrades) * 100,
             totalR,
             expectancyR,
             grossTotalR,

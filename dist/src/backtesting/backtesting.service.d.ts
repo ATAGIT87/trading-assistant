@@ -10,5 +10,5 @@ export declare class BacktestingService {
     private readonly feeRate;
     private readonly slippageRate;
     constructor(marketDataService: MarketDataService, signalsService: SignalsService, configService: ConfigService);
-    run(symbol: string, timeframe: Timeframe): Promise<BacktestResult>;
+    run(symbol: string, timeframe: Timeframe, useHigherTimeframeConfirmation?: boolean, excludeHighAdxSell?: boolean): Promise<BacktestResult>;
 }

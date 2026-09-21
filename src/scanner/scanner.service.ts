@@ -29,6 +29,7 @@ export class ScannerService {
 
     return age >= 0 && age <= maxAge;
   }
+
   async scan(symbol: string, timeframe: Timeframe, period = 14) {
     if (timeframe === Timeframe.FIFTEEN_MINUTES) {
       await this.marketDataService.syncBinanceCandles(
@@ -49,10 +50,17 @@ export class ScannerService {
     );
 
     if (candles.length === 0) {
+      console.log(
+        `[Scanner] ${symbol} / ${timeframe} → NO_CANDLES`,
+      );
       return null;
     }
 
     const latestCandle = candles[candles.length - 1];
+
+    console.log(
+      `[Scanner] Latest candle: ${symbol} / ${timeframe} → ${latestCandle.time.toISOString()} | close: ${latestCandle.close}`,
+    );
 
     if (!this.isMarketDataFresh(latestCandle.time, timeframe)) {
       console.log(
@@ -62,13 +70,18 @@ export class ScannerService {
       return null;
     }
 
-    const existingSignal = await this.signalsService.getSignalByCandleTime(
-      symbol,
-      timeframe,
-      latestCandle.time,
-    );
+    const existingSignal =
+      await this.signalsService.getSignalByCandleTime(
+        symbol,
+        timeframe,
+        latestCandle.time,
+      );
 
     if (existingSignal) {
+      console.log(
+        `[Scanner] ${symbol} / ${timeframe} → ${existingSignal.action} (existing signal, confidence: ${existingSignal.confidence}, candle: ${latestCandle.time.toISOString()}, close: ${latestCandle.close})`,
+      );
+
       return existingSignal;
     }
 
@@ -79,19 +92,26 @@ export class ScannerService {
     );
 
     if (!signal) {
-      console.log(`[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`);
+      console.log(
+        `[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`,
+      );
+
       return null;
     }
 
     console.log(
-      `[Scanner] ${symbol} / ${timeframe} → ${signal.action} (confidence: ${signal.confidence})`,
+      `[Scanner] ${symbol} / ${timeframe} → ${signal.action} (confidence: ${signal.confidence}, candle: ${latestCandle.time.toISOString()}, close: ${latestCandle.close})`,
     );
 
     if (signal.action !== "BUY" && signal.action !== "SELL") {
       return signal;
     }
 
-    await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+    await this.alertsService.sendSignalAlert(
+      symbol,
+      timeframe,
+      signal,
+    );
 
     return signal;
   }
@@ -114,7 +134,10 @@ export class ScannerService {
         continue;
       }
 
-      if (asset.timeframe === Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
+      if (
+        asset.timeframe === Timeframe.ONE_HOUR &&
+        now.getMinutes() !== 0
+      ) {
         continue;
       }
 
@@ -125,10 +148,13 @@ export class ScannerService {
         console.log(
           `[Scanner] Skipping unsupported scheduled timeframe: ${asset.symbol} / ${asset.timeframe}`,
         );
+
         continue;
       }
 
-      console.log(`[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`);
+      console.log(
+        `[Scanner] Scanning ${asset.symbol} / ${asset.timeframe}`,
+      );
 
       try {
         await this.scan(asset.symbol, asset.timeframe);
