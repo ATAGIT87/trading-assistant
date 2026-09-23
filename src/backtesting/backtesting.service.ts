@@ -9,6 +9,8 @@ import { findTradeOutcome } from "./helpers/backtest-outcome.helper";
 import { calculateBacktestSummary } from "./helpers/backtest-summary.helper";
 import { calculateBacktestStatistics } from "./helpers/backtest-statistics.helper";
 import { analyzeSellTrades } from "./helpers/sell-analysis.helper";
+import { StrategyV2Service } from "../signals/strategy-v2.service";
+import { IndicatorsService } from "../indicators/indicators.service";
 
 @Injectable()
 export class BacktestingService {
@@ -18,6 +20,8 @@ export class BacktestingService {
   constructor(
     private readonly marketDataService: MarketDataService,
     private readonly signalsService: SignalsService,
+    private readonly strategyV2Service: StrategyV2Service,
+    private readonly indicatorsService: IndicatorsService,
     private readonly configService: ConfigService,
   ) {
     this.feeRate = this.getNumericConfigValue(
@@ -41,6 +45,59 @@ export class BacktestingService {
     }
 
     return value;
+  }
+
+  private getHigherTimeframeTrendFromCandles(
+    candles: { time: Date; close: string | number }[],
+    until: Date,
+    higherTimeframe: Timeframe,
+  ): "BULLISH" | "BEARISH" | "NEUTRAL" | null {
+    const completedCandles = candles.filter((candle) =>
+      this.isCompletedHigherTimeframeCandle(candle.time, until, higherTimeframe),
+    );
+
+    if (completedCandles.length < 28) {
+      return null;
+    }
+
+    const closes = completedCandles.map((candle) => Number(candle.close));
+    const latestClose = closes[closes.length - 1];
+    const sma = this.indicatorsService.calculateSma(closes, 14);
+    const ema = this.indicatorsService.calculateEma(closes, 14);
+
+    if (sma === null || ema === null) {
+      return null;
+    }
+
+    const priceVsSma = this.indicatorsService.comparePriceToAverage(
+      latestClose,
+      sma,
+    );
+    const priceVsEma = this.indicatorsService.comparePriceToAverage(
+      latestClose,
+      ema,
+    );
+
+    return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+  }
+
+  private isCompletedHigherTimeframeCandle(
+    candleTime: Date,
+    signalTime: Date,
+    candleTimeframe: Timeframe,
+  ): boolean {
+    const durationMs =
+      candleTimeframe === Timeframe.FIFTEEN_MINUTES
+        ? 15 * 60 * 1000
+        : candleTimeframe === Timeframe.ONE_HOUR
+          ? 60 * 60 * 1000
+          : candleTimeframe === Timeframe.FOUR_HOURS
+            ? 4 * 60 * 60 * 1000
+            : candleTimeframe === Timeframe.ONE_DAY
+              ? 24 * 60 * 60 * 1000
+              : 0;
+
+    return candleTime.getTime() + durationMs < signalTime.getTime();
   }
 
   async run(
@@ -96,13 +153,49 @@ export class BacktestingService {
       while (i < endIndex) {
         const historicalCandles = candles.slice(0, i + 1);
 
-        const signal = await this.signalsService.generateSignalFromCandles(
-          symbol,
-          timeframe,
+        const higherTimeframeTrend =
+          useHigherTimeframeConfirmation && higherTimeframe !== null
+            ? this.getHigherTimeframeTrendFromCandles(
+                higherTimeframeCandles,
+                historicalCandles[historicalCandles.length - 1].time,
+                higherTimeframe,
+              )
+            : null;
+
+        const completedHigherTimeframeCandles =
+          higherTimeframe !== null
+            ? higherTimeframeCandles.filter((candle) =>
+                this.isCompletedHigherTimeframeCandle(
+                  candle.time,
+                  historicalCandles[historicalCandles.length - 1].time,
+                  higherTimeframe,
+                ),
+              )
+            : [];
+
+        const higherTimeframeDurationMs =
+          higherTimeframe === Timeframe.ONE_HOUR
+            ? 60 * 60 * 1000
+            : higherTimeframe === Timeframe.FOUR_HOURS
+              ? 4 * 60 * 60 * 1000
+              : higherTimeframe === Timeframe.ONE_DAY
+                ? 24 * 60 * 60 * 1000
+                : 0;
+
+        const higherTimeframeCandleTime =
+          completedHigherTimeframeCandles.length > 0
+            ? completedHigherTimeframeCandles[
+                completedHigherTimeframeCandles.length - 1
+              ].time
+            : undefined;
+
+        const signal = this.strategyV2Service.evaluateCandles(
           historicalCandles,
-          higherTimeframeCandles,
-          useHigherTimeframeConfirmation,
-          excludeHighAdxSell,
+          0,
+          historicalCandles.length,
+          higherTimeframeTrend ?? undefined,
+          higherTimeframeCandleTime,
+          higherTimeframeDurationMs,
         );
 
         if (signal?.action !== "BUY" && signal?.action !== "SELL") {

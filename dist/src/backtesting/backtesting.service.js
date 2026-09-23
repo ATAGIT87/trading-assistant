@@ -19,15 +19,21 @@ const backtest_outcome_helper_1 = require("./helpers/backtest-outcome.helper");
 const backtest_summary_helper_1 = require("./helpers/backtest-summary.helper");
 const backtest_statistics_helper_1 = require("./helpers/backtest-statistics.helper");
 const sell_analysis_helper_1 = require("./helpers/sell-analysis.helper");
+const strategy_v2_service_1 = require("../signals/strategy-v2.service");
+const indicators_service_1 = require("../indicators/indicators.service");
 let BacktestingService = class BacktestingService {
     marketDataService;
     signalsService;
+    strategyV2Service;
+    indicatorsService;
     configService;
     feeRate;
     slippageRate;
-    constructor(marketDataService, signalsService, configService) {
+    constructor(marketDataService, signalsService, strategyV2Service, indicatorsService, configService) {
         this.marketDataService = marketDataService;
         this.signalsService = signalsService;
+        this.strategyV2Service = strategyV2Service;
+        this.indicatorsService = indicatorsService;
         this.configService = configService;
         this.feeRate = this.getNumericConfigValue("BACKTESTING_FEE_RATE", 0.0005);
         this.slippageRate = this.getNumericConfigValue("BACKTESTING_SLIPPAGE_RATE", 0.0005);
@@ -38,6 +44,34 @@ let BacktestingService = class BacktestingService {
             return fallback;
         }
         return value;
+    }
+    getHigherTimeframeTrendFromCandles(candles, until, higherTimeframe) {
+        const completedCandles = candles.filter((candle) => this.isCompletedHigherTimeframeCandle(candle.time, until, higherTimeframe));
+        if (completedCandles.length < 28) {
+            return null;
+        }
+        const closes = completedCandles.map((candle) => Number(candle.close));
+        const latestClose = closes[closes.length - 1];
+        const sma = this.indicatorsService.calculateSma(closes, 14);
+        const ema = this.indicatorsService.calculateEma(closes, 14);
+        if (sma === null || ema === null) {
+            return null;
+        }
+        const priceVsSma = this.indicatorsService.comparePriceToAverage(latestClose, sma);
+        const priceVsEma = this.indicatorsService.comparePriceToAverage(latestClose, ema);
+        return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
+    }
+    isCompletedHigherTimeframeCandle(candleTime, signalTime, candleTimeframe) {
+        const durationMs = candleTimeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES
+            ? 15 * 60 * 1000
+            : candleTimeframe === timeframe_enum_1.Timeframe.ONE_HOUR
+                ? 60 * 60 * 1000
+                : candleTimeframe === timeframe_enum_1.Timeframe.FOUR_HOURS
+                    ? 4 * 60 * 60 * 1000
+                    : candleTimeframe === timeframe_enum_1.Timeframe.ONE_DAY
+                        ? 24 * 60 * 60 * 1000
+                        : 0;
+        return candleTime.getTime() + durationMs < signalTime.getTime();
     }
     async run(symbol, timeframe, useHigherTimeframeConfirmation = true, excludeHighAdxSell = false) {
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
@@ -65,7 +99,23 @@ let BacktestingService = class BacktestingService {
             let i = Math.max(startIndex, period * 2 - 1);
             while (i < endIndex) {
                 const historicalCandles = candles.slice(0, i + 1);
-                const signal = await this.signalsService.generateSignalFromCandles(symbol, timeframe, historicalCandles, higherTimeframeCandles, useHigherTimeframeConfirmation, excludeHighAdxSell);
+                const higherTimeframeTrend = useHigherTimeframeConfirmation && higherTimeframe !== null
+                    ? this.getHigherTimeframeTrendFromCandles(higherTimeframeCandles, historicalCandles[historicalCandles.length - 1].time, higherTimeframe)
+                    : null;
+                const completedHigherTimeframeCandles = higherTimeframe !== null
+                    ? higherTimeframeCandles.filter((candle) => this.isCompletedHigherTimeframeCandle(candle.time, historicalCandles[historicalCandles.length - 1].time, higherTimeframe))
+                    : [];
+                const higherTimeframeDurationMs = higherTimeframe === timeframe_enum_1.Timeframe.ONE_HOUR
+                    ? 60 * 60 * 1000
+                    : higherTimeframe === timeframe_enum_1.Timeframe.FOUR_HOURS
+                        ? 4 * 60 * 60 * 1000
+                        : higherTimeframe === timeframe_enum_1.Timeframe.ONE_DAY
+                            ? 24 * 60 * 60 * 1000
+                            : 0;
+                const higherTimeframeCandleTime = completedHigherTimeframeCandles.length > 0
+                    ? completedHigherTimeframeCandles[completedHigherTimeframeCandles.length - 1].time
+                    : undefined;
+                const signal = this.strategyV2Service.evaluateCandles(historicalCandles, 0, historicalCandles.length, higherTimeframeTrend ?? undefined, higherTimeframeCandleTime, higherTimeframeDurationMs);
                 if (signal?.action !== "BUY" && signal?.action !== "SELL") {
                     i++;
                     continue;
@@ -175,6 +225,8 @@ exports.BacktestingService = BacktestingService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [market_data_service_1.MarketDataService,
         signals_service_1.SignalsService,
+        strategy_v2_service_1.StrategyV2Service,
+        indicators_service_1.IndicatorsService,
         config_1.ConfigService])
 ], BacktestingService);
 //# sourceMappingURL=backtesting.service.js.map

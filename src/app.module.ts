@@ -7,6 +7,7 @@ import { IndicatorsModule } from "./indicators/indicators.module";
 import { SignalsModule } from "./signals/signals.module";
 import { BacktestingModule } from "./backtesting/backtesting.module";
 import { ScannerModule } from "./scanner/scanner.module";
+import { DemoTradingModule } from "./demo-trading/demo-trading.module";
 import { ConfigModule } from "@nestjs/config";
 
 @Module({
@@ -30,6 +31,7 @@ import { ConfigModule } from "@nestjs/config";
     SignalsModule,
     BacktestingModule,
     ScannerModule,
+    DemoTradingModule,
     ScheduleModule.forRoot(),
   ],
 })

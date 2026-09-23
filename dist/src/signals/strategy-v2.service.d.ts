@@ -1,10 +1,9 @@
-import { IndicatorsService } from "../indicators/indicators.service";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { TradingSignal } from "./signal.types";
 export type StrategyV2Trend = "BULLISH" | "BEARISH" | "NEUTRAL";
 export declare class StrategyV2Service {
     private readonly indicatorsService;
-    constructor(indicatorsService?: IndicatorsService);
+    constructor();
     evaluateCandles(candles: MarketCandle[], startIndex?: number, endIndex?: number, higherTimeframeTrend?: StrategyV2Trend, higherTimeframeCandleTime?: Date, higherTimeframeDurationMs?: number): TradingSignal;
     private isCompletedHigherTimeframeCandle;
     private getRegime;

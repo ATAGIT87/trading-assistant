@@ -26,7 +26,9 @@ interface ConfirmationEvent {
 
 @Injectable()
 export class StrategyV2Service {
-  constructor(private readonly indicatorsService = new IndicatorsService()) {}
+  private readonly indicatorsService = new IndicatorsService();
+
+  constructor() {}
 
   evaluateCandles(
     candles: MarketCandle[],

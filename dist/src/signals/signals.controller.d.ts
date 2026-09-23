@@ -7,6 +7,29 @@ export declare class SignalsController {
     constructor(signalsService: SignalsService, signalStorageService: SignalStorageService);
     getSignalHistory(symbol: string, timeframe: Timeframe): Promise<import("./entities/signal.entity").Signal[]>;
     getLatestSignal(symbol: string, timeframe: Timeframe): Promise<import("./entities/signal.entity").Signal | null>;
+    getLiveV2Signal(symbol: string, timeframe: Timeframe): Promise<{
+        symbol: string;
+        timeframe: Timeframe;
+        action: string;
+        signalTime: Date;
+        entry: null;
+        stopLoss: null;
+        takeProfit: null;
+        riskReward: null;
+        reason: string;
+        strategyVersion: string;
+    } | {
+        symbol: string;
+        timeframe: Timeframe;
+        action: import("./signal.types").SignalAction;
+        signalTime: Date;
+        entry: number | null;
+        stopLoss: number | null;
+        takeProfit: number | null;
+        riskReward: number | null;
+        reason: string;
+        strategyVersion: string;
+    }>;
     generateSignal(symbol: string, timeframe: Timeframe, period: number): Promise<{
         action: "BUY" | "SELL" | "WAIT" | "NO_TRADE";
         confidence: number;

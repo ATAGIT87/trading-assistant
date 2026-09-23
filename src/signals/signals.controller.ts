@@ -27,6 +27,16 @@ export class SignalsController {
     return this.signalStorageService.getLatestSignal(symbol, timeframe);
   }
 
+  @Get(":symbol/:timeframe")
+  async getLiveV2Signal(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+  ) {
+    const result = await this.signalsService.getLiveV2Signal(symbol, timeframe);
+
+    return result;
+  }
+
   @Get(":symbol/:timeframe/:period")
   async generateSignal(
     @Param("symbol") symbol: string,

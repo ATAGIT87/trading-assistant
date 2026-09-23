@@ -13,10 +13,8 @@ exports.StrategyV2Service = void 0;
 const common_1 = require("@nestjs/common");
 const indicators_service_1 = require("../indicators/indicators.service");
 let StrategyV2Service = class StrategyV2Service {
-    indicatorsService;
-    constructor(indicatorsService = new indicators_service_1.IndicatorsService()) {
-        this.indicatorsService = indicatorsService;
-    }
+    indicatorsService = new indicators_service_1.IndicatorsService();
+    constructor() { }
     evaluateCandles(candles, startIndex = 0, endIndex = candles.length, higherTimeframeTrend, higherTimeframeCandleTime, higherTimeframeDurationMs = 0) {
         const safeEnd = Math.min(Math.max(startIndex, endIndex), candles.length);
         if (candles.length === 0 || safeEnd <= startIndex) {
@@ -300,6 +298,6 @@ let StrategyV2Service = class StrategyV2Service {
 exports.StrategyV2Service = StrategyV2Service;
 exports.StrategyV2Service = StrategyV2Service = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [Object])
+    __metadata("design:paramtypes", [])
 ], StrategyV2Service);
 //# sourceMappingURL=strategy-v2.service.js.map

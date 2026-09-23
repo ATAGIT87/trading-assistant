@@ -16,6 +16,7 @@ const indicators_module_1 = require("./indicators/indicators.module");
 const signals_module_1 = require("./signals/signals.module");
 const backtesting_module_1 = require("./backtesting/backtesting.module");
 const scanner_module_1 = require("./scanner/scanner.module");
+const demo_trading_module_1 = require("./demo-trading/demo-trading.module");
 const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
@@ -42,6 +43,7 @@ exports.AppModule = AppModule = __decorate([
             signals_module_1.SignalsModule,
             backtesting_module_1.BacktestingModule,
             scanner_module_1.ScannerModule,
+            demo_trading_module_1.DemoTradingModule,
             schedule_1.ScheduleModule.forRoot(),
         ],
     })

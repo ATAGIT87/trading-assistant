@@ -31,6 +31,10 @@ let SignalsController = class SignalsController {
     getLatestSignal(symbol, timeframe) {
         return this.signalStorageService.getLatestSignal(symbol, timeframe);
     }
+    async getLiveV2Signal(symbol, timeframe) {
+        const result = await this.signalsService.getLiveV2Signal(symbol, timeframe);
+        return result;
+    }
     async generateSignal(symbol, timeframe, period) {
         const result = await this.signalsService.generateSignal(symbol, timeframe, period);
         return signal_response_schema_1.SignalResponseSchema.parse(result);
@@ -53,6 +57,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], SignalsController.prototype, "getLatestSignal", null);
+__decorate([
+    (0, common_1.Get)(":symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], SignalsController.prototype, "getLiveV2Signal", null);
 __decorate([
     (0, common_1.Get)(":symbol/:timeframe/:period"),
     __param(0, (0, common_1.Param)("symbol")),
