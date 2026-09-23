@@ -143,6 +143,10 @@ let DemoTradingService = class DemoTradingService {
                 processed.push({
                     symbol: position.symbol,
                     timeframe: position.timeframe,
+                    side: position.side,
+                    entry: Number(position.entry),
+                    stopLoss: Number(position.stopLoss),
+                    takeProfit: Number(position.takeProfit),
                     status: "OPEN",
                     exitPrice: null,
                     closedAt: null,
@@ -156,6 +160,10 @@ let DemoTradingService = class DemoTradingService {
                 processed.push({
                     symbol: position.symbol,
                     timeframe: position.timeframe,
+                    side: position.side,
+                    entry: Number(position.entry),
+                    stopLoss: Number(position.stopLoss),
+                    takeProfit: Number(position.takeProfit),
                     status: "OPEN",
                     exitPrice: null,
                     closedAt: null,
@@ -172,6 +180,10 @@ let DemoTradingService = class DemoTradingService {
             processed.push({
                 symbol: position.symbol,
                 timeframe: position.timeframe,
+                side: position.side,
+                entry: Number(position.entry),
+                stopLoss: Number(position.stopLoss),
+                takeProfit: Number(position.takeProfit),
                 status: outcome.status,
                 exitPrice: outcome.exitPrice,
                 closedAt: position.closedAt,

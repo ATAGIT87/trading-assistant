@@ -58,6 +58,10 @@ export declare class DemoTradingService {
         processed: {
             symbol: string;
             timeframe: Timeframe;
+            side: "BUY" | "SELL";
+            entry: number;
+            stopLoss: number;
+            takeProfit: number;
             status: "OPEN" | "WIN" | "LOSS";
             exitPrice: number | null;
             closedAt: Date | null;

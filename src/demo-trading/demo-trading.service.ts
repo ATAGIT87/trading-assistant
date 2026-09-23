@@ -156,6 +156,10 @@ export class DemoTradingService {
     const processed: Array<{
       symbol: string;
       timeframe: Timeframe;
+      side: "BUY" | "SELL";
+      entry: number;
+      stopLoss: number;
+      takeProfit: number;
       status: "OPEN" | "WIN" | "LOSS";
       exitPrice: number | null;
       closedAt: Date | null;
@@ -173,6 +177,10 @@ export class DemoTradingService {
         processed.push({
           symbol: position.symbol,
           timeframe: position.timeframe,
+          side: position.side,
+          entry: Number(position.entry),
+          stopLoss: Number(position.stopLoss),
+          takeProfit: Number(position.takeProfit),
           status: "OPEN",
           exitPrice: null,
           closedAt: null,
@@ -188,6 +196,10 @@ export class DemoTradingService {
         processed.push({
           symbol: position.symbol,
           timeframe: position.timeframe,
+          side: position.side,
+          entry: Number(position.entry),
+          stopLoss: Number(position.stopLoss),
+          takeProfit: Number(position.takeProfit),
           status: "OPEN",
           exitPrice: null,
           closedAt: null,
@@ -207,6 +219,10 @@ export class DemoTradingService {
       processed.push({
         symbol: position.symbol,
         timeframe: position.timeframe,
+        side: position.side,
+        entry: Number(position.entry),
+        stopLoss: Number(position.stopLoss),
+        takeProfit: Number(position.takeProfit),
         status: outcome.status,
         exitPrice: outcome.exitPrice,
         closedAt: position.closedAt,
