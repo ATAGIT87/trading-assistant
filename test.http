@@ -111,4 +111,4 @@ POST http://localhost:3000/market-data/sync-binance/ETHUSD/15m
 GET http://localhost:3000/backtesting/ETHUSD/15m
 
 ###
-http://localhost:3000/backtesting/ETHUSD/15m?useHigherTimeframeConfirmation=true&excludeHighAdxSell=false
+curl http://localhost:3000/signals/ETHUSD/15m

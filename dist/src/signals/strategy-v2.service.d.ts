@@ -5,6 +5,7 @@ export declare class StrategyV2Service {
     private readonly indicatorsService;
     constructor();
     evaluateCandles(candles: MarketCandle[], startIndex?: number, endIndex?: number, higherTimeframeTrend?: StrategyV2Trend, higherTimeframeCandleTime?: Date, higherTimeframeDurationMs?: number): TradingSignal;
+    private describeNoConfirmedSwingBreakout;
     private isCompletedHigherTimeframeCandle;
     private getRegime;
     private calculateAdx14;
