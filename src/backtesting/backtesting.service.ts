@@ -9,7 +9,10 @@ import {
   timeframeDurationMs,
 } from "../assets/timeframe.utils";
 import { MarketDataService } from "../market-data/market-data.service";
-import { StrategyV2Service } from "../signals/strategy-v2.service";
+import {
+  STRATEGY_VERSION,
+  StrategyV2Service,
+} from "../signals/strategy-v2.service";
 import { BacktestResult } from "./interfaces/backtest-result.interface";
 import { BacktestTrade } from "./interfaces/backtest-trade.interface";
 import { findTradeOutcome } from "./helpers/backtest-outcome.helper";
@@ -79,7 +82,7 @@ export class BacktestingService {
 
     if (candles.length < 50) {
       return this.saveRun(symbol, timeframe, {
-        strategyVersion: "v2-baseline",
+        strategyVersion: STRATEGY_VERSION,
         higherTimeframeConfirmation: higherTimeframe !== null,
         ...calculateBacktestStatistics([]),
         totalTrades: 0,
@@ -428,7 +431,7 @@ export class BacktestingService {
     );
 
     return this.saveRun(symbol, timeframe, {
-      strategyVersion: "v2-baseline",
+      strategyVersion: STRATEGY_VERSION,
       higherTimeframeConfirmation: higherTimeframe !== null,
       ...statistics,
 
@@ -475,6 +478,33 @@ export class BacktestingService {
       order: { createdAt: "DESC" },
       take: 20,
     });
+  }
+
+  async getReadiness(symbol: string, timeframe: Timeframe) {
+    const latestRun = await this.backtestRunRepository.findOne({
+      where: { symbol, timeframe, strategyVersion: STRATEGY_VERSION },
+      order: { createdAt: "DESC" },
+    });
+
+    if (!latestRun) {
+      return {
+        isReady: false,
+        reason: "No backtest exists for the active strategy version.",
+      };
+    }
+
+    const test = latestRun.result.test;
+    const isReady =
+      test.totalTrades >= 20 && test.totalR > 0 && test.expectancyR > 0;
+
+    return {
+      isReady,
+      reason: isReady
+        ? "Out-of-sample backtest criteria passed."
+        : `Out-of-sample criteria failed: trades=${test.totalTrades}, totalR=${test.totalR.toFixed(2)}, expectancyR=${test.expectancyR.toFixed(2)}.`,
+      runId: latestRun.id,
+      test,
+    };
   }
 
   async compareLatestRuns(

@@ -3,12 +3,14 @@ import { Timeframe } from "../assets/enums/timeframe.enum";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { MarketDataService } from "../market-data/market-data.service";
 import { SignalsService } from "../signals/signals.service";
+import { BacktestingService } from "../backtesting/backtesting.service";
 import { DemoPosition } from "./entities/demo-position.entity";
 export declare class DemoTradingService {
     private readonly demoPositionRepository;
     private readonly signalsService;
     private readonly marketDataService;
-    constructor(demoPositionRepository: Repository<DemoPosition>, signalsService: SignalsService, marketDataService: MarketDataService);
+    private readonly backtestingService;
+    constructor(demoPositionRepository: Repository<DemoPosition>, signalsService: SignalsService, marketDataService: MarketDataService, backtestingService: BacktestingService);
     resolvePositionOutcome(position: Pick<DemoPosition, "side" | "entry" | "stopLoss" | "takeProfit" | "riskReward">, candle: Pick<MarketCandle, "low" | "high">): {
         status: "OPEN" | "WIN" | "LOSS";
         exitPrice: number | null;

@@ -6,6 +6,7 @@ describe("DemoTradingService", () => {
     null as any,
     null as any,
     null as any,
+    null as any,
   );
 
   it("resolves a BUY trade to WIN when take profit is touched and LOSS if stop loss is triggered in the same candle", () => {

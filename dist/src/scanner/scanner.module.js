@@ -14,12 +14,13 @@ const signals_module_1 = require("../signals/signals.module");
 const alerts_module_1 = require("../alerts/alerts.module");
 const market_data_module_1 = require("../market-data/market-data.module");
 const assets_module_1 = require("../assets/assets.module");
+const backtesting_module_1 = require("../backtesting/backtesting.module");
 let ScannerModule = class ScannerModule {
 };
 exports.ScannerModule = ScannerModule;
 exports.ScannerModule = ScannerModule = __decorate([
     (0, common_1.Module)({
-        imports: [signals_module_1.SignalsModule, alerts_module_1.AlertsModule, market_data_module_1.MarketDataModule, assets_module_1.AssetsModule],
+        imports: [signals_module_1.SignalsModule, alerts_module_1.AlertsModule, market_data_module_1.MarketDataModule, assets_module_1.AssetsModule, backtesting_module_1.BacktestingModule],
         providers: [scanner_service_1.ScannerService],
         controllers: [scanner_controller_1.ScannerController],
     })

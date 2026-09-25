@@ -4,6 +4,17 @@ export declare class BacktestingController {
     private readonly backtestingService;
     constructor(backtestingService: BacktestingService);
     getHistory(symbol: string, timeframe: Timeframe): Promise<import("./entities/backtest-run.entity").BacktestRun[]>;
+    getReadiness(symbol: string, timeframe: Timeframe): Promise<{
+        isReady: boolean;
+        reason: string;
+        runId?: undefined;
+        test?: undefined;
+    } | {
+        isReady: boolean;
+        reason: string;
+        runId: number;
+        test: import("./interfaces/backtest-result.interface").BacktestSummary;
+    }>;
     compareLatestRuns(symbol: string, timeframe: Timeframe, baselineVersion?: string, candidateVersion?: string): Promise<{
         baseline: import("./entities/backtest-run.entity").BacktestRun;
         candidate: import("./entities/backtest-run.entity").BacktestRun;

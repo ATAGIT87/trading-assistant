@@ -16,6 +16,17 @@ export declare class BacktestingService {
     private getNumericConfigValue;
     run(symbol: string, timeframe: Timeframe): Promise<BacktestResult>;
     findRuns(symbol: string, timeframe: Timeframe): Promise<BacktestRun[]>;
+    getReadiness(symbol: string, timeframe: Timeframe): Promise<{
+        isReady: boolean;
+        reason: string;
+        runId?: undefined;
+        test?: undefined;
+    } | {
+        isReady: boolean;
+        reason: string;
+        runId: number;
+        test: import("./interfaces/backtest-result.interface").BacktestSummary;
+    }>;
     compareLatestRuns(symbol: string, timeframe: Timeframe, baselineVersion: string, candidateVersion: string): Promise<{
         baseline: BacktestRun;
         candidate: BacktestRun;

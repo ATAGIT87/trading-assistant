@@ -10,6 +10,9 @@ export type StrategyV2Trend =
   | "BEARISH"
   | "NEUTRAL";
 
+export const STRATEGY_VERSION = "v2-baseline";
+const MIN_ADX = 15;
+
 @Injectable()
 export class StrategyV2Service {
   constructor(
@@ -143,11 +146,11 @@ export class StrategyV2Service {
       );
     }
 
-    if (adx < 15) {
+    if (adx < MIN_ADX) {
       return this.buildSignal(
         "NO_TRADE",
         close,
-        `ADX_WEAK: ADX14 is ${adx.toFixed(2)}.`,
+        `NO_TRADE: ADX14 ${adx.toFixed(2)} is below the minimum ${MIN_ADX}.`,
         relevantCandles,
         trend,
         rsi,

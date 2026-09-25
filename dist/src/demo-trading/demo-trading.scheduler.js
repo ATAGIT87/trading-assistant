@@ -17,28 +17,38 @@ const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const timeframe_utils_1 = require("../assets/timeframe.utils");
 const market_data_service_1 = require("../market-data/market-data.service");
 const signals_service_1 = require("../signals/signals.service");
+const backtesting_service_1 = require("../backtesting/backtesting.service");
 const demo_trading_service_1 = require("./demo-trading.service");
 const telegram_notification_service_1 = require("./telegram-notification.service");
 let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
     demoTradingService;
     signalsService;
     marketDataService;
+    backtestingService;
     telegramNotificationService;
     logger = new common_1.Logger(DemoTradingScheduler_1.name);
     demoMarkets = [
         { symbol: "BTCUSD", timeframe: timeframe_enum_1.Timeframe.FIFTEEN_MINUTES },
         { symbol: "ETHUSD", timeframe: timeframe_enum_1.Timeframe.FIFTEEN_MINUTES },
     ];
-    constructor(demoTradingService, signalsService, marketDataService, telegramNotificationService) {
+    constructor(demoTradingService, signalsService, marketDataService, backtestingService, telegramNotificationService) {
         this.demoTradingService = demoTradingService;
         this.signalsService = signalsService;
         this.marketDataService = marketDataService;
+        this.backtestingService = backtestingService;
         this.telegramNotificationService = telegramNotificationService;
     }
     async handleDemoTradingCycle() {
         const runAt = new Date();
         if (!this.telegramNotificationService.isEnabled()) {
             this.logger.warn("Telegram notifications disabled: missing TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID.");
+        }
+        for (const market of this.demoMarkets) {
+            await this.marketDataService.syncBinanceCandles(market.symbol, market.timeframe);
+            const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(market.timeframe);
+            if (higherTimeframe !== null) {
+                await this.marketDataService.syncBinanceCandles(market.symbol, higherTimeframe);
+            }
         }
         const checkResult = await this.demoTradingService.checkOpenPositions();
         const closedPositions = checkResult.processed.filter((entry) => entry.status === "WIN" || entry.status === "LOSS");
@@ -47,10 +57,10 @@ let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
         }
         this.logger.log(`[demo-scheduler] tick=${runAt.toISOString()} closed=${closedPositions.length}`);
         for (const market of this.demoMarkets) {
-            await this.marketDataService.syncBinanceCandles(market.symbol, market.timeframe);
-            const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(market.timeframe);
-            if (higherTimeframe !== null) {
-                await this.marketDataService.syncBinanceCandles(market.symbol, higherTimeframe);
+            const readiness = await this.backtestingService.getReadiness(market.symbol, market.timeframe);
+            if (!readiness.isReady) {
+                this.logger.warn(`[demo-scheduler] ${market.symbol} / ${market.timeframe} skipped: ${readiness.reason}`);
+                continue;
             }
             const signal = await this.signalsService.getLiveV2Signal(market.symbol, market.timeframe);
             const action = signal?.action ?? "NO_TRADE";
@@ -81,6 +91,7 @@ exports.DemoTradingScheduler = DemoTradingScheduler = DemoTradingScheduler_1 = _
     __metadata("design:paramtypes", [demo_trading_service_1.DemoTradingService,
         signals_service_1.SignalsService,
         market_data_service_1.MarketDataService,
+        backtesting_service_1.BacktestingService,
         telegram_notification_service_1.TelegramNotificationService])
 ], DemoTradingScheduler);
 //# sourceMappingURL=demo-trading.scheduler.js.map

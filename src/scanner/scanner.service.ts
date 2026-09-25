@@ -4,6 +4,7 @@ import { Cron } from "@nestjs/schedule";
 import { SignalsService } from "../signals/signals.service";
 import { MarketDataService } from "../market-data/market-data.service";
 import { AlertsService } from "../alerts/alerts.service";
+import { BacktestingService } from "../backtesting/backtesting.service";
 import { AssetsService } from "../assets/assets.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import {
@@ -19,6 +20,7 @@ export class ScannerService {
     private readonly marketDataService: MarketDataService,
     private readonly alertsService: AlertsService,
     private readonly assetsService: AssetsService,
+    private readonly backtestingService: BacktestingService,
   ) {}
 
   private isMarketDataFresh(candleTime: Date, timeframe: Timeframe): boolean {
@@ -70,7 +72,17 @@ export class ScannerService {
     }
 
     if (signal.action === "BUY" || signal.action === "SELL") {
-      await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+      const readiness = await this.backtestingService.getReadiness(
+        symbol,
+        timeframe,
+      );
+      if (readiness.isReady) {
+        await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+      } else {
+        console.warn(
+          `[Scanner] Alert blocked for ${symbol} / ${timeframe}: ${readiness.reason}`,
+        );
+      }
     }
 
     console.log(

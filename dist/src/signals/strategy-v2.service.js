@@ -9,10 +9,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StrategyV2Service = void 0;
+exports.StrategyV2Service = exports.STRATEGY_VERSION = void 0;
 const common_1 = require("@nestjs/common");
 const indicators_service_1 = require("../indicators/indicators.service");
 const risk_manager_service_1 = require("../risk/risk-manager.service");
+exports.STRATEGY_VERSION = "v2-baseline";
+const MIN_ADX = 15;
 let StrategyV2Service = class StrategyV2Service {
     indicatorsService;
     riskManagerService;
@@ -54,8 +56,8 @@ let StrategyV2Service = class StrategyV2Service {
                 _higherTimeframeTrend !== trend)) {
             return this.buildSignal("NO_TRADE", close, `NO_TRADE: higher timeframe confirmation failed (primary=${trend}, higher=${_higherTimeframeTrend}).`, relevantCandles, trend, rsi, adx, atr14);
         }
-        if (adx < 15) {
-            return this.buildSignal("NO_TRADE", close, `ADX_WEAK: ADX14 is ${adx.toFixed(2)}.`, relevantCandles, trend, rsi, adx, atr14);
+        if (adx < MIN_ADX) {
+            return this.buildSignal("NO_TRADE", close, `NO_TRADE: ADX14 ${adx.toFixed(2)} is below the minimum ${MIN_ADX}.`, relevantCandles, trend, rsi, adx, atr14);
         }
         const momentum = this.calculateMomentum(relevantCandles);
         const previousSwingHigh = this.findPreviousSwingHigh(relevantCandles);

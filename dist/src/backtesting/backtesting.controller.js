@@ -26,6 +26,9 @@ let BacktestingController = class BacktestingController {
     async getHistory(symbol, timeframe) {
         return this.backtestingService.findRuns(symbol, timeframe);
     }
+    async getReadiness(symbol, timeframe) {
+        return this.backtestingService.getReadiness(symbol, timeframe);
+    }
     async compareLatestRuns(symbol, timeframe, baselineVersion = "v2-baseline", candidateVersion = "v2-baseline") {
         return this.backtestingService.compareLatestRuns(symbol, timeframe, baselineVersion, candidateVersion);
     }
@@ -43,6 +46,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], BacktestingController.prototype, "getHistory", null);
+__decorate([
+    (0, common_1.Get)("readiness/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], BacktestingController.prototype, "getReadiness", null);
 __decorate([
     (0, common_1.Get)("compare/:symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),

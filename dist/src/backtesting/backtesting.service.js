@@ -55,7 +55,7 @@ let BacktestingService = class BacktestingService {
             : await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe);
         if (candles.length < 50) {
             return this.saveRun(symbol, timeframe, {
-                strategyVersion: "v2-baseline",
+                strategyVersion: strategy_v2_service_1.STRATEGY_VERSION,
                 higherTimeframeConfirmation: higherTimeframe !== null,
                 ...(0, backtest_statistics_helper_1.calculateBacktestStatistics)([]),
                 totalTrades: 0,
@@ -223,7 +223,7 @@ let BacktestingService = class BacktestingService {
         });
         console.log("=================================\n");
         return this.saveRun(symbol, timeframe, {
-            strategyVersion: "v2-baseline",
+            strategyVersion: strategy_v2_service_1.STRATEGY_VERSION,
             higherTimeframeConfirmation: higherTimeframe !== null,
             ...statistics,
             totalTrades: trades.length,
@@ -251,6 +251,28 @@ let BacktestingService = class BacktestingService {
             order: { createdAt: "DESC" },
             take: 20,
         });
+    }
+    async getReadiness(symbol, timeframe) {
+        const latestRun = await this.backtestRunRepository.findOne({
+            where: { symbol, timeframe, strategyVersion: strategy_v2_service_1.STRATEGY_VERSION },
+            order: { createdAt: "DESC" },
+        });
+        if (!latestRun) {
+            return {
+                isReady: false,
+                reason: "No backtest exists for the active strategy version.",
+            };
+        }
+        const test = latestRun.result.test;
+        const isReady = test.totalTrades >= 20 && test.totalR > 0 && test.expectancyR > 0;
+        return {
+            isReady,
+            reason: isReady
+                ? "Out-of-sample backtest criteria passed."
+                : `Out-of-sample criteria failed: trades=${test.totalTrades}, totalR=${test.totalR.toFixed(2)}, expectancyR=${test.expectancyR.toFixed(2)}.`,
+            runId: latestRun.id,
+            test,
+        };
     }
     async compareLatestRuns(symbol, timeframe, baselineVersion, candidateVersion) {
         const [baseline, candidate] = await Promise.all([

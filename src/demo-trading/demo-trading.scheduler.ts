@@ -5,6 +5,7 @@ import { Timeframe } from "../assets/enums/timeframe.enum";
 import { getHigherTimeframe } from "../assets/timeframe.utils";
 import { MarketDataService } from "../market-data/market-data.service";
 import { SignalsService } from "../signals/signals.service";
+import { BacktestingService } from "../backtesting/backtesting.service";
 import { DemoTradingService } from "./demo-trading.service";
 import { TelegramNotificationService } from "./telegram-notification.service";
 
@@ -24,6 +25,7 @@ export class DemoTradingScheduler {
     private readonly demoTradingService: DemoTradingService,
     private readonly signalsService: SignalsService,
     private readonly marketDataService: MarketDataService,
+    private readonly backtestingService: BacktestingService,
     private readonly telegramNotificationService: TelegramNotificationService,
   ) {}
 
@@ -35,6 +37,20 @@ export class DemoTradingScheduler {
       this.logger.warn(
         "Telegram notifications disabled: missing TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID.",
       );
+    }
+
+    for (const market of this.demoMarkets) {
+      await this.marketDataService.syncBinanceCandles(
+        market.symbol,
+        market.timeframe,
+      );
+      const higherTimeframe = getHigherTimeframe(market.timeframe);
+      if (higherTimeframe !== null) {
+        await this.marketDataService.syncBinanceCandles(
+          market.symbol,
+          higherTimeframe,
+        );
+      }
     }
 
     const checkResult = await this.demoTradingService.checkOpenPositions();
@@ -55,16 +71,15 @@ export class DemoTradingScheduler {
     );
 
     for (const market of this.demoMarkets) {
-      await this.marketDataService.syncBinanceCandles(
+      const readiness = await this.backtestingService.getReadiness(
         market.symbol,
         market.timeframe,
       );
-      const higherTimeframe = getHigherTimeframe(market.timeframe);
-      if (higherTimeframe !== null) {
-        await this.marketDataService.syncBinanceCandles(
-          market.symbol,
-          higherTimeframe,
+      if (!readiness.isReady) {
+        this.logger.warn(
+          `[demo-scheduler] ${market.symbol} / ${market.timeframe} skipped: ${readiness.reason}`,
         );
+        continue;
       }
 
       const signal = await this.signalsService.getLiveV2Signal(

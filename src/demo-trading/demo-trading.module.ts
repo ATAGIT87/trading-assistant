@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { MarketDataModule } from "../market-data/market-data.module";
+import { BacktestingModule } from "../backtesting/backtesting.module";
 import { SignalsModule } from "../signals/signals.module";
 import { ConfigModule } from "@nestjs/config";
 
@@ -17,6 +18,7 @@ import { DemoPosition } from "./entities/demo-position.entity";
     TypeOrmModule.forFeature([DemoPosition]),
     SignalsModule,
     MarketDataModule,
+    BacktestingModule,
   ],
   providers: [DemoTradingService, DemoTradingScheduler, TelegramNotificationService],
   controllers: [DemoTradingController],

@@ -19,15 +19,18 @@ const typeorm_2 = require("typeorm");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const market_data_service_1 = require("../market-data/market-data.service");
 const signals_service_1 = require("../signals/signals.service");
+const backtesting_service_1 = require("../backtesting/backtesting.service");
 const demo_position_entity_1 = require("./entities/demo-position.entity");
 let DemoTradingService = class DemoTradingService {
     demoPositionRepository;
     signalsService;
     marketDataService;
-    constructor(demoPositionRepository, signalsService, marketDataService) {
+    backtestingService;
+    constructor(demoPositionRepository, signalsService, marketDataService, backtestingService) {
         this.demoPositionRepository = demoPositionRepository;
         this.signalsService = signalsService;
         this.marketDataService = marketDataService;
+        this.backtestingService = backtestingService;
     }
     resolvePositionOutcome(position, candle) {
         const candleLow = Number(candle.low);
@@ -71,6 +74,16 @@ let DemoTradingService = class DemoTradingService {
         return { status: "OPEN", exitPrice: null, resultR: null };
     }
     async openPosition(symbol, timeframe) {
+        const readiness = await this.backtestingService.getReadiness(symbol, timeframe);
+        if (!readiness.isReady) {
+            return {
+                symbol,
+                timeframe,
+                action: "NO_TRADE",
+                reason: `Demo position blocked: ${readiness.reason}`,
+                position: null,
+            };
+        }
         const signal = await this.signalsService.getLiveV2Signal(symbol, timeframe);
         if (signal.action !== "BUY" &&
             signal.action !== "SELL") {
@@ -240,6 +253,7 @@ exports.DemoTradingService = DemoTradingService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(demo_position_entity_1.DemoPosition)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         signals_service_1.SignalsService,
-        market_data_service_1.MarketDataService])
+        market_data_service_1.MarketDataService,
+        backtesting_service_1.BacktestingService])
 ], DemoTradingService);
 //# sourceMappingURL=demo-trading.service.js.map

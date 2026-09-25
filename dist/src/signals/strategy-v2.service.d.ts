@@ -3,6 +3,7 @@ import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { RiskManagerService } from "../risk/risk-manager.service";
 import { TradingSignal } from "./signal.types";
 export type StrategyV2Trend = "BULLISH" | "BEARISH" | "NEUTRAL";
+export declare const STRATEGY_VERSION = "v2-baseline";
 export declare class StrategyV2Service {
     private readonly indicatorsService;
     private readonly riskManagerService;

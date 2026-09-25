@@ -6,6 +6,7 @@ import { Timeframe } from "../assets/enums/timeframe.enum";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { MarketDataService } from "../market-data/market-data.service";
 import { SignalsService } from "../signals/signals.service";
+import { BacktestingService } from "../backtesting/backtesting.service";
 import { DemoPosition } from "./entities/demo-position.entity";
 
 @Injectable()
@@ -15,6 +16,7 @@ export class DemoTradingService {
     private readonly demoPositionRepository: Repository<DemoPosition>,
     private readonly signalsService: SignalsService,
     private readonly marketDataService: MarketDataService,
+    private readonly backtestingService: BacktestingService,
   ) {}
 
   resolvePositionOutcome(
@@ -79,6 +81,20 @@ export class DemoTradingService {
   }
 
   async openPosition(symbol: string, timeframe: Timeframe) {
+    const readiness = await this.backtestingService.getReadiness(
+      symbol,
+      timeframe,
+    );
+    if (!readiness.isReady) {
+      return {
+        symbol,
+        timeframe,
+        action: "NO_TRADE" as const,
+        reason: `Demo position blocked: ${readiness.reason}`,
+        position: null,
+      };
+    }
+
     const signal = await this.signalsService.getLiveV2Signal(symbol, timeframe);
 
     if (

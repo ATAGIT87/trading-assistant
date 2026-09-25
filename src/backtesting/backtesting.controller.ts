@@ -19,6 +19,14 @@ export class BacktestingController {
     return this.backtestingService.findRuns(symbol, timeframe);
   }
 
+  @Get("readiness/:symbol/:timeframe")
+  async getReadiness(
+    @Param("symbol", ParseTradingSymbolPipe) symbol: string,
+    @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
+  ) {
+    return this.backtestingService.getReadiness(symbol, timeframe);
+  }
+
   @Get("compare/:symbol/:timeframe")
   async compareLatestRuns(
     @Param("symbol", ParseTradingSymbolPipe) symbol: string,
