@@ -68,41 +68,19 @@ export class ScannerService {
       return null;
     }
 
-    const existingSignal = await this.signalsService.getSignalByCandleTime(
-      symbol,
-      timeframe,
-      latestCandle.time,
-    );
-
-    if (existingSignal) {
-      console.log(
-        `[Scanner] ${symbol} / ${timeframe} → ${existingSignal.action} (existing signal, confidence: ${existingSignal.confidence}, candle: ${latestCandle.time.toISOString()}, close: ${latestCandle.close})`,
-      );
-
-      return existingSignal;
-    }
-
-    const signal = await this.signalsService.generateSignal(
-      symbol,
-      timeframe,
-      period,
-    );
+    const signal = await this.signalsService.getLiveV2Signal(symbol, timeframe);
 
     if (!signal) {
-      console.log(`[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL`);
+      console.log(
+        `[Scanner] ${symbol} / ${timeframe} → NO_SIGNAL (V2: no completed candles available or no valid setup)`,
+      );
 
       return null;
     }
 
     console.log(
-      `[Scanner] ${symbol} / ${timeframe} → ${signal.action} (confidence: ${signal.confidence}, candle: ${latestCandle.time.toISOString()}, close: ${latestCandle.close})`,
+      `[Scanner] ${symbol} / ${timeframe} → V2 ${signal.action} (strategyVersion: ${signal.strategyVersion}, signalTime: ${signal.signalTime.toISOString()}, reason: ${signal.reason})`,
     );
-
-    if (signal.action !== "BUY" && signal.action !== "SELL") {
-      return signal;
-    }
-
-    await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
 
     return signal;
   }

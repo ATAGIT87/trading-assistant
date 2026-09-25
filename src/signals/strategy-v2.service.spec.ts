@@ -64,7 +64,7 @@ describe("StrategyV2Service", () => {
 
     expect(signal.action).toBe("NO_TRADE");
     expect(signal.reason).toContain("NO_CONFIRMED_SWING_BREAKOUT");
-    expect(signal.reason).toContain("confirmed swing high exists");
+    expect(signal.reason).toContain("confirmed swing high does not exist");
   });
 
   it("should keep a pending breakout unresolved until a valid rejection appears", () => {
@@ -105,4 +105,108 @@ describe("StrategyV2Service", () => {
     expect(signal.reason).toContain("HIGHER_TIMEFRAME_CONFLICT");
     expect(signal.reason).toContain("HTF trend BEARISH");
   });
+  
+
+// src/signals/strategy-v2.service.spec.ts
+
+it("should allow a V2 breakout confirmation when ADX is exactly 15", () => {
+  const candles = Array.from(
+    { length: 12 },
+    (_, index) => ({
+      id: index,
+      symbol: "ETHUSD",
+      timeframe: Timeframe.FIFTEEN_MINUTES,
+      time: new Date(
+        Date.UTC(2026, 0, 1, 0, index * 15),
+      ),
+      open: "100",
+      high: "101",
+      low: "99",
+      close: "100",
+      volume: "1000",
+    }),
+  ) as MarketCandle[];
+
+  candles[10] = {
+    ...candles[10],
+    open: "100",
+    high: "104",
+    low: "100",
+    close: "103.5",
+  };
+
+  candles[11] = {
+    ...candles[11],
+    open: "104",
+    high: "106",
+    low: "102",
+    close: "105",
+  };
+
+  const breakout: BreakoutEvent = {
+    direction: "BUY",
+    level: 103,
+    close: 103.5,
+    index: 10,
+  };
+
+  jest
+    .spyOn(service as any, "getRegime")
+    .mockReturnValue("BULLISH");
+
+  jest
+    .spyOn(service as any, "calculateAdx14")
+    .mockReturnValue(15);
+
+  jest
+    .spyOn(service as any, "calculateStructuralStop")
+    .mockReturnValue(98);
+
+  jest
+    .spyOn(service as any, "findNextConfirmedSwingTarget")
+    .mockReturnValue(113);
+
+  const confirmation = (
+    service as any
+  ).findConfirmationEvent(
+    candles,
+    breakout,
+    2,
+    "BULLISH",
+    15,
+  );
+
+  expect(confirmation).not.toBeNull();
+  expect(confirmation?.direction).toBe("BUY");
+  expect(confirmation?.entryPrice).toBe(105);
+  expect(confirmation?.stopLoss).toBe(98);
+  expect(confirmation?.takeProfit).toBe(113);
+});
+
+  it("should use the newest confirmed swing as the breakout reference even when the new level is lower", () => {
+    const candles = [
+      makeCandle("2024-01-01T00:00:00.000Z", 88, 90, 85, 88),
+      makeCandle("2024-01-01T00:15:00.000Z", 89, 91, 86, 89),
+      makeCandle("2024-01-01T00:30:00.000Z", 90, 92, 87, 90),
+      makeCandle("2024-01-01T00:45:00.000Z", 91, 93, 88, 91),
+      makeCandle("2024-01-01T01:00:00.000Z", 99, 100, 95, 99),
+      makeCandle("2024-01-01T01:15:00.000Z", 97, 99, 94, 96),
+      makeCandle("2024-01-01T01:30:00.000Z", 92, 94, 90, 92),
+      makeCandle("2024-01-01T01:45:00.000Z", 91, 93, 89, 91),
+      makeCandle("2024-01-01T02:00:00.000Z", 90, 92, 88, 90),
+      makeCandle("2024-01-01T02:15:00.000Z", 89, 91, 87, 89),
+      makeCandle("2024-01-01T02:30:00.000Z", 93, 95, 90, 93),
+      makeCandle("2024-01-01T02:45:00.000Z", 90, 94, 89, 90),
+      makeCandle("2024-01-01T03:00:00.000Z", 96, 97, 90, 96),
+    ];
+
+    const breakout = (service as any).findLatestBreakoutEvent(candles);
+
+    expect(breakout).not.toBeNull();
+    expect(breakout.direction).toBe("BUY");
+    expect(breakout.level).toBe(95);
+    expect(breakout.index).toBe(12);
+  });
+
+
 });

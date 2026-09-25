@@ -1,21 +1,18 @@
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
+import { RiskManagerService } from "../risk/risk-manager.service";
 import { TradingSignal } from "./signal.types";
 export type StrategyV2Trend = "BULLISH" | "BEARISH" | "NEUTRAL";
 export declare class StrategyV2Service {
+    private readonly riskManagerService;
     private readonly indicatorsService;
-    constructor();
-    evaluateCandles(candles: MarketCandle[], startIndex?: number, endIndex?: number, higherTimeframeTrend?: StrategyV2Trend, higherTimeframeCandleTime?: Date, higherTimeframeDurationMs?: number): TradingSignal;
-    private describeNoConfirmedSwingBreakout;
-    private isCompletedHigherTimeframeCandle;
-    private getRegime;
+    constructor(riskManagerService: RiskManagerService);
+    evaluateCandles(candles: MarketCandle[], startIndex?: number, endIndex?: number, _higherTimeframeTrend?: StrategyV2Trend, _higherTimeframeCandleTime?: Date, _higherTimeframeDurationMs?: number): TradingSignal;
+    private calculateMomentum;
+    private findPreviousSwingHigh;
+    private findPreviousSwingLow;
     private calculateAdx14;
     private calculateAtr14;
-    private calculateTrailingMedianAtr14;
-    private classifyAtrRegime;
     private calculateRsi;
-    private findLatestBreakoutEvent;
-    private findConfirmationEvent;
-    private calculateStructuralStop;
-    private calculateStructuralTarget;
+    private buildNoTradeReason;
     private buildSignal;
 }

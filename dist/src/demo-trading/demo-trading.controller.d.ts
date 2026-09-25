@@ -6,26 +6,15 @@ export declare class DemoTradingController {
     openPosition(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
-        action: string;
+        action: import("../signals/signal.types").SignalAction;
         reason: string;
         position: null;
         signal?: undefined;
     } | {
         symbol: string;
         timeframe: Timeframe;
-        action: string;
+        action: "BUY" | "SELL";
         signal: {
-            symbol: string;
-            timeframe: Timeframe;
-            action: string;
-            signalTime: Date;
-            entry: null;
-            stopLoss: null;
-            takeProfit: null;
-            riskReward: null;
-            reason: string;
-            strategyVersion: string;
-        } | {
             symbol: string;
             timeframe: Timeframe;
             action: import("../signals/signal.types").SignalAction;

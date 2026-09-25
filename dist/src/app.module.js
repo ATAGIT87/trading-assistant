@@ -8,16 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const typeorm_1 = require("@nestjs/typeorm");
 const assets_module_1 = require("./assets/assets.module");
-const market_data_module_1 = require("./market-data/market-data.module");
-const indicators_module_1 = require("./indicators/indicators.module");
-const signals_module_1 = require("./signals/signals.module");
 const backtesting_module_1 = require("./backtesting/backtesting.module");
-const scanner_module_1 = require("./scanner/scanner.module");
 const demo_trading_module_1 = require("./demo-trading/demo-trading.module");
-const config_1 = require("@nestjs/config");
+const indicators_module_1 = require("./indicators/indicators.module");
+const market_data_module_1 = require("./market-data/market-data.module");
+const risk_module_1 = require("./risk/risk.module");
+const scanner_module_1 = require("./scanner/scanner.module");
+const signals_module_1 = require("./signals/signals.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -37,14 +38,15 @@ exports.AppModule = AppModule = __decorate([
                 autoLoadEntities: true,
                 synchronize: true,
             }),
+            schedule_1.ScheduleModule.forRoot(),
             assets_module_1.AssetsModule,
             market_data_module_1.MarketDataModule,
             indicators_module_1.IndicatorsModule,
             signals_module_1.SignalsModule,
+            risk_module_1.RiskModule,
             backtesting_module_1.BacktestingModule,
             scanner_module_1.ScannerModule,
             demo_trading_module_1.DemoTradingModule,
-            schedule_1.ScheduleModule.forRoot(),
         ],
     })
 ], AppModule);

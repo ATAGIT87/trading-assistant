@@ -14,18 +14,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BacktestingController = void 0;
 const common_1 = require("@nestjs/common");
-const backtesting_service_1 = require("./backtesting.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
 const backtest_response_schema_1 = require("./backtest-response.schema");
+const backtesting_service_1 = require("./backtesting.service");
 let BacktestingController = class BacktestingController {
     backtestingService;
     constructor(backtestingService) {
         this.backtestingService = backtestingService;
     }
-    async runBacktest(symbol, timeframe, useHigherTimeframeConfirmation = "true", excludeHighAdxSell = "false") {
-        const useHTF = useHigherTimeframeConfirmation !== "false";
-        const excludeHighAdxSellFilter = excludeHighAdxSell !== "false";
-        const result = await this.backtestingService.run(symbol, timeframe, useHTF, excludeHighAdxSellFilter);
+    async runBacktest(symbol, timeframe, _useHigherTimeframeConfirmation = "false", _excludeHighAdxSell = "false") {
+        const result = await this.backtestingService.run(symbol, timeframe);
         return backtest_response_schema_1.BacktestResponseSchema.parse(result);
     }
 };

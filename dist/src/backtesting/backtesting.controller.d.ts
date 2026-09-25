@@ -1,9 +1,9 @@
-import { BacktestingService } from "./backtesting.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { BacktestingService } from "./backtesting.service";
 export declare class BacktestingController {
     private readonly backtestingService;
     constructor(backtestingService: BacktestingService);
-    runBacktest(symbol: string, timeframe: Timeframe, useHigherTimeframeConfirmation?: string, excludeHighAdxSell?: string): Promise<{
+    runBacktest(symbol: string, timeframe: Timeframe, _useHigherTimeframeConfirmation?: string, _excludeHighAdxSell?: string): Promise<{
         totalTrades: number;
         winningTrades: number;
         losingTrades: number;

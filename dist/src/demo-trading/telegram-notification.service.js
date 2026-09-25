@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var TelegramNotificationService_1;
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TelegramNotificationService = void 0;
 const common_1 = require("@nestjs/common");
@@ -105,6 +106,6 @@ let TelegramNotificationService = TelegramNotificationService_1 = class Telegram
 exports.TelegramNotificationService = TelegramNotificationService;
 exports.TelegramNotificationService = TelegramNotificationService = TelegramNotificationService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService])
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object])
 ], TelegramNotificationService);
 //# sourceMappingURL=telegram-notification.service.js.map
