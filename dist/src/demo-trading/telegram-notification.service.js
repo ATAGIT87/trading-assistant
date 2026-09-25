@@ -51,10 +51,10 @@ let TelegramNotificationService = TelegramNotificationService_1 = class Telegram
             "",
             action,
             "",
-            `Entry: ${Number(signal.entry ?? position.entry).toFixed(2)}`,
+            `Entry: ${signal.entryPrice.toFixed(2)}`,
             `SL: ${Number(signal.stopLoss ?? position.stopLoss).toFixed(2)}`,
             `TP: ${Number(signal.takeProfit ?? position.takeProfit).toFixed(2)}`,
-            `R:R: ${signal.riskReward ?? position.riskReward ?? 0}:${1}`,
+            `R:R: ${position.riskReward ?? 0}:${1}`,
             "",
             "Status: OPEN",
         ].join("\n");

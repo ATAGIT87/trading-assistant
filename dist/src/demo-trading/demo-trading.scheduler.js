@@ -14,21 +14,25 @@ exports.DemoTradingScheduler = void 0;
 const common_1 = require("@nestjs/common");
 const schedule_1 = require("@nestjs/schedule");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const timeframe_utils_1 = require("../assets/timeframe.utils");
+const market_data_service_1 = require("../market-data/market-data.service");
 const signals_service_1 = require("../signals/signals.service");
 const demo_trading_service_1 = require("./demo-trading.service");
 const telegram_notification_service_1 = require("./telegram-notification.service");
 let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
     demoTradingService;
     signalsService;
+    marketDataService;
     telegramNotificationService;
     logger = new common_1.Logger(DemoTradingScheduler_1.name);
     demoMarkets = [
         { symbol: "BTCUSD", timeframe: timeframe_enum_1.Timeframe.FIFTEEN_MINUTES },
         { symbol: "ETHUSD", timeframe: timeframe_enum_1.Timeframe.FIFTEEN_MINUTES },
     ];
-    constructor(demoTradingService, signalsService, telegramNotificationService) {
+    constructor(demoTradingService, signalsService, marketDataService, telegramNotificationService) {
         this.demoTradingService = demoTradingService;
         this.signalsService = signalsService;
+        this.marketDataService = marketDataService;
         this.telegramNotificationService = telegramNotificationService;
     }
     async handleDemoTradingCycle() {
@@ -43,6 +47,11 @@ let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
         }
         this.logger.log(`[demo-scheduler] tick=${runAt.toISOString()} closed=${closedPositions.length}`);
         for (const market of this.demoMarkets) {
+            await this.marketDataService.syncBinanceCandles(market.symbol, market.timeframe);
+            const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(market.timeframe);
+            if (higherTimeframe !== null) {
+                await this.marketDataService.syncBinanceCandles(market.symbol, higherTimeframe);
+            }
             const signal = await this.signalsService.getLiveV2Signal(market.symbol, market.timeframe);
             const action = signal?.action ?? "NO_TRADE";
             if (action !== "BUY" && action !== "SELL") {
@@ -71,6 +80,7 @@ exports.DemoTradingScheduler = DemoTradingScheduler = DemoTradingScheduler_1 = _
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [demo_trading_service_1.DemoTradingService,
         signals_service_1.SignalsService,
+        market_data_service_1.MarketDataService,
         telegram_notification_service_1.TelegramNotificationService])
 ], DemoTradingScheduler);
 //# sourceMappingURL=demo-trading.scheduler.js.map

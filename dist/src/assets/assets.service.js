@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("typeorm");
 const typeorm_2 = require("@nestjs/typeorm");
 const asset_entity_1 = require("./entities/asset.entity");
+const trading_symbol_1 = require("../market-data/trading-symbol");
 let AssetsService = class AssetsService {
     assetRepository;
     constructor(assetRepository) {
@@ -36,7 +37,7 @@ let AssetsService = class AssetsService {
     }
     create(symbol, name, type, isActive, timeframe) {
         const asset = this.assetRepository.create({
-            symbol,
+            symbol: (0, trading_symbol_1.normalizeTradingSymbol)(symbol),
             name,
             type,
             ...(isActive !== undefined && { isActive }),
@@ -45,6 +46,9 @@ let AssetsService = class AssetsService {
         return this.assetRepository.save(asset);
     }
     async update(id, data) {
+        if (data.symbol !== undefined) {
+            data.symbol = (0, trading_symbol_1.normalizeTradingSymbol)(data.symbol);
+        }
         const asset = await this.assetRepository.preload({
             id,
             ...data,

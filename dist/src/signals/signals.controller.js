@@ -14,69 +14,29 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsController = void 0;
 const common_1 = require("@nestjs/common");
-const signals_service_1 = require("./signals.service");
-const signal_storage_service_1 = require("./signal-storage.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
-const signal_response_schema_1 = require("./signal-response.schema");
+const trading_symbol_1 = require("../market-data/trading-symbol");
+const signals_service_1 = require("./signals.service");
 let SignalsController = class SignalsController {
     signalsService;
-    signalStorageService;
-    constructor(signalsService, signalStorageService) {
+    constructor(signalsService) {
         this.signalsService = signalsService;
-        this.signalStorageService = signalStorageService;
-    }
-    getSignalHistory(symbol, timeframe) {
-        return this.signalStorageService.getSignalHistory(symbol, timeframe);
-    }
-    getLatestSignal(symbol, timeframe) {
-        return this.signalStorageService.getLatestSignal(symbol, timeframe);
     }
     async getLiveV2Signal(symbol, timeframe) {
-        const result = await this.signalsService.getLiveV2Signal(symbol, timeframe);
-        return result;
-    }
-    async generateSignal(symbol, timeframe, period) {
-        const result = await this.signalsService.generateSignal(symbol, timeframe, period);
-        return signal_response_schema_1.SignalResponseSchema.parse(result);
+        return this.signalsService.getLiveV2Signal(symbol, timeframe);
     }
 };
 exports.SignalsController = SignalsController;
 __decorate([
-    (0, common_1.Get)("history/:symbol/:timeframe"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", void 0)
-], SignalsController.prototype, "getSignalHistory", null);
-__decorate([
-    (0, common_1.Get)("latest/:symbol/:timeframe"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", void 0)
-], SignalsController.prototype, "getLatestSignal", null);
-__decorate([
     (0, common_1.Get)(":symbol/:timeframe"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], SignalsController.prototype, "getLiveV2Signal", null);
-__decorate([
-    (0, common_1.Get)(":symbol/:timeframe/:period"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
-    __param(2, (0, common_1.Param)("period", common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Number]),
-    __metadata("design:returntype", Promise)
-], SignalsController.prototype, "generateSignal", null);
 exports.SignalsController = SignalsController = __decorate([
     (0, common_1.Controller)("signals"),
-    __metadata("design:paramtypes", [signals_service_1.SignalsService,
-        signal_storage_service_1.SignalStorageService])
+    __metadata("design:paramtypes", [signals_service_1.SignalsService])
 ], SignalsController);
 //# sourceMappingURL=signals.controller.js.map

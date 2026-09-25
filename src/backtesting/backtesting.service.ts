@@ -1,16 +1,22 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { MarketDataService } from "../market-data/market-data.service";
-import { SignalsService } from "../signals/signals.service";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+
 import { Timeframe } from "../assets/enums/timeframe.enum";
-import { BacktestTrade } from "./interfaces/backtest-trade.interface";
-import { BacktestResult } from "./interfaces/backtest-result.interface";
-import { findTradeOutcome } from "./helpers/backtest-outcome.helper";
-import { calculateBacktestSummary } from "./helpers/backtest-summary.helper";
-import { calculateBacktestStatistics } from "./helpers/backtest-statistics.helper";
-import { analyzeSellTrades } from "./helpers/sell-analysis.helper";
+import {
+  getHigherTimeframe,
+  timeframeDurationMs,
+} from "../assets/timeframe.utils";
+import { MarketDataService } from "../market-data/market-data.service";
 import { StrategyV2Service } from "../signals/strategy-v2.service";
-import { IndicatorsService } from "../indicators/indicators.service";
+import { BacktestResult } from "./interfaces/backtest-result.interface";
+import { BacktestTrade } from "./interfaces/backtest-trade.interface";
+import { findTradeOutcome } from "./helpers/backtest-outcome.helper";
+import { calculateBacktestStatistics } from "./helpers/backtest-statistics.helper";
+import { calculateBacktestSummary } from "./helpers/backtest-summary.helper";
+import { analyzeSellTrades } from "./helpers/sell-analysis.helper";
+import { BacktestRun } from "./entities/backtest-run.entity";
 
 @Injectable()
 export class BacktestingService {
@@ -19,15 +25,16 @@ export class BacktestingService {
 
   constructor(
     private readonly marketDataService: MarketDataService,
-    private readonly signalsService: SignalsService,
     private readonly strategyV2Service: StrategyV2Service,
-    private readonly indicatorsService: IndicatorsService,
     private readonly configService: ConfigService,
+    @InjectRepository(BacktestRun)
+    private readonly backtestRunRepository: Repository<BacktestRun>,
   ) {
     this.feeRate = this.getNumericConfigValue(
       "BACKTESTING_FEE_RATE",
       0.0005,
     );
+
     this.slippageRate = this.getNumericConfigValue(
       "BACKTESTING_SLIPPAGE_RATE",
       0.0005,
@@ -38,7 +45,12 @@ export class BacktestingService {
     key: string,
     fallback: number,
   ): number {
-    const value = Number(this.configService.get<number | string>(key, fallback));
+    const value = Number(
+      this.configService.get<number | string>(
+        key,
+        fallback,
+      ),
+    );
 
     if (!Number.isFinite(value) || value < 0) {
       return fallback;
@@ -47,97 +59,51 @@ export class BacktestingService {
     return value;
   }
 
-  private getHigherTimeframeTrendFromCandles(
-    candles: { time: Date; close: string | number }[],
-    until: Date,
-    higherTimeframe: Timeframe,
-  ): "BULLISH" | "BEARISH" | "NEUTRAL" | null {
-    const completedCandles = candles.filter((candle) =>
-      this.isCompletedHigherTimeframeCandle(candle.time, until, higherTimeframe),
-    );
-
-    if (completedCandles.length < 28) {
-      return null;
-    }
-
-    const closes = completedCandles.map((candle) => Number(candle.close));
-    const latestClose = closes[closes.length - 1];
-    const sma = this.indicatorsService.calculateSma(closes, 14);
-    const ema = this.indicatorsService.calculateEma(closes, 14);
-
-    if (sma === null || ema === null) {
-      return null;
-    }
-
-    const priceVsSma = this.indicatorsService.comparePriceToAverage(
-      latestClose,
-      sma,
-    );
-    const priceVsEma = this.indicatorsService.comparePriceToAverage(
-      latestClose,
-      ema,
-    );
-
-    return this.indicatorsService.determineTrend(priceVsSma, priceVsEma);
-  }
-
-  private isCompletedHigherTimeframeCandle(
-    candleTime: Date,
-    signalTime: Date,
-    candleTimeframe: Timeframe,
-  ): boolean {
-    const durationMs =
-      candleTimeframe === Timeframe.FIFTEEN_MINUTES
-        ? 15 * 60 * 1000
-        : candleTimeframe === Timeframe.ONE_HOUR
-          ? 60 * 60 * 1000
-          : candleTimeframe === Timeframe.FOUR_HOURS
-            ? 4 * 60 * 60 * 1000
-            : candleTimeframe === Timeframe.ONE_DAY
-              ? 24 * 60 * 60 * 1000
-              : 0;
-
-    return candleTime.getTime() + durationMs < signalTime.getTime();
-  }
-
   async run(
     symbol: string,
     timeframe: Timeframe,
-    useHigherTimeframeConfirmation = true,
-    excludeHighAdxSell = false,
   ): Promise<BacktestResult> {
-    const candles = await this.marketDataService.getHistoricalCandles(
-      symbol,
-      timeframe,
-    );
-
-    const higherTimeframe =
-      timeframe === Timeframe.FIFTEEN_MINUTES
-        ? Timeframe.ONE_HOUR
-        : timeframe === Timeframe.ONE_HOUR
-          ? Timeframe.FOUR_HOURS
-          : timeframe === Timeframe.FOUR_HOURS
-            ? Timeframe.ONE_DAY
-            : null;
-
+    const candles =
+      await this.marketDataService.getHistoricalCandles(
+        symbol,
+        timeframe,
+      );
+    const higherTimeframe = getHigherTimeframe(timeframe);
     const higherTimeframeCandles =
-      useHigherTimeframeConfirmation && higherTimeframe !== null
-        ? await this.marketDataService.getHistoricalCandles(
+      higherTimeframe === null
+        ? []
+        : await this.marketDataService.getHistoricalCandles(
             symbol,
             higherTimeframe,
-          )
-        : [];
+          );
 
-    const period = 14;
+    if (candles.length < 50) {
+      return this.saveRun(symbol, timeframe, {
+        strategyVersion: "v2-baseline",
+        higherTimeframeConfirmation: higherTimeframe !== null,
+        ...calculateBacktestStatistics([]),
+        totalTrades: 0,
+        winningTrades: 0,
+        losingTrades: 0,
+        winRate: 0,
+        totalR: 0,
+        expectancyR: 0,
+        grossTotalR: 0,
+        totalFeeR: 0,
+        totalSlippageR: 0,
+        totalCostR: 0,
+        training: calculateBacktestSummary([]),
+        test: calculateBacktestSummary([]),
+        trades: [],
+      });
+    }
 
-    const splitIndex = Math.floor(candles.length * 0.7);
+    const splitIndex =
+      Math.floor(candles.length * 0.7);
 
     const trades: BacktestTrade[] = [];
     const trainingTrades: BacktestTrade[] = [];
     const testTrades: BacktestTrade[] = [];
-
-    let winningTrades = 0;
-    let losingTrades = 0;
 
     let grossTotalR = 0;
     let totalFeeR = 0;
@@ -148,64 +114,68 @@ export class BacktestingService {
       endIndex: number,
       targetTrades: BacktestTrade[],
     ) => {
-      let i = Math.max(startIndex, period * 2 - 1);
+      let i = Math.max(
+        startIndex,
+        49,
+      );
 
       while (i < endIndex) {
-        const historicalCandles = candles.slice(0, i + 1);
+        const historicalCandles =
+          candles.slice(0, i + 1);
 
         const higherTimeframeTrend =
-          useHigherTimeframeConfirmation && higherTimeframe !== null
-            ? this.getHigherTimeframeTrendFromCandles(
-                higherTimeframeCandles,
-                historicalCandles[historicalCandles.length - 1].time,
-                higherTimeframe,
-              )
-            : null;
-
-        const completedHigherTimeframeCandles =
-          higherTimeframe !== null
-            ? higherTimeframeCandles.filter((candle) =>
-                this.isCompletedHigherTimeframeCandle(
-                  candle.time,
-                  historicalCandles[historicalCandles.length - 1].time,
-                  higherTimeframe,
+          higherTimeframe === null
+            ? undefined
+            : this.strategyV2Service.getTrend(
+                higherTimeframeCandles.filter(
+                  (candle) =>
+                    candle.time.getTime() +
+                      timeframeDurationMs[higherTimeframe] <=
+                    candles[i].time.getTime(),
                 ),
-              )
-            : [];
+              );
 
-        const higherTimeframeDurationMs =
-          higherTimeframe === Timeframe.ONE_HOUR
-            ? 60 * 60 * 1000
-            : higherTimeframe === Timeframe.FOUR_HOURS
-              ? 4 * 60 * 60 * 1000
-              : higherTimeframe === Timeframe.ONE_DAY
-                ? 24 * 60 * 60 * 1000
-                : 0;
-
-        const higherTimeframeCandleTime =
-          completedHigherTimeframeCandles.length > 0
-            ? completedHigherTimeframeCandles[
-                completedHigherTimeframeCandles.length - 1
-              ].time
-            : undefined;
-
-        const signal = this.strategyV2Service.evaluateCandles(
-          historicalCandles,
-          0,
-          historicalCandles.length,
-          higherTimeframeTrend ?? undefined,
-          higherTimeframeCandleTime,
-          higherTimeframeDurationMs,
-        );
-
-        if (signal?.action !== "BUY" && signal?.action !== "SELL") {
+        if (higherTimeframe !== null && higherTimeframeTrend === null) {
           i++;
           continue;
         }
 
-        const futureCandles = candles.slice(i + 1, endIndex);
+        const signal =
+          this.strategyV2Service.evaluateCandles(
+            historicalCandles,
+            0,
+            historicalCandles.length,
+            higherTimeframeTrend ?? undefined,
+          );
 
-        const outcome = findTradeOutcome(signal, futureCandles);
+        if (
+          signal.action !== "BUY" &&
+          signal.action !== "SELL"
+        ) {
+          i++;
+          continue;
+        }
+
+        if (
+          signal.stopLoss === null ||
+          signal.takeProfit === null
+        ) {
+          i++;
+          continue;
+        }
+
+        const futureCandles =
+          candles.slice(i + 1, endIndex);
+
+        if (futureCandles.length === 0) {
+          break;
+        }
+
+        const outcome =
+          findTradeOutcome(
+            signal,
+            futureCandles,
+          );
 
         const result =
           outcome.result === true
@@ -215,37 +185,62 @@ export class BacktestingService {
               : "OPEN";
 
         const riskAmount =
-          signal.stopLoss === null
-            ? 0
-            : Math.abs(signal.entryPrice - signal.stopLoss);
+          Math.abs(
+            signal.entryPrice -
+              signal.stopLoss,
+          );
 
         const grossR =
-          outcome.result === true ? 2 : outcome.result === false ? -1 : null;
+          outcome.result === true
+            ? 2
+            : outcome.result === false
+              ? -1
+              : null;
 
         let feeR = 0;
         let slippageR = 0;
         let netR: number | null = grossR;
 
-        if (grossR !== null && riskAmount > 0) {
-          const entryPrice = signal.entryPrice;
+        if (
+          grossR !== null &&
+          riskAmount > 0
+        ) {
+          const entryPrice =
+            signal.entryPrice;
 
-          const exitPrice = outcome.exitPrice ?? entryPrice;
+          const exitPrice =
+            outcome.exitPrice ??
+            entryPrice;
 
-          const entryFee = entryPrice * this.feeRate;
-          const exitFee = exitPrice * this.feeRate;
+          const entryFee =
+            entryPrice *
+            this.feeRate;
 
-          const totalFee = entryFee + exitFee;
+          const exitFee =
+            exitPrice *
+            this.feeRate;
 
-          feeR = totalFee / riskAmount;
+          feeR =
+            (entryFee + exitFee) /
+            riskAmount;
 
-          const entrySlippage = entryPrice * this.slippageRate;
-          const exitSlippage = exitPrice * this.slippageRate;
+          const entrySlippage =
+            entryPrice *
+            this.slippageRate;
 
-          const totalSlippage = entrySlippage + exitSlippage;
+          const exitSlippage =
+            exitPrice *
+            this.slippageRate;
 
-          slippageR = totalSlippage / riskAmount;
+          slippageR =
+            (entrySlippage +
+              exitSlippage) /
+            riskAmount;
 
-          netR = grossR - feeR - slippageR;
+          netR =
+            grossR -
+            feeR -
+            slippageR;
         }
 
         const backtestTrade: BacktestTrade = {
@@ -253,103 +248,204 @@ export class BacktestingService {
 
           action: signal.action,
 
-          confidence: signal.confidence,
+          confidence:
+            signal.confidence,
 
-          entryPrice: signal.entryPrice,
+          entryPrice:
+            signal.entryPrice,
 
-          exitPrice: outcome.exitPrice,
+          exitPrice:
+            outcome.exitPrice,
 
-          stopLoss: signal.stopLoss,
+          stopLoss:
+            signal.stopLoss,
 
-          takeProfit: signal.takeProfit,
+          takeProfit:
+            signal.takeProfit,
 
-          trend: signal.trend,
+          trend:
+            signal.trend,
 
-          rsi: signal.rsi,
+          rsi:
+            signal.rsi,
 
-          adx: signal.adx,
+          adx:
+            signal.adx,
 
-          marketCondition: signal.marketCondition,
+          marketCondition:
+            signal.marketCondition,
 
           result,
 
           exitTime:
             outcome.exitIndex === null
               ? null
-              : (futureCandles[outcome.exitIndex]?.time ?? null),
+              : (
+                  futureCandles[
+                    outcome.exitIndex
+                  ]?.time ?? null
+                ),
 
           riskAmount,
 
           resultR: netR,
 
-          maeR: outcome.maeR,
+          maeR:
+            outcome.maeR,
 
-          mfeR: outcome.mfeR,
+          mfeR:
+            outcome.mfeR,
 
-          durationCandles: outcome.durationCandles,
+          durationCandles:
+            outcome.durationCandles,
         };
 
-        trades.push(backtestTrade);
+        trades.push(
+          backtestTrade,
+        );
 
-        targetTrades.push(backtestTrade);
+        targetTrades.push(
+          backtestTrade,
+        );
 
         if (grossR !== null) {
           grossTotalR += grossR;
         }
 
         totalFeeR += feeR;
+        totalSlippageR +=
+          slippageR;
 
-        totalSlippageR += slippageR;
-
-        if (netR !== null) {
-          if (netR > 0) {
-            winningTrades++;
-          } else if (netR < 0) {
-            losingTrades++;
-          }
-        }
-
-        if (outcome.exitIndex === null) {
+        if (
+          outcome.exitIndex === null
+        ) {
           break;
         }
 
-        i = i + outcome.exitIndex + 2;
+        i =
+          i +
+          outcome.exitIndex +
+          2;
       }
     };
 
-    await processSegment(0, splitIndex, trainingTrades);
+    await processSegment(
+      0,
+      splitIndex,
+      trainingTrades,
+    );
 
-    await processSegment(splitIndex, candles.length, testTrades);
+    await processSegment(
+      splitIndex,
+      candles.length,
+      testTrades,
+    );
 
-    const completedTrades = winningTrades + losingTrades;
+    const winningTrades =
+      trades.filter(
+        (trade) =>
+          trade.resultR !== null &&
+          trade.resultR > 0,
+      ).length;
 
-    const totalR = trades.reduce((sum, trade) => sum + (trade.resultR ?? 0), 0);
+    const losingTrades =
+      trades.filter(
+        (trade) =>
+          trade.resultR !== null &&
+          trade.resultR < 0,
+      ).length;
 
-    const expectancyR = completedTrades === 0 ? 0 : totalR / completedTrades;
+    const completedTrades =
+      winningTrades +
+      losingTrades;
 
-    const statistics = calculateBacktestStatistics(trades);
+    const totalR =
+      trades.reduce(
+        (sum, trade) =>
+          sum +
+          (trade.resultR ?? 0),
+        0,
+      );
 
-    const training = calculateBacktestSummary(trainingTrades);
+    const expectancyR =
+      completedTrades === 0
+        ? 0
+        : totalR /
+          completedTrades;
 
-    const test = calculateBacktestSummary(testTrades);
+    const statistics =
+      calculateBacktestStatistics(
+        trades,
+      );
 
-    const sellAnalysis = analyzeSellTrades(trades);
+    const training =
+      calculateBacktestSummary(
+        trainingTrades,
+      );
 
-    console.log("\n========== SELL ANALYSIS ==========");
-    console.table(sellAnalysis);
-    console.log("===================================\n");
+    const test =
+      calculateBacktestSummary(
+        testTrades,
+      );
 
-    return {
+    const sellAnalysis =
+      analyzeSellTrades(
+        trades,
+      );
+
+    console.log(
+      "\n========== SELL ANALYSIS ==========",
+    );
+    console.table(
+      sellAnalysis,
+    );
+    console.log(
+      "===================================\n",
+    );
+
+    console.log(
+      "\n========== V2 BACKTEST ==========",
+    );
+
+    console.log({
+      totalTrades:
+        trades.length,
+      winningTrades,
+      losingTrades,
+      winRate:
+        completedTrades === 0
+          ? 0
+          : (
+              winningTrades /
+              completedTrades
+            ) * 100,
+      totalR,
+      expectancyR,
+    });
+
+    console.log(
+      "=================================\n",
+    );
+
+    return this.saveRun(symbol, timeframe, {
+      strategyVersion: "v2-baseline",
+      higherTimeframeConfirmation: higherTimeframe !== null,
       ...statistics,
 
-      totalTrades: trades.length,
+      totalTrades:
+        trades.length,
 
       winningTrades,
 
       losingTrades,
 
       winRate:
-        completedTrades === 0 ? 0 : (winningTrades / completedTrades) * 100,
+        completedTrades === 0
+          ? 0
+          : (
+              winningTrades /
+              completedTrades
+            ) * 100,
 
       totalR,
 
@@ -361,13 +457,77 @@ export class BacktestingService {
 
       totalSlippageR,
 
-      totalCostR: totalFeeR + totalSlippageR,
+      totalCostR:
+        totalFeeR +
+        totalSlippageR,
 
       training,
 
       test,
 
       trades,
+    });
+  }
+
+  async findRuns(symbol: string, timeframe: Timeframe): Promise<BacktestRun[]> {
+    return this.backtestRunRepository.find({
+      where: { symbol, timeframe },
+      order: { createdAt: "DESC" },
+      take: 20,
+    });
+  }
+
+  async compareLatestRuns(
+    symbol: string,
+    timeframe: Timeframe,
+    baselineVersion: string,
+    candidateVersion: string,
+  ) {
+    const [baseline, candidate] = await Promise.all([
+      this.backtestRunRepository.findOne({
+        where: { symbol, timeframe, strategyVersion: baselineVersion },
+        order: { createdAt: "DESC" },
+      }),
+      this.backtestRunRepository.findOne({
+        where: { symbol, timeframe, strategyVersion: candidateVersion },
+        order: { createdAt: "DESC" },
+      }),
+    ]);
+
+    if (!baseline || !candidate) {
+      return null;
+    }
+
+    return {
+      baseline,
+      candidate,
+      delta: {
+        totalR: candidate.result.totalR - baseline.result.totalR,
+        expectancyR:
+          candidate.result.expectancyR - baseline.result.expectancyR,
+        winRate: candidate.result.winRate - baseline.result.winRate,
+        testTotalR:
+          candidate.result.test.totalR - baseline.result.test.totalR,
+        testExpectancyR:
+          candidate.result.test.expectancyR - baseline.result.test.expectancyR,
+      },
     };
+  }
+
+  private async saveRun(
+    symbol: string,
+    timeframe: Timeframe,
+    result: BacktestResult,
+  ): Promise<BacktestResult> {
+    await this.backtestRunRepository.save(
+      this.backtestRunRepository.create({
+        symbol,
+        timeframe,
+        strategyVersion: result.strategyVersion,
+        result,
+      }),
+    );
+
+    return result;
   }
 }

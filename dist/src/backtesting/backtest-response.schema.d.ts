@@ -1,5 +1,7 @@
 import { z } from "zod";
 export declare const BacktestResponseSchema: z.ZodObject<{
+    strategyVersion: z.ZodString;
+    higherTimeframeConfirmation: z.ZodBoolean;
     totalTrades: z.ZodNumber;
     winningTrades: z.ZodNumber;
     losingTrades: z.ZodNumber;

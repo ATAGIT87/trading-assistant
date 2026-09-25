@@ -17,37 +17,15 @@ export declare class DemoTradingService {
     openPosition(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
-        action: string;
+        action: "WAIT" | "NO_TRADE";
         reason: string;
         position: null;
         signal?: undefined;
     } | {
         symbol: string;
         timeframe: Timeframe;
-        action: string;
-        signal: {
-            symbol: string;
-            timeframe: Timeframe;
-            action: string;
-            signalTime: Date;
-            entry: null;
-            stopLoss: null;
-            takeProfit: null;
-            riskReward: null;
-            reason: string;
-            strategyVersion: string;
-        } | {
-            symbol: string;
-            timeframe: Timeframe;
-            action: import("../signals/signal.types").SignalAction;
-            signalTime: Date;
-            entry: number | null;
-            stopLoss: number | null;
-            takeProfit: number | null;
-            riskReward: number | null;
-            reason: string;
-            strategyVersion: string;
-        };
+        action: "BUY" | "SELL";
+        signal: import("../signals/signal.types").TradingSignal;
         reason: string;
         position: DemoPosition;
     }>;

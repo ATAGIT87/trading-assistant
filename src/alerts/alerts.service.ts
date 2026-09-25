@@ -1,14 +1,37 @@
 import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+
+import { Timeframe } from "../assets/enums/timeframe.enum";
 import { TradingSignal } from "../signals/signal.types";
+import { AlertDelivery } from "./entities/alert-delivery.entity";
 
 @Injectable()
 export class AlertsService {
+  constructor(
+    @InjectRepository(AlertDelivery)
+    private readonly alertDeliveryRepository: Repository<AlertDelivery>,
+  ) {}
+
   async sendSignalAlert(
     symbol: string,
-    timeframe: string,
+    timeframe: Timeframe,
     signal: TradingSignal,
   ): Promise<void> {
     if (signal.action !== "BUY" && signal.action !== "SELL") {
+      return;
+    }
+
+    const existingDelivery = await this.alertDeliveryRepository.findOne({
+      where: {
+        symbol,
+        timeframe,
+        candleTime: signal.candleTime,
+        action: signal.action,
+      },
+    });
+
+    if (existingDelivery) {
       return;
     }
 
@@ -59,5 +82,14 @@ export class AlertsService {
 
       throw new Error(`Telegram alert failed: ${response.status} ${errorBody}`);
     }
+
+    await this.alertDeliveryRepository.save(
+      this.alertDeliveryRepository.create({
+        symbol,
+        timeframe,
+        candleTime: signal.candleTime,
+        action: signal.action,
+      }),
+    );
   }
 }

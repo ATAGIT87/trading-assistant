@@ -1,4 +1,5 @@
 import { ConfigService } from "@nestjs/config";
+import { TradingSignal } from "../signals/signal.types";
 export declare class TelegramNotificationService {
     private readonly configService;
     private readonly logger;
@@ -16,16 +17,7 @@ export declare class TelegramNotificationService {
         stopLoss: number;
         takeProfit: number;
         riskReward: number | null;
-    } | null, action: string, signal: {
-        symbol?: string;
-        timeframe?: string;
-        signalTime?: Date | string;
-        entry?: number | null;
-        stopLoss?: number | null;
-        takeProfit?: number | null;
-        riskReward?: number | null;
-        reason?: string;
-    } | null): Promise<boolean>;
+    } | null, action: string, signal: TradingSignal | null): Promise<boolean>;
     sendCloseNotification(position: {
         symbol: string;
         timeframe: string;

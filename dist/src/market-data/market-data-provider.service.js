@@ -8,13 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketDataProviderService = void 0;
 const common_1 = require("@nestjs/common");
+const trading_symbol_1 = require("./trading-symbol");
 let MarketDataProviderService = class MarketDataProviderService {
     baseUrl = "https://api.coingecko.com/api/v3";
     async getLatestPrice(symbol) {
-        const normalizedSymbol = symbol.toUpperCase();
-        if (normalizedSymbol !== "BTCUSD") {
-            throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-        }
+        (0, trading_symbol_1.normalizeTradingSymbol)(symbol);
         const response = await fetch(`${this.baseUrl}/simple/price?ids=bitcoin&vs_currencies=usd`);
         if (!response.ok) {
             throw new Error(`Market data request failed: ${response.status}`);
@@ -27,10 +25,7 @@ let MarketDataProviderService = class MarketDataProviderService {
         return price;
     }
     async getHourlyMarketData(symbol, days = 30) {
-        const normalizedSymbol = symbol.toUpperCase();
-        if (normalizedSymbol !== "BTCUSD") {
-            throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-        }
+        (0, trading_symbol_1.normalizeTradingSymbol)(symbol);
         const response = await fetch(`${this.baseUrl}/coins/bitcoin/market_chart?vs_currency=usd&days=${days}&interval=hourly`);
         if (!response.ok) {
             throw new Error(`Market data request failed: ${response.status}`);
@@ -43,11 +38,8 @@ let MarketDataProviderService = class MarketDataProviderService {
         }));
     }
     async getRealCandles(symbol, days = 30) {
-        const normalizedSymbol = symbol.toUpperCase();
-        if (normalizedSymbol !== "BTCUSD") {
-            throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-        }
-        const response = await fetch(`${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=1`);
+        (0, trading_symbol_1.normalizeTradingSymbol)(symbol);
+        const response = await fetch(`${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`);
         if (!response.ok) {
             const errorBody = await response.text();
             console.error("CoinGecko OHLC error:", response.status, errorBody);
@@ -87,7 +79,7 @@ let MarketDataProviderService = class MarketDataProviderService {
         return Array.from(hourlyCandles.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
     }
     async getBinanceCandles(symbol, timeframe, limit = 1000) {
-        const normalizedSymbol = this.normalizeSymbol(symbol);
+        const normalizedSymbol = (0, trading_symbol_1.normalizeTradingSymbol)(symbol);
         this.validateTimeframe(timeframe);
         const binanceSymbolMap = {
             BTCUSD: "BTCUSDT",
@@ -135,13 +127,6 @@ let MarketDataProviderService = class MarketDataProviderService {
     }
     async getBinanceHourlyCandles(symbol, limit = 1000) {
         return this.getBinanceCandles(symbol, "1h", limit);
-    }
-    normalizeSymbol(symbol) {
-        const normalizedSymbol = symbol.trim().toUpperCase();
-        if (!normalizedSymbol) {
-            throw new Error("Symbol is required");
-        }
-        return normalizedSymbol;
     }
     validateTimeframe(timeframe) {
         const supportedTimeframes = ["15m", "1h", "4h", "1d"];

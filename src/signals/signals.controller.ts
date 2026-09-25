@@ -1,54 +1,23 @@
-import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
-import { SignalsService } from "./signals.service";
-import { SignalStorageService } from "./signal-storage.service";
+import { Controller, Get, Param, ParseEnumPipe } from "@nestjs/common";
+
 import { Timeframe } from "../assets/enums/timeframe.enum";
-import { SignalResponseSchema } from "./signal-response.schema";
+import { ParseTradingSymbolPipe } from "../market-data/trading-symbol";
+import { SignalsService } from "./signals.service";
 
 @Controller("signals")
 export class SignalsController {
   constructor(
     private readonly signalsService: SignalsService,
-    private readonly signalStorageService: SignalStorageService,
   ) {}
-
-  @Get("history/:symbol/:timeframe")
-  getSignalHistory(
-    @Param("symbol") symbol: string,
-    @Param("timeframe") timeframe: Timeframe,
-  ) {
-    return this.signalStorageService.getSignalHistory(symbol, timeframe);
-  }
-
-  @Get("latest/:symbol/:timeframe")
-  getLatestSignal(
-    @Param("symbol") symbol: string,
-    @Param("timeframe") timeframe: Timeframe,
-  ) {
-    return this.signalStorageService.getLatestSignal(symbol, timeframe);
-  }
 
   @Get(":symbol/:timeframe")
   async getLiveV2Signal(
-    @Param("symbol") symbol: string,
-    @Param("timeframe") timeframe: Timeframe,
+    @Param("symbol", ParseTradingSymbolPipe) symbol: string,
+    @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
   ) {
-    const result = await this.signalsService.getLiveV2Signal(symbol, timeframe);
-
-    return result;
-  }
-
-  @Get(":symbol/:timeframe/:period")
-  async generateSignal(
-    @Param("symbol") symbol: string,
-    @Param("timeframe") timeframe: Timeframe,
-    @Param("period", ParseIntPipe) period: number,
-  ) {
-    const result = await this.signalsService.generateSignal(
+    return this.signalsService.getLiveV2Signal(
       symbol,
       timeframe,
-      period,
     );
-
-    return SignalResponseSchema.parse(result);
   }
 }

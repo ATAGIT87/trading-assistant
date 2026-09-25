@@ -2,6 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { getHigherTimeframe } from "../assets/timeframe.utils";
+import { MarketDataService } from "../market-data/market-data.service";
 import { SignalsService } from "../signals/signals.service";
 import { DemoTradingService } from "./demo-trading.service";
 import { TelegramNotificationService } from "./telegram-notification.service";
@@ -21,6 +23,7 @@ export class DemoTradingScheduler {
   constructor(
     private readonly demoTradingService: DemoTradingService,
     private readonly signalsService: SignalsService,
+    private readonly marketDataService: MarketDataService,
     private readonly telegramNotificationService: TelegramNotificationService,
   ) {}
 
@@ -52,6 +55,18 @@ export class DemoTradingScheduler {
     );
 
     for (const market of this.demoMarkets) {
+      await this.marketDataService.syncBinanceCandles(
+        market.symbol,
+        market.timeframe,
+      );
+      const higherTimeframe = getHigherTimeframe(market.timeframe);
+      if (higherTimeframe !== null) {
+        await this.marketDataService.syncBinanceCandles(
+          market.symbol,
+          higherTimeframe,
+        );
+      }
+
       const signal = await this.signalsService.getLiveV2Signal(
         market.symbol,
         market.timeframe,
