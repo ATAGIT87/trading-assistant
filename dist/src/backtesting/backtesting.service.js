@@ -8,26 +8,35 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BacktestingService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const timeframe_utils_1 = require("../assets/timeframe.utils");
 const market_data_service_1 = require("../market-data/market-data.service");
 const strategy_v2_service_1 = require("../signals/strategy-v2.service");
 const backtest_outcome_helper_1 = require("./helpers/backtest-outcome.helper");
 const backtest_statistics_helper_1 = require("./helpers/backtest-statistics.helper");
 const backtest_summary_helper_1 = require("./helpers/backtest-summary.helper");
 const sell_analysis_helper_1 = require("./helpers/sell-analysis.helper");
+const backtest_run_entity_1 = require("./entities/backtest-run.entity");
 let BacktestingService = class BacktestingService {
     marketDataService;
     strategyV2Service;
     configService;
+    backtestRunRepository;
     feeRate;
     slippageRate;
-    constructor(marketDataService, strategyV2Service, configService) {
+    constructor(marketDataService, strategyV2Service, configService, backtestRunRepository) {
         this.marketDataService = marketDataService;
         this.strategyV2Service = strategyV2Service;
         this.configService = configService;
+        this.backtestRunRepository = backtestRunRepository;
         this.feeRate = this.getNumericConfigValue("BACKTESTING_FEE_RATE", 0.0005);
         this.slippageRate = this.getNumericConfigValue("BACKTESTING_SLIPPAGE_RATE", 0.0005);
     }
@@ -38,10 +47,16 @@ let BacktestingService = class BacktestingService {
         }
         return value;
     }
-    async run(symbol, timeframe, _useHigherTimeframeConfirmation = false, _excludeHighAdxSell = false) {
+    async run(symbol, timeframe) {
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
+        const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(timeframe);
+        const higherTimeframeCandles = higherTimeframe === null
+            ? []
+            : await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe);
         if (candles.length < 50) {
-            return {
+            return this.saveRun(symbol, timeframe, {
+                strategyVersion: "v2-baseline",
+                higherTimeframeConfirmation: higherTimeframe !== null,
                 ...(0, backtest_statistics_helper_1.calculateBacktestStatistics)([]),
                 totalTrades: 0,
                 winningTrades: 0,
@@ -56,7 +71,7 @@ let BacktestingService = class BacktestingService {
                 training: (0, backtest_summary_helper_1.calculateBacktestSummary)([]),
                 test: (0, backtest_summary_helper_1.calculateBacktestSummary)([]),
                 trades: [],
-            };
+            });
         }
         const splitIndex = Math.floor(candles.length * 0.7);
         const trades = [];
@@ -65,11 +80,20 @@ let BacktestingService = class BacktestingService {
         let grossTotalR = 0;
         let totalFeeR = 0;
         let totalSlippageR = 0;
-        const processSegment = (startIndex, endIndex, targetTrades) => {
+        const processSegment = async (startIndex, endIndex, targetTrades) => {
             let i = Math.max(startIndex, 49);
             while (i < endIndex) {
                 const historicalCandles = candles.slice(0, i + 1);
-                const signal = this.strategyV2Service.evaluateCandles(historicalCandles, 0, historicalCandles.length);
+                const higherTimeframeTrend = higherTimeframe === null
+                    ? undefined
+                    : this.strategyV2Service.getTrend(higherTimeframeCandles.filter((candle) => candle.time.getTime() +
+                        timeframe_utils_1.timeframeDurationMs[higherTimeframe] <=
+                        candles[i].time.getTime()));
+                if (higherTimeframe !== null && higherTimeframeTrend === null) {
+                    i++;
+                    continue;
+                }
+                const signal = this.strategyV2Service.evaluateCandles(historicalCandles, 0, historicalCandles.length, higherTimeframeTrend ?? undefined);
                 if (signal.action !== "BUY" &&
                     signal.action !== "SELL") {
                     i++;
@@ -164,8 +188,8 @@ let BacktestingService = class BacktestingService {
                         2;
             }
         };
-        processSegment(0, splitIndex, trainingTrades);
-        processSegment(splitIndex, candles.length, testTrades);
+        await processSegment(0, splitIndex, trainingTrades);
+        await processSegment(splitIndex, candles.length, testTrades);
         const winningTrades = trades.filter((trade) => trade.resultR !== null &&
             trade.resultR > 0).length;
         const losingTrades = trades.filter((trade) => trade.resultR !== null &&
@@ -198,7 +222,9 @@ let BacktestingService = class BacktestingService {
             expectancyR,
         });
         console.log("=================================\n");
-        return {
+        return this.saveRun(symbol, timeframe, {
+            strategyVersion: "v2-baseline",
+            higherTimeframeConfirmation: higherTimeframe !== null,
             ...statistics,
             totalTrades: trades.length,
             winningTrades,
@@ -217,14 +243,58 @@ let BacktestingService = class BacktestingService {
             training,
             test,
             trades,
+        });
+    }
+    async findRuns(symbol, timeframe) {
+        return this.backtestRunRepository.find({
+            where: { symbol, timeframe },
+            order: { createdAt: "DESC" },
+            take: 20,
+        });
+    }
+    async compareLatestRuns(symbol, timeframe, baselineVersion, candidateVersion) {
+        const [baseline, candidate] = await Promise.all([
+            this.backtestRunRepository.findOne({
+                where: { symbol, timeframe, strategyVersion: baselineVersion },
+                order: { createdAt: "DESC" },
+            }),
+            this.backtestRunRepository.findOne({
+                where: { symbol, timeframe, strategyVersion: candidateVersion },
+                order: { createdAt: "DESC" },
+            }),
+        ]);
+        if (!baseline || !candidate) {
+            return null;
+        }
+        return {
+            baseline,
+            candidate,
+            delta: {
+                totalR: candidate.result.totalR - baseline.result.totalR,
+                expectancyR: candidate.result.expectancyR - baseline.result.expectancyR,
+                winRate: candidate.result.winRate - baseline.result.winRate,
+                testTotalR: candidate.result.test.totalR - baseline.result.test.totalR,
+                testExpectancyR: candidate.result.test.expectancyR - baseline.result.test.expectancyR,
+            },
         };
+    }
+    async saveRun(symbol, timeframe, result) {
+        await this.backtestRunRepository.save(this.backtestRunRepository.create({
+            symbol,
+            timeframe,
+            strategyVersion: result.strategyVersion,
+            result,
+        }));
+        return result;
     }
 };
 exports.BacktestingService = BacktestingService;
 exports.BacktestingService = BacktestingService = __decorate([
     (0, common_1.Injectable)(),
+    __param(3, (0, typeorm_1.InjectRepository)(backtest_run_entity_1.BacktestRun)),
     __metadata("design:paramtypes", [market_data_service_1.MarketDataService,
         strategy_v2_service_1.StrategyV2Service,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        typeorm_2.Repository])
 ], BacktestingService);
 //# sourceMappingURL=backtesting.service.js.map

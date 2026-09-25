@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsService = void 0;
 const common_1 = require("@nestjs/common");
-const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const timeframe_utils_1 = require("../assets/timeframe.utils");
 const market_data_token_1 = require("./market-data.token");
 const strategy_v2_service_1 = require("./strategy-v2.service");
 let SignalsService = class SignalsService {
@@ -36,69 +36,36 @@ let SignalsService = class SignalsService {
         const completedCandles = this.getCompletedCandles(candles, timeframe);
         if (completedCandles.length === 0) {
             return {
-                symbol,
-                timeframe,
                 action: "NO_TRADE",
-                signalTime: new Date(),
-                entry: null,
+                confidence: 0,
+                entryPrice: 0,
                 stopLoss: null,
                 takeProfit: null,
-                riskReward: null,
+                isStrongSetup: false,
+                trend: "NEUTRAL",
+                rsi: 50,
+                adx: 0,
+                rsiStatus: "NEUTRAL",
+                marketCondition: "NEUTRAL",
+                candleTime: new Date(),
                 reason: "No completed candles are available at request time.",
-                strategyVersion: "V2",
             };
         }
-        const signal = this.strategyV2Service.evaluateCandles(completedCandles, 0, completedCandles.length);
-        const isTradeSignal = signal.action === "BUY" ||
-            signal.action === "SELL";
-        return {
-            symbol,
-            timeframe,
-            action: signal.action,
-            signalTime: signal.candleTime,
-            entry: isTradeSignal
-                ? signal.entryPrice
-                : null,
-            stopLoss: isTradeSignal
-                ? signal.stopLoss
-                : null,
-            takeProfit: isTradeSignal
-                ? signal.takeProfit
-                : null,
-            riskReward: isTradeSignal
-                ? this.calculateRiskReward(signal.entryPrice, signal.stopLoss, signal.takeProfit)
-                : null,
-            reason: signal.reason,
-            strategyVersion: "V2",
-        };
-    }
-    async getSignalByCandleTime(symbol, timeframe, candleTime) {
-        return null;
+        const signal = this.strategyV2Service.evaluateCandles(completedCandles, 0, completedCandles.length, await this.getHigherTimeframeTrend(symbol, timeframe));
+        return signal;
     }
     getCompletedCandles(candles, timeframe, now = new Date()) {
-        const durationMs = timeframe === timeframe_enum_1.Timeframe.FIFTEEN_MINUTES
-            ? 15 * 60 * 1000
-            : timeframe === timeframe_enum_1.Timeframe.ONE_HOUR
-                ? 60 * 60 * 1000
-                : timeframe === timeframe_enum_1.Timeframe.FOUR_HOURS
-                    ? 4 * 60 * 60 * 1000
-                    : timeframe === timeframe_enum_1.Timeframe.ONE_DAY
-                        ? 24 * 60 * 60 * 1000
-                        : 0;
         return candles.filter((candle) => candle.time.getTime() +
-            durationMs <
+            timeframe_utils_1.timeframeDurationMs[timeframe] <=
             now.getTime());
     }
-    calculateRiskReward(entryPrice, stopLoss, takeProfit) {
-        if (stopLoss === null ||
-            takeProfit === null) {
-            return null;
+    async getHigherTimeframeTrend(symbol, timeframe) {
+        const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(timeframe);
+        if (higherTimeframe === null) {
+            return undefined;
         }
-        const risk = Math.abs(entryPrice - stopLoss);
-        if (risk <= 0) {
-            return null;
-        }
-        return (Math.abs(takeProfit - entryPrice) / risk);
+        const higherTimeframeCandles = this.getCompletedCandles(await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe), higherTimeframe);
+        return this.strategyV2Service.getTrend(higherTimeframeCandles) ?? "NEUTRAL";
     }
 };
 exports.SignalsService = SignalsService;

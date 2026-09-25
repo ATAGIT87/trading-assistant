@@ -1,6 +1,7 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Controller, Get, Param, ParseEnumPipe } from "@nestjs/common";
 
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { ParseTradingSymbolPipe } from "../market-data/trading-symbol";
 import { SignalsService } from "./signals.service";
 
 @Controller("signals")
@@ -11,8 +12,8 @@ export class SignalsController {
 
   @Get(":symbol/:timeframe")
   async getLiveV2Signal(
-    @Param("symbol") symbol: string,
-    @Param("timeframe") timeframe: Timeframe,
+    @Param("symbol", ParseTradingSymbolPipe) symbol: string,
+    @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
   ) {
     return this.signalsService.getLiveV2Signal(
       symbol,

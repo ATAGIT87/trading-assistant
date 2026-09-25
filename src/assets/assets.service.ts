@@ -5,6 +5,7 @@ import { Asset } from "./entities/asset.entity";
 import { AssetType } from "./enums/asset-type.enum";
 import { UpdateAssetDto } from "./dto/update-asset.dto";
 import { Timeframe } from "./enums/timeframe.enum";
+import { normalizeTradingSymbol } from "../market-data/trading-symbol";
 @Injectable()
 export class AssetsService {
   constructor(
@@ -32,7 +33,7 @@ export class AssetsService {
     timeframe?: Timeframe,
   ): Promise<Asset> {
     const asset = this.assetRepository.create({
-      symbol,
+      symbol: normalizeTradingSymbol(symbol),
       name,
       type,
       ...(isActive !== undefined && { isActive }),
@@ -42,6 +43,9 @@ export class AssetsService {
     return this.assetRepository.save(asset);
   }
   async update(id: number, data: UpdateAssetDto): Promise<Asset | null> {
+    if (data.symbol !== undefined) {
+      data.symbol = normalizeTradingSymbol(data.symbol);
+    }
     const asset = await this.assetRepository.preload({
       id,
       ...data,

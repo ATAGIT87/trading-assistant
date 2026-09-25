@@ -6,6 +6,11 @@ import { MarketDataService } from "../market-data/market-data.service";
 import { AlertsService } from "../alerts/alerts.service";
 import { AssetsService } from "../assets/assets.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import {
+  getHigherTimeframe,
+  isTimeframeBoundary,
+  timeframeDurationMs,
+} from "../assets/timeframe.utils";
 
 @Injectable()
 export class ScannerService {
@@ -17,31 +22,17 @@ export class ScannerService {
   ) {}
 
   private isMarketDataFresh(candleTime: Date, timeframe: Timeframe): boolean {
-    const timeframeMs: Record<Timeframe, number> = {
-      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
-      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
-      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
-      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
-    };
-
-    const maxAge = timeframeMs[timeframe] * 2;
+    const maxAge = timeframeDurationMs[timeframe] * 2;
     const age = Date.now() - candleTime.getTime();
 
     return age >= 0 && age <= maxAge;
   }
 
-  async scan(symbol: string, timeframe: Timeframe, period = 14) {
-    if (timeframe === Timeframe.FIFTEEN_MINUTES) {
-      await this.marketDataService.syncBinanceCandles(
-        symbol,
-        Timeframe.ONE_HOUR,
-      );
-    }
-
+  async scan(symbol: string, timeframe: Timeframe) {
     await this.marketDataService.syncBinanceCandles(symbol, timeframe);
-
-    if (timeframe === Timeframe.ONE_HOUR) {
-      await this.marketDataService.buildFourHourCandles(symbol);
+    const higherTimeframe = getHigherTimeframe(timeframe);
+    if (higherTimeframe !== null) {
+      await this.marketDataService.syncBinanceCandles(symbol, higherTimeframe);
     }
 
     const candles = await this.marketDataService.getHistoricalCandles(
@@ -78,8 +69,12 @@ export class ScannerService {
       return null;
     }
 
+    if (signal.action === "BUY" || signal.action === "SELL") {
+      await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+    }
+
     console.log(
-      `[Scanner] ${symbol} / ${timeframe} → V2 ${signal.action} (strategyVersion: ${signal.strategyVersion}, signalTime: ${signal.signalTime.toISOString()}, reason: ${signal.reason})`,
+      `[Scanner] ${symbol} / ${timeframe} → ${signal.action} (signalTime: ${signal.candleTime.toISOString()}, reason: ${signal.reason})`,
     );
 
     return signal;
@@ -96,25 +91,7 @@ export class ScannerService {
     for (const asset of assets) {
       const now = new Date();
 
-      if (
-        asset.timeframe === Timeframe.FIFTEEN_MINUTES &&
-        now.getMinutes() % 15 !== 0
-      ) {
-        continue;
-      }
-
-      if (asset.timeframe === Timeframe.ONE_HOUR && now.getMinutes() !== 0) {
-        continue;
-      }
-
-      if (
-        asset.timeframe !== Timeframe.FIFTEEN_MINUTES &&
-        asset.timeframe !== Timeframe.ONE_HOUR
-      ) {
-        console.log(
-          `[Scanner] Skipping unsupported scheduled timeframe: ${asset.symbol} / ${asset.timeframe}`,
-        );
-
+      if (!isTimeframeBoundary(asset.timeframe, now)) {
         continue;
       }
 

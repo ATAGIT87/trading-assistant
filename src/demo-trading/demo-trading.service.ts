@@ -81,12 +81,15 @@ export class DemoTradingService {
   async openPosition(symbol: string, timeframe: Timeframe) {
     const signal = await this.signalsService.getLiveV2Signal(symbol, timeframe);
 
-    if (!signal || (signal.action !== "BUY" && signal.action !== "SELL")) {
+    if (
+      signal.action !== "BUY" &&
+      signal.action !== "SELL"
+    ) {
       return {
         symbol,
         timeframe,
-        action: signal?.action ?? "NO_TRADE",
-        reason: signal?.reason ?? "No actionable V2 signal available.",
+        action: signal.action,
+        reason: signal.reason,
         position: null,
       };
     }
@@ -110,16 +113,29 @@ export class DemoTradingService {
       };
     }
 
+    if (signal.stopLoss === null || signal.takeProfit === null) {
+      return {
+        symbol,
+        timeframe,
+        action: "NO_TRADE" as const,
+        reason: "Actionable signal is missing risk levels.",
+        position: null,
+      };
+    }
+
+    const risk = Math.abs(signal.entryPrice - signal.stopLoss);
+    const reward = Math.abs(signal.takeProfit - signal.entryPrice);
+
     const newPosition = this.demoPositionRepository.create({
       symbol,
       timeframe,
       side: signal.action,
-      entry: Number(signal.entry),
-      stopLoss: Number(signal.stopLoss),
-      takeProfit: Number(signal.takeProfit),
-      riskReward: signal.riskReward ?? null,
+      entry: signal.entryPrice,
+      stopLoss: signal.stopLoss,
+      takeProfit: signal.takeProfit,
+      riskReward: risk > 0 ? reward / risk : null,
       status: "OPEN",
-      openedAt: new Date(signal.signalTime),
+      openedAt: new Date(signal.candleTime),
       closedAt: null,
       exitPrice: null,
       resultR: null,

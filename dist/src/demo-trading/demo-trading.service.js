@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DemoTradingService = void 0;
 const common_1 = require("@nestjs/common");
@@ -73,12 +72,13 @@ let DemoTradingService = class DemoTradingService {
     }
     async openPosition(symbol, timeframe) {
         const signal = await this.signalsService.getLiveV2Signal(symbol, timeframe);
-        if (!signal || (signal.action !== "BUY" && signal.action !== "SELL")) {
+        if (signal.action !== "BUY" &&
+            signal.action !== "SELL") {
             return {
                 symbol,
                 timeframe,
-                action: signal?.action ?? "NO_TRADE",
-                reason: signal?.reason ?? "No actionable V2 signal available.",
+                action: signal.action,
+                reason: signal.reason,
                 position: null,
             };
         }
@@ -99,16 +99,27 @@ let DemoTradingService = class DemoTradingService {
                 position: existingOpenPosition,
             };
         }
+        if (signal.stopLoss === null || signal.takeProfit === null) {
+            return {
+                symbol,
+                timeframe,
+                action: "NO_TRADE",
+                reason: "Actionable signal is missing risk levels.",
+                position: null,
+            };
+        }
+        const risk = Math.abs(signal.entryPrice - signal.stopLoss);
+        const reward = Math.abs(signal.takeProfit - signal.entryPrice);
         const newPosition = this.demoPositionRepository.create({
             symbol,
             timeframe,
             side: signal.action,
-            entry: Number(signal.entry),
-            stopLoss: Number(signal.stopLoss),
-            takeProfit: Number(signal.takeProfit),
-            riskReward: signal.riskReward ?? null,
+            entry: signal.entryPrice,
+            stopLoss: signal.stopLoss,
+            takeProfit: signal.takeProfit,
+            riskReward: risk > 0 ? reward / risk : null,
             status: "OPEN",
-            openedAt: new Date(signal.signalTime),
+            openedAt: new Date(signal.candleTime),
             closedAt: null,
             exitPrice: null,
             resultR: null,
@@ -227,7 +238,8 @@ exports.DemoTradingService = DemoTradingService;
 exports.DemoTradingService = DemoTradingService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(demo_position_entity_1.DemoPosition)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, signals_service_1.SignalsService,
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        signals_service_1.SignalsService,
         market_data_service_1.MarketDataService])
 ], DemoTradingService);
 //# sourceMappingURL=demo-trading.service.js.map

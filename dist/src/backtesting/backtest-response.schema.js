@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BacktestResponseSchema = void 0;
 const zod_1 = require("zod");
 exports.BacktestResponseSchema = zod_1.z.object({
+    strategyVersion: zod_1.z.string(),
+    higherTimeframeConfirmation: zod_1.z.boolean(),
     totalTrades: zod_1.z.number().int().nonnegative(),
     winningTrades: zod_1.z.number().int().nonnegative(),
     losingTrades: zod_1.z.number().int().nonnegative(),

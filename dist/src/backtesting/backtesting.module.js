@@ -8,16 +8,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BacktestingModule = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
 const market_data_module_1 = require("../market-data/market-data.module");
 const signals_module_1 = require("../signals/signals.module");
 const backtesting_controller_1 = require("./backtesting.controller");
 const backtesting_service_1 = require("./backtesting.service");
+const backtest_run_entity_1 = require("./entities/backtest-run.entity");
 let BacktestingModule = class BacktestingModule {
 };
 exports.BacktestingModule = BacktestingModule;
 exports.BacktestingModule = BacktestingModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            typeorm_1.TypeOrmModule.forFeature([backtest_run_entity_1.BacktestRun]),
             market_data_module_1.MarketDataModule,
             signals_module_1.SignalsModule,
         ],

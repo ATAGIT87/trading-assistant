@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
+import { normalizeTradingSymbol } from "./trading-symbol";
+
 interface CoinGeckoMarketChartResponse {
   prices: [number, number][];
   total_volumes: [number, number][];
@@ -10,11 +12,7 @@ export class MarketDataProviderService {
   private readonly baseUrl = "https://api.coingecko.com/api/v3";
 
   async getLatestPrice(symbol: string): Promise<number> {
-    const normalizedSymbol = symbol.toUpperCase();
-
-    if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-    }
+    normalizeTradingSymbol(symbol);
 
     const response = await fetch(
       `${this.baseUrl}/simple/price?ids=bitcoin&vs_currencies=usd`,
@@ -49,11 +47,7 @@ export class MarketDataProviderService {
       volume: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
-
-    if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-    }
+    normalizeTradingSymbol(symbol);
 
     const response = await fetch(
       `${this.baseUrl}/coins/bitcoin/market_chart?vs_currency=usd&days=${days}&interval=hourly`,
@@ -84,14 +78,10 @@ export class MarketDataProviderService {
       close: number;
     }[]
   > {
-    const normalizedSymbol = symbol.toUpperCase();
-
-    if (normalizedSymbol !== "BTCUSD") {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-    }
+    normalizeTradingSymbol(symbol);
 
     const response = await fetch(
-      `${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=1`,
+      `${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`,
     );
 
     if (!response.ok) {
@@ -187,7 +177,7 @@ export class MarketDataProviderService {
       volume: number;
     }[]
   > {
-    const normalizedSymbol = this.normalizeSymbol(symbol);
+    const normalizedSymbol = normalizeTradingSymbol(symbol);
 
     this.validateTimeframe(timeframe);
 
@@ -269,16 +259,6 @@ export class MarketDataProviderService {
 
   async getBinanceHourlyCandles(symbol: string, limit = 1000) {
     return this.getBinanceCandles(symbol, "1h", limit);
-  }
-
-  private normalizeSymbol(symbol: string): string {
-    const normalizedSymbol = symbol.trim().toUpperCase();
-
-    if (!normalizedSymbol) {
-      throw new Error("Symbol is required");
-    }
-
-    return normalizedSymbol;
   }
 
   private validateTimeframe(timeframe: string): void {

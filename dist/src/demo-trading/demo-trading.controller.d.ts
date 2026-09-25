@@ -6,7 +6,7 @@ export declare class DemoTradingController {
     openPosition(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
-        action: import("../signals/signal.types").SignalAction;
+        action: "WAIT" | "NO_TRADE";
         reason: string;
         position: null;
         signal?: undefined;
@@ -14,18 +14,7 @@ export declare class DemoTradingController {
         symbol: string;
         timeframe: Timeframe;
         action: "BUY" | "SELL";
-        signal: {
-            symbol: string;
-            timeframe: Timeframe;
-            action: import("../signals/signal.types").SignalAction;
-            signalTime: Date;
-            entry: number | null;
-            stopLoss: number | null;
-            takeProfit: number | null;
-            riskReward: number | null;
-            reason: string;
-            strategyVersion: string;
-        };
+        signal: import("../signals/signal.types").TradingSignal;
         reason: string;
         position: import("./entities/demo-position.entity").DemoPosition;
     }>;

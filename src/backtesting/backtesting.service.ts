@@ -1,7 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import {
+  getHigherTimeframe,
+  timeframeDurationMs,
+} from "../assets/timeframe.utils";
 import { MarketDataService } from "../market-data/market-data.service";
 import { StrategyV2Service } from "../signals/strategy-v2.service";
 import { BacktestResult } from "./interfaces/backtest-result.interface";
@@ -10,6 +16,7 @@ import { findTradeOutcome } from "./helpers/backtest-outcome.helper";
 import { calculateBacktestStatistics } from "./helpers/backtest-statistics.helper";
 import { calculateBacktestSummary } from "./helpers/backtest-summary.helper";
 import { analyzeSellTrades } from "./helpers/sell-analysis.helper";
+import { BacktestRun } from "./entities/backtest-run.entity";
 
 @Injectable()
 export class BacktestingService {
@@ -20,6 +27,8 @@ export class BacktestingService {
     private readonly marketDataService: MarketDataService,
     private readonly strategyV2Service: StrategyV2Service,
     private readonly configService: ConfigService,
+    @InjectRepository(BacktestRun)
+    private readonly backtestRunRepository: Repository<BacktestRun>,
   ) {
     this.feeRate = this.getNumericConfigValue(
       "BACKTESTING_FEE_RATE",
@@ -53,17 +62,25 @@ export class BacktestingService {
   async run(
     symbol: string,
     timeframe: Timeframe,
-    _useHigherTimeframeConfirmation = false,
-    _excludeHighAdxSell = false,
   ): Promise<BacktestResult> {
     const candles =
       await this.marketDataService.getHistoricalCandles(
         symbol,
         timeframe,
       );
+    const higherTimeframe = getHigherTimeframe(timeframe);
+    const higherTimeframeCandles =
+      higherTimeframe === null
+        ? []
+        : await this.marketDataService.getHistoricalCandles(
+            symbol,
+            higherTimeframe,
+          );
 
     if (candles.length < 50) {
-      return {
+      return this.saveRun(symbol, timeframe, {
+        strategyVersion: "v2-baseline",
+        higherTimeframeConfirmation: higherTimeframe !== null,
         ...calculateBacktestStatistics([]),
         totalTrades: 0,
         winningTrades: 0,
@@ -78,7 +95,7 @@ export class BacktestingService {
         training: calculateBacktestSummary([]),
         test: calculateBacktestSummary([]),
         trades: [],
-      };
+      });
     }
 
     const splitIndex =
@@ -92,7 +109,7 @@ export class BacktestingService {
     let totalFeeR = 0;
     let totalSlippageR = 0;
 
-    const processSegment = (
+    const processSegment = async (
       startIndex: number,
       endIndex: number,
       targetTrades: BacktestTrade[],
@@ -106,11 +123,29 @@ export class BacktestingService {
         const historicalCandles =
           candles.slice(0, i + 1);
 
+        const higherTimeframeTrend =
+          higherTimeframe === null
+            ? undefined
+            : this.strategyV2Service.getTrend(
+                higherTimeframeCandles.filter(
+                  (candle) =>
+                    candle.time.getTime() +
+                      timeframeDurationMs[higherTimeframe] <=
+                    candles[i].time.getTime(),
+                ),
+              );
+
+        if (higherTimeframe !== null && higherTimeframeTrend === null) {
+          i++;
+          continue;
+        }
+
         const signal =
           this.strategyV2Service.evaluateCandles(
             historicalCandles,
             0,
             historicalCandles.length,
+            higherTimeframeTrend ?? undefined,
           );
 
         if (
@@ -294,13 +329,13 @@ export class BacktestingService {
       }
     };
 
-    processSegment(
+    await processSegment(
       0,
       splitIndex,
       trainingTrades,
     );
 
-    processSegment(
+    await processSegment(
       splitIndex,
       candles.length,
       testTrades,
@@ -392,7 +427,9 @@ export class BacktestingService {
       "=================================\n",
     );
 
-    return {
+    return this.saveRun(symbol, timeframe, {
+      strategyVersion: "v2-baseline",
+      higherTimeframeConfirmation: higherTimeframe !== null,
       ...statistics,
 
       totalTrades:
@@ -429,6 +466,68 @@ export class BacktestingService {
       test,
 
       trades,
+    });
+  }
+
+  async findRuns(symbol: string, timeframe: Timeframe): Promise<BacktestRun[]> {
+    return this.backtestRunRepository.find({
+      where: { symbol, timeframe },
+      order: { createdAt: "DESC" },
+      take: 20,
+    });
+  }
+
+  async compareLatestRuns(
+    symbol: string,
+    timeframe: Timeframe,
+    baselineVersion: string,
+    candidateVersion: string,
+  ) {
+    const [baseline, candidate] = await Promise.all([
+      this.backtestRunRepository.findOne({
+        where: { symbol, timeframe, strategyVersion: baselineVersion },
+        order: { createdAt: "DESC" },
+      }),
+      this.backtestRunRepository.findOne({
+        where: { symbol, timeframe, strategyVersion: candidateVersion },
+        order: { createdAt: "DESC" },
+      }),
+    ]);
+
+    if (!baseline || !candidate) {
+      return null;
+    }
+
+    return {
+      baseline,
+      candidate,
+      delta: {
+        totalR: candidate.result.totalR - baseline.result.totalR,
+        expectancyR:
+          candidate.result.expectancyR - baseline.result.expectancyR,
+        winRate: candidate.result.winRate - baseline.result.winRate,
+        testTotalR:
+          candidate.result.test.totalR - baseline.result.test.totalR,
+        testExpectancyR:
+          candidate.result.test.expectancyR - baseline.result.test.expectancyR,
+      },
     };
+  }
+
+  private async saveRun(
+    symbol: string,
+    timeframe: Timeframe,
+    result: BacktestResult,
+  ): Promise<BacktestResult> {
+    await this.backtestRunRepository.save(
+      this.backtestRunRepository.create({
+        symbol,
+        timeframe,
+        strategyVersion: result.strategyVersion,
+        result,
+      }),
+    );
+
+    return result;
   }
 }

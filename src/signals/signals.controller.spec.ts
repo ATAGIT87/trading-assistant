@@ -1,7 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { SignalsController } from "./signals.controller";
 import { SignalsService } from "./signals.service";
-import { SignalStorageService } from "./signal-storage.service";
 
 describe("SignalsController", () => {
   let controller: SignalsController;
@@ -12,11 +11,7 @@ describe("SignalsController", () => {
       providers: [
         {
           provide: SignalsService,
-          useValue: {},
-        },
-        {
-          provide: SignalStorageService,
-          useValue: {},
+          useValue: { getLiveV2Signal: jest.fn() },
         },
       ],
     }).compile();

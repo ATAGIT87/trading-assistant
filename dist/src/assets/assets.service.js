@@ -11,13 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AssetsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("typeorm");
 const typeorm_2 = require("@nestjs/typeorm");
 const asset_entity_1 = require("./entities/asset.entity");
+const trading_symbol_1 = require("../market-data/trading-symbol");
 let AssetsService = class AssetsService {
     assetRepository;
     constructor(assetRepository) {
@@ -37,7 +37,7 @@ let AssetsService = class AssetsService {
     }
     create(symbol, name, type, isActive, timeframe) {
         const asset = this.assetRepository.create({
-            symbol,
+            symbol: (0, trading_symbol_1.normalizeTradingSymbol)(symbol),
             name,
             type,
             ...(isActive !== undefined && { isActive }),
@@ -46,6 +46,9 @@ let AssetsService = class AssetsService {
         return this.assetRepository.save(asset);
     }
     async update(id, data) {
+        if (data.symbol !== undefined) {
+            data.symbol = (0, trading_symbol_1.normalizeTradingSymbol)(data.symbol);
+        }
         const asset = await this.assetRepository.preload({
             id,
             ...data,
@@ -80,6 +83,6 @@ exports.AssetsService = AssetsService;
 exports.AssetsService = AssetsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_2.InjectRepository)(asset_entity_1.Asset)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_1.Repository !== "undefined" && typeorm_1.Repository) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [typeorm_1.Repository])
 ], AssetsService);
 //# sourceMappingURL=assets.service.js.map

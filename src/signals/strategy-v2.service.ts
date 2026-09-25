@@ -12,10 +12,8 @@ export type StrategyV2Trend =
 
 @Injectable()
 export class StrategyV2Service {
-  private readonly indicatorsService =
-    new IndicatorsService();
-
   constructor(
+    private readonly indicatorsService: IndicatorsService,
     private readonly riskManagerService: RiskManagerService,
   ) {}
 
@@ -24,8 +22,6 @@ export class StrategyV2Service {
     startIndex = 0,
     endIndex = candles.length,
     _higherTimeframeTrend?: StrategyV2Trend,
-    _higherTimeframeCandleTime?: Date,
-    _higherTimeframeDurationMs = 0,
   ): TradingSignal {
     const safeStart = Math.max(0, startIndex);
 
@@ -126,22 +122,26 @@ export class StrategyV2Service {
       );
     }
 
-    const bullishTrend =
-      close > ema20 &&
-      ema20 > ema50 &&
-      sma20 > sma50;
+    const trend = this.getTrend(relevantCandles) ?? "NEUTRAL";
+    const bullishTrend = trend === "BULLISH";
+    const bearishTrend = trend === "BEARISH";
 
-    const bearishTrend =
-      close < ema20 &&
-      ema20 < ema50 &&
-      sma20 < sma50;
-
-    const trend: StrategyV2Trend =
-      bullishTrend
-        ? "BULLISH"
-        : bearishTrend
-          ? "BEARISH"
-          : "NEUTRAL";
+    if (
+      _higherTimeframeTrend !== undefined &&
+      (_higherTimeframeTrend === "NEUTRAL" ||
+        _higherTimeframeTrend !== trend)
+    ) {
+      return this.buildSignal(
+        "NO_TRADE",
+        close,
+        `NO_TRADE: higher timeframe confirmation failed (primary=${trend}, higher=${_higherTimeframeTrend}).`,
+        relevantCandles,
+        trend,
+        rsi,
+        adx,
+        atr14,
+      );
+    }
 
     if (adx < 15) {
       return this.buildSignal(
@@ -228,6 +228,33 @@ export class StrategyV2Service {
       adx,
       atr14,
     );
+  }
+
+  getTrend(candles: MarketCandle[]): StrategyV2Trend | null {
+    if (candles.length < 50) {
+      return null;
+    }
+
+    const closes = candles.map((candle) => Number(candle.close));
+    const close = closes[closes.length - 1];
+    const ema20 = this.indicatorsService.calculateEma(closes, 20);
+    const ema50 = this.indicatorsService.calculateEma(closes, 50);
+    const sma20 = this.indicatorsService.calculateSma(closes, 20);
+    const sma50 = this.indicatorsService.calculateSma(closes, 50);
+
+    if (ema20 === null || ema50 === null || sma20 === null || sma50 === null) {
+      return null;
+    }
+
+    if (close > ema20 && ema20 > ema50 && sma20 > sma50) {
+      return "BULLISH";
+    }
+
+    if (close < ema20 && ema20 < ema50 && sma20 < sma50) {
+      return "BEARISH";
+    }
+
+    return "NEUTRAL";
   }
 
   private calculateMomentum(

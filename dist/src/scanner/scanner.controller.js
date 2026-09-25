@@ -16,25 +16,25 @@ exports.ScannerController = void 0;
 const common_1 = require("@nestjs/common");
 const scanner_service_1 = require("./scanner.service");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const trading_symbol_1 = require("../market-data/trading-symbol");
 const scanner_response_schema_1 = require("./scanner-response.schema");
 let ScannerController = class ScannerController {
     scannerService;
     constructor(scannerService) {
         this.scannerService = scannerService;
     }
-    async scan(symbol, timeframe, period) {
-        const result = await this.scannerService.scan(symbol, timeframe, period);
+    async scan(symbol, timeframe) {
+        const result = await this.scannerService.scan(symbol, timeframe);
         return scanner_response_schema_1.ScannerResponseSchema.parse(result);
     }
 };
 exports.ScannerController = ScannerController;
 __decorate([
-    (0, common_1.Get)(":symbol/:timeframe/:period"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
-    __param(2, (0, common_1.Param)("period", common_1.ParseIntPipe)),
+    (0, common_1.Get)(":symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Number]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ScannerController.prototype, "scan", null);
 exports.ScannerController = ScannerController = __decorate([

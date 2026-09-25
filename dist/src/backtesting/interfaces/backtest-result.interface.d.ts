@@ -8,6 +8,8 @@ export interface BacktestSummary {
     expectancyR: number;
 }
 export interface BacktestResult {
+    strategyVersion: string;
+    higherTimeframeConfirmation: boolean;
     sellAdxBelow25Trades: number;
     sellAdxBelow25Wins: number;
     sellAdxBelow25R: number;

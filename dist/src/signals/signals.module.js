@@ -9,10 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsModule = void 0;
 const common_1 = require("@nestjs/common");
 const market_data_module_1 = require("../market-data/market-data.module");
+const indicators_module_1 = require("../indicators/indicators.module");
 const risk_module_1 = require("../risk/risk.module");
 const signals_controller_1 = require("./signals.controller");
 const signals_service_1 = require("./signals.service");
 const strategy_v2_service_1 = require("./strategy-v2.service");
+const market_data_service_1 = require("../market-data/market-data.service");
+const market_data_token_1 = require("./market-data.token");
 let SignalsModule = class SignalsModule {
 };
 exports.SignalsModule = SignalsModule;
@@ -20,10 +23,15 @@ exports.SignalsModule = SignalsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             market_data_module_1.MarketDataModule,
+            indicators_module_1.IndicatorsModule,
             risk_module_1.RiskModule,
         ],
         controllers: [signals_controller_1.SignalsController],
         providers: [
+            {
+                provide: market_data_token_1.MARKET_DATA_SERVICE,
+                useExisting: market_data_service_1.MarketDataService,
+            },
             signals_service_1.SignalsService,
             strategy_v2_service_1.StrategyV2Service,
         ],

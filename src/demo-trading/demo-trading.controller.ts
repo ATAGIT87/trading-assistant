@@ -1,6 +1,7 @@
-import { Controller, Get, Param, Post } from "@nestjs/common";
+import { Controller, Get, Param, ParseEnumPipe, Post } from "@nestjs/common";
 
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { ParseTradingSymbolPipe } from "../market-data/trading-symbol";
 import { DemoTradingService } from "./demo-trading.service";
 
 @Controller("demo-trading")
@@ -9,8 +10,8 @@ export class DemoTradingController {
 
   @Post("open/:symbol/:timeframe")
   async openPosition(
-    @Param("symbol") symbol: string,
-    @Param("timeframe") timeframe: Timeframe,
+    @Param("symbol", ParseTradingSymbolPipe) symbol: string,
+    @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
   ) {
     return this.demoTradingService.openPosition(symbol, timeframe);
   }

@@ -1,6 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
 
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import {
+  getHigherTimeframe,
+  timeframeDurationMs,
+} from "../assets/timeframe.utils";
 import { MarketCandle } from "../market-data/entities/market-candle.entity";
 import { MARKET_DATA_SERVICE } from "./market-data.token";
 import type { MarketDataPort } from "./market-data.port";
@@ -42,7 +46,7 @@ export class SignalsService {
   async getLiveV2Signal(
     symbol: string,
     timeframe: Timeframe,
-  ) {
+  ): Promise<TradingSignal> {
     const candles =
       await this.marketDataService.getHistoricalCandles(
         symbol,
@@ -57,17 +61,20 @@ export class SignalsService {
 
     if (completedCandles.length === 0) {
       return {
-        symbol,
-        timeframe,
         action: "NO_TRADE" as const,
-        signalTime: new Date(),
-        entry: null,
+        confidence: 0,
+        entryPrice: 0,
         stopLoss: null,
         takeProfit: null,
-        riskReward: null,
+        isStrongSetup: false,
+        trend: "NEUTRAL",
+        rsi: 50,
+        adx: 0,
+        rsiStatus: "NEUTRAL",
+        marketCondition: "NEUTRAL",
+        candleTime: new Date(),
         reason:
           "No completed candles are available at request time.",
-        strategyVersion: "V2",
       };
     }
 
@@ -76,44 +83,10 @@ export class SignalsService {
         completedCandles,
         0,
         completedCandles.length,
+        await this.getHigherTimeframeTrend(symbol, timeframe),
       );
 
-    const isTradeSignal =
-      signal.action === "BUY" ||
-      signal.action === "SELL";
-
-    return {
-      symbol,
-      timeframe,
-      action: signal.action,
-      signalTime: signal.candleTime,
-      entry: isTradeSignal
-        ? signal.entryPrice
-        : null,
-      stopLoss: isTradeSignal
-        ? signal.stopLoss
-        : null,
-      takeProfit: isTradeSignal
-        ? signal.takeProfit
-        : null,
-      riskReward: isTradeSignal
-        ? this.calculateRiskReward(
-            signal.entryPrice,
-            signal.stopLoss,
-            signal.takeProfit,
-          )
-        : null,
-      reason: signal.reason,
-      strategyVersion: "V2",
-    };
-  }
-
-  async getSignalByCandleTime(
-    symbol: string,
-    timeframe: Timeframe,
-    candleTime: Date,
-  ) {
-    return null;
+    return signal;
   }
 
   private getCompletedCandles(
@@ -121,50 +94,29 @@ export class SignalsService {
     timeframe: Timeframe,
     now = new Date(),
   ): MarketCandle[] {
-    const durationMs =
-      timeframe === Timeframe.FIFTEEN_MINUTES
-        ? 15 * 60 * 1000
-        : timeframe === Timeframe.ONE_HOUR
-          ? 60 * 60 * 1000
-          : timeframe === Timeframe.FOUR_HOURS
-            ? 4 * 60 * 60 * 1000
-            : timeframe === Timeframe.ONE_DAY
-              ? 24 * 60 * 60 * 1000
-              : 0;
-
     return candles.filter(
       (candle) =>
         candle.time.getTime() +
-          durationMs <
+          timeframeDurationMs[timeframe] <=
         now.getTime(),
     );
   }
 
-  private calculateRiskReward(
-    entryPrice: number,
-    stopLoss: number | null,
-    takeProfit: number | null,
-  ): number | null {
-    if (
-      stopLoss === null ||
-      takeProfit === null
-    ) {
-      return null;
+  private async getHigherTimeframeTrend(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<TradingSignal["trend"] | undefined> {
+    const higherTimeframe = getHigherTimeframe(timeframe);
+
+    if (higherTimeframe === null) {
+      return undefined;
     }
 
-    const risk =
-      Math.abs(
-        entryPrice - stopLoss,
-      );
-
-    if (risk <= 0) {
-      return null;
-    }
-
-    return (
-      Math.abs(
-        takeProfit - entryPrice,
-      ) / risk
+    const higherTimeframeCandles = this.getCompletedCandles(
+      await this.marketDataService.getHistoricalCandles(symbol, higherTimeframe),
+      higherTimeframe,
     );
+
+    return this.strategyV2Service.getTrend(higherTimeframeCandles) ?? "NEUTRAL";
   }
 }

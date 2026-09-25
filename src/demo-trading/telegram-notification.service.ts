@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
+import { TradingSignal } from "../signals/signal.types";
+
 @Injectable()
 export class TelegramNotificationService {
   private readonly logger = new Logger(TelegramNotificationService.name);
@@ -39,7 +41,7 @@ export class TelegramNotificationService {
   async sendOpenNotification(
     position: { symbol: string; timeframe: string; side: string; entry: number; stopLoss: number; takeProfit: number; riskReward: number | null } | null,
     action: string,
-    signal: { symbol?: string; timeframe?: string; signalTime?: Date | string; entry?: number | null; stopLoss?: number | null; takeProfit?: number | null; riskReward?: number | null; reason?: string } | null,
+    signal: TradingSignal | null,
   ): Promise<boolean> {
     if (!this.isEnabled() || !position || !signal) {
       this.warnIfDisabled();
@@ -53,10 +55,10 @@ export class TelegramNotificationService {
       "",
       action,
       "",
-      `Entry: ${Number(signal.entry ?? position.entry).toFixed(2)}`,
+      `Entry: ${signal.entryPrice.toFixed(2)}`,
       `SL: ${Number(signal.stopLoss ?? position.stopLoss).toFixed(2)}`,
       `TP: ${Number(signal.takeProfit ?? position.takeProfit).toFixed(2)}`,
-      `R:R: ${signal.riskReward ?? position.riskReward ?? 0}:${1}`,
+      `R:R: ${position.riskReward ?? 0}:${1}`,
       "",
       "Status: OPEN",
     ].join("\n");

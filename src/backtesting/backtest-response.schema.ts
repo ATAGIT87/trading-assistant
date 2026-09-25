@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const BacktestResponseSchema = z.object({
+  strategyVersion: z.string(),
+  higherTimeframeConfirmation: z.boolean(),
   totalTrades: z.number().int().nonnegative(),
   winningTrades: z.number().int().nonnegative(),
   losingTrades: z.number().int().nonnegative(),

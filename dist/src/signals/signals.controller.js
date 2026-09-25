@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SignalsController = void 0;
 const common_1 = require("@nestjs/common");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const trading_symbol_1 = require("../market-data/trading-symbol");
 const signals_service_1 = require("./signals.service");
 let SignalsController = class SignalsController {
     signalsService;
@@ -28,8 +29,8 @@ let SignalsController = class SignalsController {
 exports.SignalsController = SignalsController;
 __decorate([
     (0, common_1.Get)(":symbol/:timeframe"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)

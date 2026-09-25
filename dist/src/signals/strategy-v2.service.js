@@ -14,12 +14,13 @@ const common_1 = require("@nestjs/common");
 const indicators_service_1 = require("../indicators/indicators.service");
 const risk_manager_service_1 = require("../risk/risk-manager.service");
 let StrategyV2Service = class StrategyV2Service {
+    indicatorsService;
     riskManagerService;
-    indicatorsService = new indicators_service_1.IndicatorsService();
-    constructor(riskManagerService) {
+    constructor(indicatorsService, riskManagerService) {
+        this.indicatorsService = indicatorsService;
         this.riskManagerService = riskManagerService;
     }
-    evaluateCandles(candles, startIndex = 0, endIndex = candles.length, _higherTimeframeTrend, _higherTimeframeCandleTime, _higherTimeframeDurationMs = 0) {
+    evaluateCandles(candles, startIndex = 0, endIndex = candles.length, _higherTimeframeTrend) {
         const safeStart = Math.max(0, startIndex);
         const safeEnd = Math.min(Math.max(safeStart, endIndex), candles.length);
         const relevantCandles = candles.slice(safeStart, safeEnd);
@@ -45,17 +46,14 @@ let StrategyV2Service = class StrategyV2Service {
             sma50 === null) {
             return this.buildSignal("NO_TRADE", close, "Required moving averages are not available.", relevantCandles, "NEUTRAL", rsi, adx, atr14);
         }
-        const bullishTrend = close > ema20 &&
-            ema20 > ema50 &&
-            sma20 > sma50;
-        const bearishTrend = close < ema20 &&
-            ema20 < ema50 &&
-            sma20 < sma50;
-        const trend = bullishTrend
-            ? "BULLISH"
-            : bearishTrend
-                ? "BEARISH"
-                : "NEUTRAL";
+        const trend = this.getTrend(relevantCandles) ?? "NEUTRAL";
+        const bullishTrend = trend === "BULLISH";
+        const bearishTrend = trend === "BEARISH";
+        if (_higherTimeframeTrend !== undefined &&
+            (_higherTimeframeTrend === "NEUTRAL" ||
+                _higherTimeframeTrend !== trend)) {
+            return this.buildSignal("NO_TRADE", close, `NO_TRADE: higher timeframe confirmation failed (primary=${trend}, higher=${_higherTimeframeTrend}).`, relevantCandles, trend, rsi, adx, atr14);
+        }
         if (adx < 15) {
             return this.buildSignal("NO_TRADE", close, `ADX_WEAK: ADX14 is ${adx.toFixed(2)}.`, relevantCandles, trend, rsi, adx, atr14);
         }
@@ -77,6 +75,27 @@ let StrategyV2Service = class StrategyV2Service {
             return this.buildSignal("SELL", close, "Baseline SELL: bearish trend, negative momentum and breakout below the previous swing low.", relevantCandles, trend, rsi, adx, atr14);
         }
         return this.buildSignal("NO_TRADE", close, this.buildNoTradeReason(trend, momentum, bullishBreakout, bearishBreakout), relevantCandles, trend, rsi, adx, atr14);
+    }
+    getTrend(candles) {
+        if (candles.length < 50) {
+            return null;
+        }
+        const closes = candles.map((candle) => Number(candle.close));
+        const close = closes[closes.length - 1];
+        const ema20 = this.indicatorsService.calculateEma(closes, 20);
+        const ema50 = this.indicatorsService.calculateEma(closes, 50);
+        const sma20 = this.indicatorsService.calculateSma(closes, 20);
+        const sma50 = this.indicatorsService.calculateSma(closes, 50);
+        if (ema20 === null || ema50 === null || sma20 === null || sma50 === null) {
+            return null;
+        }
+        if (close > ema20 && ema20 > ema50 && sma20 > sma50) {
+            return "BULLISH";
+        }
+        if (close < ema20 && ema20 < ema50 && sma20 < sma50) {
+            return "BEARISH";
+        }
+        return "NEUTRAL";
     }
     calculateMomentum(candles) {
         if (candles.length < 4) {
@@ -236,6 +255,7 @@ let StrategyV2Service = class StrategyV2Service {
 exports.StrategyV2Service = StrategyV2Service;
 exports.StrategyV2Service = StrategyV2Service = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [risk_manager_service_1.RiskManagerService])
+    __metadata("design:paramtypes", [indicators_service_1.IndicatorsService,
+        risk_manager_service_1.RiskManagerService])
 ], StrategyV2Service);
 //# sourceMappingURL=strategy-v2.service.js.map

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BacktestingController = void 0;
 const common_1 = require("@nestjs/common");
 const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const trading_symbol_1 = require("../market-data/trading-symbol");
 const backtest_response_schema_1 = require("./backtest-response.schema");
 const backtesting_service_1 = require("./backtesting.service");
 let BacktestingController = class BacktestingController {
@@ -22,20 +23,42 @@ let BacktestingController = class BacktestingController {
     constructor(backtestingService) {
         this.backtestingService = backtestingService;
     }
-    async runBacktest(symbol, timeframe, _useHigherTimeframeConfirmation = "false", _excludeHighAdxSell = "false") {
+    async getHistory(symbol, timeframe) {
+        return this.backtestingService.findRuns(symbol, timeframe);
+    }
+    async compareLatestRuns(symbol, timeframe, baselineVersion = "v2-baseline", candidateVersion = "v2-baseline") {
+        return this.backtestingService.compareLatestRuns(symbol, timeframe, baselineVersion, candidateVersion);
+    }
+    async runBacktest(symbol, timeframe) {
         const result = await this.backtestingService.run(symbol, timeframe);
         return backtest_response_schema_1.BacktestResponseSchema.parse(result);
     }
 };
 exports.BacktestingController = BacktestingController;
 __decorate([
-    (0, common_1.Get)(":symbol/:timeframe"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __param(1, (0, common_1.Param)("timeframe")),
-    __param(2, (0, common_1.Query)("useHigherTimeframeConfirmation")),
-    __param(3, (0, common_1.Query)("excludeHighAdxSell")),
+    (0, common_1.Get)("history/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], BacktestingController.prototype, "getHistory", null);
+__decorate([
+    (0, common_1.Get)("compare/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __param(2, (0, common_1.Query)("baseline")),
+    __param(3, (0, common_1.Query)("candidate")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], BacktestingController.prototype, "compareLatestRuns", null);
+__decorate([
+    (0, common_1.Get)(":symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], BacktestingController.prototype, "runBacktest", null);
 exports.BacktestingController = BacktestingController = __decorate([
