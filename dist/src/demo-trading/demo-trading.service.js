@@ -180,6 +180,9 @@ let DemoTradingService = class DemoTradingService {
         }
         const risk = Math.abs(entry - signal.stopLoss);
         const reward = Math.abs(signal.takeProfit - entry);
+        const investedAmount = Number(this.configService.get("DEMO_POSITION_SIZE_USDT", 100));
+        const quantity = investedAmount / entry;
+        const entryFee = investedAmount * Number(this.configService.get("BACKTESTING_FEE_RATE", 0.0005));
         const newPosition = this.demoPositionRepository.create({
             symbol,
             strategyVersion: activeStrategy || null,
@@ -187,6 +190,11 @@ let DemoTradingService = class DemoTradingService {
             timeframe,
             side: signal.action,
             entry,
+            quantity,
+            investedAmount,
+            entryFee,
+            exitFee: 0,
+            realizedPnlUsdt: null,
             stopLoss: signal.stopLoss,
             takeProfit: signal.takeProfit,
             riskReward: risk > 0 ? reward / risk : null,
@@ -346,6 +354,9 @@ let DemoTradingService = class DemoTradingService {
             position.closedAt = new Date(exitCandle.time);
             position.resultR = outcome.resultR;
             position.exitReason = outcome.exitReason;
+            const exitValue = Number(position.quantity) * Number(outcome.exitPrice);
+            position.exitFee = exitValue * Number(this.configService.get("BACKTESTING_FEE_RATE", 0.0005));
+            position.realizedPnlUsdt = exitValue - Number(position.investedAmount) - Number(position.entryFee) - Number(position.exitFee);
             await this.demoPositionRepository.save(position);
             processed.push({
                 symbol: position.symbol,

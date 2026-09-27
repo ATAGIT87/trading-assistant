@@ -20,6 +20,11 @@ let DemoPosition = class DemoPosition {
     timeframe;
     side;
     entry;
+    quantity;
+    investedAmount;
+    entryFee;
+    exitFee;
+    realizedPnlUsdt;
     stopLoss;
     takeProfit;
     riskReward;
@@ -69,6 +74,26 @@ __decorate([
     (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8 }),
     __metadata("design:type", Number)
 ], DemoPosition.prototype, "entry", void 0);
+__decorate([
+    (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8, default: 0 }),
+    __metadata("design:type", Number)
+], DemoPosition.prototype, "quantity", void 0);
+__decorate([
+    (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8, default: 0 }),
+    __metadata("design:type", Number)
+], DemoPosition.prototype, "investedAmount", void 0);
+__decorate([
+    (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8, default: 0 }),
+    __metadata("design:type", Number)
+], DemoPosition.prototype, "entryFee", void 0);
+__decorate([
+    (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8, default: 0 }),
+    __metadata("design:type", Number)
+], DemoPosition.prototype, "exitFee", void 0);
+__decorate([
+    (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8, nullable: true }),
+    __metadata("design:type", Object)
+], DemoPosition.prototype, "realizedPnlUsdt", void 0);
 __decorate([
     (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8 }),
     __metadata("design:type", Number)

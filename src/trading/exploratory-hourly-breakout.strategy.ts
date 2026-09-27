@@ -9,7 +9,7 @@ import { TradingStrategy } from "../signals/trading-strategy.port";
 /** Forward-observation rule only. It is deliberately not an approved strategy. */
 @Injectable()
 export class ExploratoryHourlyBreakoutStrategy implements TradingStrategy {
-  readonly version = "exploratory-hourly-breakout-v1";
+  readonly version = "exploratory-hourly-trend-pullback-v1";
   readonly minimumHistory = 201;
   readonly supportedTimeframes = [Timeframe.ONE_HOUR] as const;
   readonly evaluationScope = "PORTFOLIO" as const;
@@ -55,11 +55,11 @@ export class ExploratoryHourlyBreakoutStrategy implements TradingStrategy {
       (symbol !== "BTCUSDT" && symbol !== "ETHUSDT")
     )
       return no("NO_TRADE: exploratory universe/history requirement not met.");
-    const closes = candles.map((c) => Number(c.close)),
-      volumes = candles.map((c) => Number(c.volume));
-    const sma = this.indicators.calculateSma(closes, 200),
-      high = Math.max(...candles.slice(-21, -1).map((c) => Number(c.high))),
-      avgVol = this.indicators.calculateSma(volumes.slice(-21, -1), 20);
+    const closes = candles.map((c) => Number(c.close));
+    const sma = this.indicators.calculateSma(closes, 200);
+    const ema20 = this.indicators.calculateEma(closes, 20);
+    const rsi = this.indicators.calculateRsiFromPrices(closes, 14) ?? 50;
+    const previousLow = Number(candles.at(-2)!.low);
     const atr = this.indicators.calculateAtr(
       this.indicators.calculateTrueRangesFromCandles(
         candles.map((c) => ({
@@ -72,13 +72,14 @@ export class ExploratoryHourlyBreakoutStrategy implements TradingStrategy {
     );
     if (
       sma === null ||
-      avgVol === null ||
       atr === null ||
       closes.at(-1)! <= sma ||
-      closes.at(-1)! <= high ||
-      volumes.at(-1)! <= avgVol
+      ema20 === null ||
+      previousLow > ema20 ||
+      closes.at(-1)! <= ema20 ||
+      rsi < 45 || rsi > 65
     )
-      return no("NO_TRADE: exploratory breakout conditions are incomplete.");
+      return no("NO_TRADE: hourly trend pullback conditions are incomplete.");
     const levels = this.risk.calculateLevels(
       "BUY",
       closes.at(-1)!,
@@ -90,18 +91,18 @@ export class ExploratoryHourlyBreakoutStrategy implements TradingStrategy {
       return no("NO_TRADE: no valid risk levels.");
     return {
       action: "BUY",
-      confidence: 60,
+      confidence: 65,
       entryPrice: closes.at(-1)!,
       stopLoss: levels.stopLoss,
       takeProfit: levels.takeProfit,
       isStrongSetup: true,
       trend: "BULLISH",
-      rsi: 50,
+      rsi,
       adx: 0,
-      rsiStatus: "NEUTRAL",
+      rsiStatus: this.indicators.classifyRsi(rsi),
       marketCondition: "BULLISH_CONTINUATION",
       candleTime: latest.time,
-      reason: "EXPERIMENTAL: hourly trend breakout with volume confirmation.",
+      reason: "EXPERIMENTAL: hourly SMA-200 trend, EMA-20 pullback, and RSI confirmation.",
     };
   }
 }

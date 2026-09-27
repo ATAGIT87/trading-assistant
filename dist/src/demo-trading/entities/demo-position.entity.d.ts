@@ -10,6 +10,11 @@ export declare class DemoPosition {
     timeframe: Timeframe;
     side: DemoPositionSide;
     entry: number;
+    quantity: number;
+    investedAmount: number;
+    entryFee: number;
+    exitFee: number;
+    realizedPnlUsdt: number | null;
     stopLoss: number;
     takeProfit: number;
     riskReward: number | null;

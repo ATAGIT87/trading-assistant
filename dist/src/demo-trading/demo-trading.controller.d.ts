@@ -16,7 +16,7 @@ export declare class DemoTradingController {
         action: "BUY";
         signal: import("../signals/signal.types").TradingSignal;
         reason: string;
-        position: any;
+        position: import("./entities/demo-position.entity").DemoPosition;
     }>;
     getOpenPositions(): Promise<{
         openPositions: import("./entities/demo-position.entity").DemoPosition[];

@@ -46,6 +46,12 @@ export class DemoPosition {
   @Column("decimal", { precision: 20, scale: 8 })
   entry!: number;
 
+  @Column("decimal", { precision: 20, scale: 8, default: 0 }) quantity!: number;
+  @Column("decimal", { precision: 20, scale: 8, default: 0 }) investedAmount!: number;
+  @Column("decimal", { precision: 20, scale: 8, default: 0 }) entryFee!: number;
+  @Column("decimal", { precision: 20, scale: 8, default: 0 }) exitFee!: number;
+  @Column("decimal", { precision: 20, scale: 8, nullable: true }) realizedPnlUsdt!: number | null;
+
   @Column("decimal", { precision: 20, scale: 8 })
   stopLoss!: number;
 
