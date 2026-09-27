@@ -170,7 +170,7 @@ let MarketDataService = class MarketDataService {
         await this.storageService.replaceFourHourCandles(symbol, fourHourCandles);
         return fourHourCandles.length;
     }
-    async repairBinanceGaps(symbol, timeframe) {
+    async repairSpotGaps(symbol, timeframe) {
         const durationMs = timeframe_utils_1.timeframeDurationMs[timeframe];
         const candles = await this.getHistoricalCandles(symbol, timeframe);
         let gapsFound = 0;
@@ -184,7 +184,7 @@ let MarketDataService = class MarketDataService {
                 continue;
             }
             gapsFound++;
-            const batch = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, Math.min(missing + 2, 1000), next.time.getTime() - 1);
+            const batch = await this.marketDataProviderService.getSpotCandles(symbol, timeframe, Math.min(missing + 2, 720));
             const missingCandles = batch.filter((candle) => candle.time.getTime() > previous.time.getTime() &&
                 candle.time.getTime() < next.time.getTime() &&
                 candle.time.getTime() + durationMs <= Date.now());
@@ -193,8 +193,8 @@ let MarketDataService = class MarketDataService {
         }
         return { gapsFound, received, saved };
     }
-    async syncBinanceCandles(symbol, timeframe) {
-        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 1000);
+    async syncSpotCandles(symbol, timeframe) {
+        const candles = await this.marketDataProviderService.getSpotCandles(symbol, timeframe, 720);
         const timeframeMs = {
             [timeframe_enum_1.Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
             [timeframe_enum_1.Timeframe.ONE_HOUR]: 60 * 60 * 1000,
@@ -206,7 +206,7 @@ let MarketDataService = class MarketDataService {
         return this.saveCandles(symbol, timeframe, closedCandles);
     }
     async getLiveCandleOpen(symbol, timeframe, expectedOpenTime) {
-        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 2);
+        const candles = await this.marketDataProviderService.getSpotCandles(symbol, timeframe, 2);
         const candle = candles.find((candidate) => candidate.time.getTime() === expectedOpenTime.getTime());
         if (!candle ||
             candle.time.getTime() + timeframe_utils_1.timeframeDurationMs[timeframe] <= Date.now() ||
@@ -215,40 +215,8 @@ let MarketDataService = class MarketDataService {
         }
         return candle.open;
     }
-    async backfillBinanceCandles(symbol, timeframe, days) {
-        const timeframeMs = {
-            [timeframe_enum_1.Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
-            [timeframe_enum_1.Timeframe.ONE_HOUR]: 60 * 60 * 1000,
-            [timeframe_enum_1.Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
-            [timeframe_enum_1.Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
-        };
-        const startTime = Date.now() - days * 24 * 60 * 60 * 1000;
-        const earliestStoredCandle = await this.storageService.findEarliestCandle(symbol, timeframe);
-        if (earliestStoredCandle !== null &&
-            earliestStoredCandle.time.getTime() <= startTime) {
-            return { received: 0, saved: 0 };
-        }
-        let endTime = earliestStoredCandle === null
-            ? Date.now()
-            : earliestStoredCandle.time.getTime() - 1;
-        let received = 0;
-        let saved = 0;
-        while (endTime >= startTime) {
-            const batch = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 10_000, endTime);
-            const closedBatch = batch.filter((candle) => candle.time.getTime() >= startTime &&
-                candle.time.getTime() + timeframeMs[timeframe] <= Date.now());
-            if (closedBatch.length === 0) {
-                break;
-            }
-            received += closedBatch.length;
-            saved += await this.saveCandles(symbol, timeframe, closedBatch);
-            const oldestTime = closedBatch[0].time.getTime();
-            if (oldestTime <= startTime || batch.length < 1000) {
-                break;
-            }
-            endTime = oldestTime - 1;
-        }
-        return { received, saved };
+    async backfillSpotCandles(symbol, timeframe, days) {
+        throw new common_1.BadRequestException(`Kraken's public OHLC endpoint retains only recent candles; ${days} days cannot be backfilled reliably. Live Demo sync remains available.`);
     }
     async saveCandles(symbol, timeframe, candles) {
         let savedCount = 0;

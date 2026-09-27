@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketCandle } from "./entities/market-candle.entity";
@@ -329,7 +329,7 @@ export class MarketDataService {
     return fourHourCandles.length;
   }
 
-  async repairBinanceGaps(
+  async repairSpotGaps(
     symbol: string,
     timeframe: Exclude<Timeframe, Timeframe.FOUR_HOURS>,
   ): Promise<{ gapsFound: number; received: number; saved: number }> {
@@ -351,11 +351,10 @@ export class MarketDataService {
       }
 
       gapsFound++;
-      const batch = await this.marketDataProviderService.getBinanceCandles(
+      const batch = await this.marketDataProviderService.getSpotCandles(
         symbol,
         timeframe,
-        Math.min(missing + 2, 1000),
-        next.time.getTime() - 1,
+        Math.min(missing + 2, 720),
       );
       const missingCandles = batch.filter(
         (candle) =>
@@ -370,14 +369,14 @@ export class MarketDataService {
     return { gapsFound, received, saved };
   }
 
-  async syncBinanceCandles(
+  async syncSpotCandles(
     symbol: string,
     timeframe: Timeframe,
   ): Promise<number> {
-    const candles = await this.marketDataProviderService.getBinanceCandles(
+    const candles = await this.marketDataProviderService.getSpotCandles(
       symbol,
       timeframe,
-      1000,
+      720,
     );
 
     const timeframeMs: Record<Timeframe, number> = {
@@ -405,14 +404,14 @@ export class MarketDataService {
    * Persisted market candles are deliberately closed candles only, so strategy
    * calculation cannot accidentally use an unfinished candle.  A live paper
    * entry is the one exception: its fill must use the next candle's actual
-   * opening price, which Binance exposes while that candle is in progress.
+   * opening price, which Kraken exposes while that candle is in progress.
    */
   async getLiveCandleOpen(
     symbol: string,
     timeframe: Timeframe,
     expectedOpenTime: Date,
   ): Promise<number | null> {
-    const candles = await this.marketDataProviderService.getBinanceCandles(
+    const candles = await this.marketDataProviderService.getSpotCandles(
       symbol,
       timeframe,
       2,
@@ -432,65 +431,14 @@ export class MarketDataService {
     return candle.open;
   }
 
-  async backfillBinanceCandles(
+  async backfillSpotCandles(
     symbol: string,
     timeframe: Timeframe,
     days: number,
   ): Promise<{ received: number; saved: number }> {
-    const timeframeMs: Record<Timeframe, number> = {
-      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
-      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
-      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
-      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
-    };
-    const startTime = Date.now() - days * 24 * 60 * 60 * 1000;
-    const earliestStoredCandle = await this.storageService.findEarliestCandle(
-      symbol,
-      timeframe,
+    throw new BadRequestException(
+      `Kraken's public OHLC endpoint retains only recent candles; ${days} days cannot be backfilled reliably. Live Demo sync remains available.`,
     );
-    if (
-      earliestStoredCandle !== null &&
-      earliestStoredCandle.time.getTime() <= startTime
-    ) {
-      return { received: 0, saved: 0 };
-    }
-    let endTime =
-      earliestStoredCandle === null
-        ? Date.now()
-        : earliestStoredCandle.time.getTime() - 1;
-    let received = 0;
-    let saved = 0;
-
-    while (endTime >= startTime) {
-      // The provider pages Binance requests internally. Requesting its safe
-      // maximum here avoids dozens of needless database/backfill iterations.
-      const batch = await this.marketDataProviderService.getBinanceCandles(
-        symbol,
-        timeframe,
-        10_000,
-        endTime,
-      );
-      const closedBatch = batch.filter(
-        (candle) =>
-          candle.time.getTime() >= startTime &&
-          candle.time.getTime() + timeframeMs[timeframe] <= Date.now(),
-      );
-
-      if (closedBatch.length === 0) {
-        break;
-      }
-
-      received += closedBatch.length;
-      saved += await this.saveCandles(symbol, timeframe, closedBatch);
-
-      const oldestTime = closedBatch[0].time.getTime();
-      if (oldestTime <= startTime || batch.length < 1000) {
-        break;
-      }
-      endTime = oldestTime - 1;
-    }
-
-    return { received, saved };
   }
 
   async saveCandles(

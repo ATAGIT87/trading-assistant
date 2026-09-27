@@ -185,19 +185,19 @@ export class MarketDataController {
   }
 
   @Get("spot-candles/:symbol")
-  getBinanceCandles(@Param("symbol") symbol: string) {
-    return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
+  getSpotCandles(@Param("symbol") symbol: string) {
+    return this.marketDataProviderService.getSpotCandles(symbol, "1h", 100);
   }
 
-  @Post("sync-binance/:symbol/:timeframe")
-  async syncBinanceCandles(
+  @Post("sync-spot/:symbol/:timeframe")
+  async syncSpotCandles(
     @Param("symbol") symbol: string,
     @Param("timeframe") timeframe: Timeframe,
   ) {
-    const candles = await this.marketDataProviderService.getBinanceCandles(
+    const candles = await this.marketDataProviderService.getSpotCandles(
       symbol,
       timeframe,
-      10000,
+      720,
     );
 
     const savedCount = await this.marketDataService.saveCandles(
@@ -214,8 +214,8 @@ export class MarketDataController {
     };
   }
 
-  @Post("backfill-binance/:symbol/:timeframe")
-  async backfillBinanceCandles(
+  @Post("backfill-spot/:symbol/:timeframe")
+  async backfillSpotCandles(
     @Param("symbol") symbol: string,
     @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
     @Query("days") days = "365",
@@ -227,15 +227,15 @@ export class MarketDataController {
       );
     }
 
-    return this.marketDataService.backfillBinanceCandles(
+    return this.marketDataService.backfillSpotCandles(
       symbol,
       timeframe,
       parsedDays,
     );
   }
 
-  @Post("repair-binance-gaps/:symbol/:timeframe")
-  async repairBinanceGaps(
+  @Post("repair-spot-gaps/:symbol/:timeframe")
+  async repairSpotGaps(
     @Param("symbol") symbol: string,
     @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
   ) {
@@ -245,7 +245,7 @@ export class MarketDataController {
       );
     }
 
-    return this.marketDataService.repairBinanceGaps(symbol, timeframe);
+    return this.marketDataService.repairSpotGaps(symbol, timeframe);
   }
 
   @Post("build-4h/:symbol")

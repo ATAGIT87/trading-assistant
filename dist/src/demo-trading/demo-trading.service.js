@@ -180,7 +180,7 @@ let DemoTradingService = class DemoTradingService {
         }
         const risk = Math.abs(entry - signal.stopLoss);
         const reward = Math.abs(signal.takeProfit - entry);
-        const investedAmount = Number(this.configService.get("DEMO_POSITION_SIZE_USDT", 100));
+        const investedAmount = Number(this.configService.get("DEMO_POSITION_SIZE_EUR", 100));
         const quantity = investedAmount / entry;
         const entryFee = investedAmount * Number(this.configService.get("BACKTESTING_FEE_RATE", 0.0005));
         const newPosition = this.demoPositionRepository.create({
@@ -194,7 +194,7 @@ let DemoTradingService = class DemoTradingService {
             investedAmount,
             entryFee,
             exitFee: 0,
-            realizedPnlUsdt: null,
+            realizedPnlQuote: null,
             stopLoss: signal.stopLoss,
             takeProfit: signal.takeProfit,
             riskReward: risk > 0 ? reward / risk : null,
@@ -261,6 +261,8 @@ let DemoTradingService = class DemoTradingService {
         const winningTrades = history.filter((position) => position.status === "WIN");
         const losingTrades = history.filter((position) => position.status === "LOSS");
         const totalR = history.reduce((sum, position) => sum + Number(position.resultR ?? 0), 0);
+        const realizedPnlQuote = history.reduce((sum, position) => sum + Number(position.realizedPnlQuote ?? 0), 0);
+        const startingBalance = Number(this.configService.get("DEMO_STARTING_BALANCE_EUR", 1000));
         return {
             openPositions: (await this.getOpenPositions()).length,
             completedTrades: history.length,
@@ -271,6 +273,10 @@ let DemoTradingService = class DemoTradingService {
                 : (winningTrades.length / history.length) * 100,
             totalR,
             expectancyR: history.length === 0 ? 0 : totalR / history.length,
+            quoteCurrency: "EUR",
+            realizedPnlQuote,
+            startingBalance,
+            estimatedBalance: startingBalance + realizedPnlQuote,
         };
     }
     isDuplicateSignalError(error) {
@@ -297,6 +303,7 @@ let DemoTradingService = class DemoTradingService {
                     exitPrice: null,
                     closedAt: null,
                     resultR: null,
+                    realizedPnlQuote: null,
                     exitReason: null,
                     reason: "No completed candle is available after the position opening time.",
                 });
@@ -344,6 +351,7 @@ let DemoTradingService = class DemoTradingService {
                     exitPrice: null,
                     closedAt: null,
                     resultR: null,
+                    realizedPnlQuote: null,
                     exitReason: null,
                     reason: "No SL or TP threshold was reached in completed candles after the position opened.",
                 });
@@ -356,7 +364,11 @@ let DemoTradingService = class DemoTradingService {
             position.exitReason = outcome.exitReason;
             const exitValue = Number(position.quantity) * Number(outcome.exitPrice);
             position.exitFee = exitValue * Number(this.configService.get("BACKTESTING_FEE_RATE", 0.0005));
-            position.realizedPnlUsdt = exitValue - Number(position.investedAmount) - Number(position.entryFee) - Number(position.exitFee);
+            position.realizedPnlQuote =
+                exitValue -
+                    Number(position.investedAmount) -
+                    Number(position.entryFee) -
+                    Number(position.exitFee);
             await this.demoPositionRepository.save(position);
             processed.push({
                 symbol: position.symbol,
@@ -370,6 +382,7 @@ let DemoTradingService = class DemoTradingService {
                 exitPrice: outcome.exitPrice,
                 closedAt: position.closedAt,
                 resultR: outcome.resultR,
+                realizedPnlQuote: Number(position.realizedPnlQuote),
                 exitReason: outcome.exitReason,
                 reason: outcome.exitReason === "TAKE_PROFIT"
                     ? "Take profit threshold was reached."
@@ -388,7 +401,7 @@ let DemoTradingService = class DemoTradingService {
         const durationMs = this.getTimeframeDurationMs(timeframe);
         return candles
             .filter((candle) => candle.time.getTime() + durationMs < Date.now())
-            .filter((candle) => candle.time.getTime() > openedAt.getTime());
+            .filter((candle) => candle.time.getTime() >= openedAt.getTime());
     }
     getTimeframeDurationMs(timeframe) {
         switch (timeframe) {

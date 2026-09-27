@@ -24,7 +24,7 @@ let DemoPosition = class DemoPosition {
     investedAmount;
     entryFee;
     exitFee;
-    realizedPnlUsdt;
+    realizedPnlQuote;
     stopLoss;
     takeProfit;
     riskReward;
@@ -93,7 +93,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8, nullable: true }),
     __metadata("design:type", Object)
-], DemoPosition.prototype, "realizedPnlUsdt", void 0);
+], DemoPosition.prototype, "realizedPnlQuote", void 0);
 __decorate([
     (0, typeorm_1.Column)("decimal", { precision: 20, scale: 8 }),
     __metadata("design:type", Number)

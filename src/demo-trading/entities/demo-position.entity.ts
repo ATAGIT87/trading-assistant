@@ -50,7 +50,8 @@ export class DemoPosition {
   @Column("decimal", { precision: 20, scale: 8, default: 0 }) investedAmount!: number;
   @Column("decimal", { precision: 20, scale: 8, default: 0 }) entryFee!: number;
   @Column("decimal", { precision: 20, scale: 8, default: 0 }) exitFee!: number;
-  @Column("decimal", { precision: 20, scale: 8, nullable: true }) realizedPnlUsdt!: number | null;
+  /** Quote-currency P/L: EUR for the current Kraken Spot Demo. */
+  @Column("decimal", { precision: 20, scale: 8, nullable: true }) realizedPnlQuote!: number | null;
 
   @Column("decimal", { precision: 20, scale: 8 })
   stopLoss!: number;

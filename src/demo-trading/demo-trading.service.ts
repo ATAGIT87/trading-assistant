@@ -221,7 +221,7 @@ export class DemoTradingService {
 
     const risk = Math.abs(entry - signal.stopLoss);
     const reward = Math.abs(signal.takeProfit - entry);
-    const investedAmount = Number(this.configService.get("DEMO_POSITION_SIZE_USDT", 100));
+    const investedAmount = Number(this.configService.get("DEMO_POSITION_SIZE_EUR", 100));
     const quantity = investedAmount / entry;
     const entryFee = investedAmount * Number(this.configService.get("BACKTESTING_FEE_RATE", 0.0005));
 
@@ -236,7 +236,7 @@ export class DemoTradingService {
       investedAmount,
       entryFee,
       exitFee: 0,
-      realizedPnlUsdt: null,
+      realizedPnlQuote: null,
       stopLoss: signal.stopLoss,
       takeProfit: signal.takeProfit,
       riskReward: risk > 0 ? reward / risk : null,
@@ -317,6 +317,14 @@ export class DemoTradingService {
       0,
     );
 
+    const realizedPnlQuote = history.reduce(
+      (sum, position) => sum + Number(position.realizedPnlQuote ?? 0),
+      0,
+    );
+    const startingBalance = Number(
+      this.configService.get("DEMO_STARTING_BALANCE_EUR", 1000),
+    );
+
     return {
       openPositions: (await this.getOpenPositions()).length,
       completedTrades: history.length,
@@ -328,6 +336,10 @@ export class DemoTradingService {
           : (winningTrades.length / history.length) * 100,
       totalR,
       expectancyR: history.length === 0 ? 0 : totalR / history.length,
+      quoteCurrency: "EUR",
+      realizedPnlQuote,
+      startingBalance,
+      estimatedBalance: startingBalance + realizedPnlQuote,
     };
   }
 
@@ -353,6 +365,7 @@ export class DemoTradingService {
       exitPrice: number | null;
       closedAt: Date | null;
       resultR: number | null;
+      realizedPnlQuote: number | null;
       exitReason: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
       reason: string;
     }> = [];
@@ -377,6 +390,7 @@ export class DemoTradingService {
           exitPrice: null,
           closedAt: null,
           resultR: null,
+          realizedPnlQuote: null,
           exitReason: null,
           reason:
             "No completed candle is available after the position opening time.",
@@ -429,6 +443,7 @@ export class DemoTradingService {
           exitPrice: null,
           closedAt: null,
           resultR: null,
+          realizedPnlQuote: null,
           exitReason: null,
           reason:
             "No SL or TP threshold was reached in completed candles after the position opened.",
@@ -443,7 +458,11 @@ export class DemoTradingService {
       position.exitReason = outcome.exitReason;
       const exitValue = Number(position.quantity) * Number(outcome.exitPrice);
       position.exitFee = exitValue * Number(this.configService.get("BACKTESTING_FEE_RATE", 0.0005));
-      position.realizedPnlUsdt = exitValue - Number(position.investedAmount) - Number(position.entryFee) - Number(position.exitFee);
+      position.realizedPnlQuote =
+        exitValue -
+        Number(position.investedAmount) -
+        Number(position.entryFee) -
+        Number(position.exitFee);
 
       await this.demoPositionRepository.save(position);
 
@@ -459,6 +478,7 @@ export class DemoTradingService {
         exitPrice: outcome.exitPrice,
         closedAt: position.closedAt,
         resultR: outcome.resultR,
+        realizedPnlQuote: Number(position.realizedPnlQuote),
         exitReason: outcome.exitReason,
         reason:
           outcome.exitReason === "TAKE_PROFIT"
@@ -488,7 +508,9 @@ export class DemoTradingService {
     const durationMs = this.getTimeframeDurationMs(timeframe);
     return candles
       .filter((candle) => candle.time.getTime() + durationMs < Date.now())
-      .filter((candle) => candle.time.getTime() > openedAt.getTime());
+      // A position enters at this candle's open. Once that candle is closed,
+      // its high/low must be evaluated; otherwise a same-hour TP/SL is lost.
+      .filter((candle) => candle.time.getTime() >= openedAt.getTime());
   }
 
   private getTimeframeDurationMs(timeframe: Timeframe): number {

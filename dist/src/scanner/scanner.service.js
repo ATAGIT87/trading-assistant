@@ -40,10 +40,10 @@ let ScannerService = class ScannerService {
         return age >= 0 && age <= maxAge;
     }
     async scan(symbol, timeframe) {
-        await this.marketDataService.syncBinanceCandles(symbol, timeframe);
+        await this.marketDataService.syncSpotCandles(symbol, timeframe);
         const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(timeframe);
         if (higherTimeframe !== null) {
-            await this.marketDataService.syncBinanceCandles(symbol, higherTimeframe);
+            await this.marketDataService.syncSpotCandles(symbol, higherTimeframe);
         }
         const candles = await this.marketDataService.getHistoricalCandles(symbol, timeframe);
         if (candles.length === 0) {

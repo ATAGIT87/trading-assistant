@@ -84,6 +84,7 @@ let TelegramNotificationService = TelegramNotificationService_1 = class Telegram
             `Entry: ${Number(position.entry).toFixed(2)}`,
             `Exit: ${Number(position.exitPrice ?? position.takeProfit ?? position.stopLoss).toFixed(2)}`,
             `Result: ${this.formatResultR(position.resultR, isWin ? 1 : -1)}`,
+            `Net P/L: ${(Number(position.realizedPnlQuote ?? 0) >= 0 ? "+" : "") + Number(position.realizedPnlQuote ?? 0).toFixed(2)} EUR`,
             `Exit reason: ${position.exitReason ?? "UNKNOWN"}`,
         ].join("\n");
         return this.sendMessage(message);

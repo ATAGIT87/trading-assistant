@@ -1,16 +1,8 @@
 import { BadRequestException, Injectable, PipeTransform } from "@nestjs/common";
 
 export const supportedTradingSymbols = [
-  "BTCUSDT",
-  "ETHUSDT",
-  "SOLUSDT",
-  "BNBUSDT",
-  "XRPUSDT",
-  "ADAUSDT",
-  "DOGEUSDT",
-  "AVAXUSDT",
-  "LINKUSDT",
-  "LTCUSDT",
+  "BTCEUR",
+  "ETHEUR",
 ] as const;
 export type SupportedTradingSymbol = (typeof supportedTradingSymbols)[number];
 

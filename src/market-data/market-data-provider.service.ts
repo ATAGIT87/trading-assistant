@@ -2,160 +2,74 @@ import { Injectable } from "@nestjs/common";
 
 import { normalizeTradingSymbol } from "./trading-symbol";
 
+export type SpotCandle = {
+  time: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+/** The application's single live provider: Kraken Spot public OHLC data. */
 @Injectable()
 export class MarketDataProviderService {
-  async getBinanceCandles(
+  private readonly krakenPairs: Record<string, string> = {
+    BTCEUR: "XBTEUR",
+    ETHEUR: "ETHEUR",
+  };
+
+  async getSpotCandles(
     symbol: string,
     timeframe: string,
-    limit = 1000,
-    initialEndTime = Date.now(),
-  ): Promise<
-    {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
-    }[]
-  > {
+    limit = 720,
+  ): Promise<SpotCandle[]> {
     const normalizedSymbol = normalizeTradingSymbol(symbol);
-
     this.validateTimeframe(timeframe);
-
-    // Internal names intentionally match Binance Spot's tradable symbols.
-    const binanceSymbol = normalizedSymbol;
-
-    if (limit < 1 || limit > 10000) {
-      throw new Error(
-        `Invalid candle limit: ${limit}. Must be between 1 and 10000.`,
-      );
+    if (!Number.isInteger(limit) || limit < 1 || limit > 720) {
+      throw new Error("Kraken Spot OHLC supports a recent window of 1 to 720 candles.");
     }
+    const pair = this.krakenPairs[normalizedSymbol];
+    if (!pair) throw new Error(`No Kraken Spot pair mapping for ${normalizedSymbol}.`);
 
-    return this.getBinanceCandlesFromUrl(
-      "https://api.binance.com/api/v3/klines",
-      binanceSymbol,
-      timeframe,
-      limit,
-      initialEndTime,
+    const response = await fetch(
+      `https://api.kraken.com/0/public/OHLC?pair=${pair}&interval=${this.toKrakenInterval(timeframe)}`,
+      { signal: AbortSignal.timeout(10_000) },
     );
-  }
+    if (!response.ok) throw new Error(`Kraken market data request failed: ${response.status}`);
 
-  private async getBinanceCandlesFromUrl(
-    endpoint: string,
-    binanceSymbol: string,
-    timeframe: string,
-    limit: number,
-    initialEndTime: number,
-  ): Promise<
-    {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
-    }[]
-  > {
-    const allCandles: {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      volume: number;
-    }[] = [];
+    const body = (await response.json()) as { error?: string[]; result?: Record<string, unknown> };
+    if (body.error?.length) throw new Error(`Kraken market data error: ${body.error.join(", ")}`);
+    const rows = Object.entries(body.result ?? {}).find(([key]) => key !== "last")?.[1];
+    if (!Array.isArray(rows)) throw new Error("Kraken market data response contains no OHLC candles.");
 
-    let endTime = initialEndTime;
-
-    while (allCandles.length < limit) {
-      const requestLimit = Math.min(1000, limit - allCandles.length);
-
-      const response = await fetch(
-        `${endpoint}?symbol=${binanceSymbol}&interval=${timeframe}&limit=${requestLimit}&endTime=${endTime}`,
-        { signal: AbortSignal.timeout(10_000) },
-      );
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-
-        throw new Error(
-          `Binance market data request failed: ${response.status} ${errorBody}`,
-        );
-      }
-
-      const data = (await response.json()) as unknown[][];
-
-      if (data.length === 0) {
-        break;
-      }
-
-      const candles = data.map((candle) => this.parseSpotKline(candle));
-
-      allCandles.unshift(...candles);
-
-      const oldestCandle = candles[0];
-
-      const oldestTime = oldestCandle.time.getTime();
-
-      endTime = oldestTime - 1;
-
-      if (data.length < requestLimit) {
-        break;
-      }
-    }
-
-    return allCandles
+    return rows
+      .map((row) => this.parseKrakenOhlc(row))
       .slice(-limit)
-      .sort((a, b) => a.time.getTime() - b.time.getTime());
+      .sort((left, right) => left.time.getTime() - right.time.getTime());
   }
 
-  async getBinanceHourlyCandles(symbol: string, limit = 1000) {
-    return this.getBinanceCandles(symbol, "1h", limit);
-  }
-
-  private parseSpotKline(candle: unknown[]): {
-    time: Date;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-  } {
-    if (candle.length < 6) {
-      throw new Error(
-        "Binance market data response contains an incomplete kline.",
-      );
+  private parseKrakenOhlc(row: unknown): SpotCandle {
+    if (!Array.isArray(row) || row.length < 7) {
+      throw new Error("Kraken market data response contains an incomplete OHLC candle.");
     }
-
-    const time = new Date(Number(candle[0]));
-    const open = Number(candle[1]);
-    const high = Number(candle[2]);
-    const low = Number(candle[3]);
-    const close = Number(candle[4]);
-    const volume = Number(candle[5]);
-
-    if (
-      !Number.isFinite(time.getTime()) ||
-      ![open, high, low, close, volume].every(Number.isFinite) ||
-      low > Math.min(open, close) ||
-      high < Math.max(open, close) ||
-      low < 0 ||
-      volume < 0
-    ) {
-      throw new Error(
-        "Binance market data response contains an invalid Spot kline.",
-      );
+    const time = new Date(Number(row[0]) * 1000);
+    const open = Number(row[1]);
+    const high = Number(row[2]);
+    const low = Number(row[3]);
+    const close = Number(row[4]);
+    const volume = Number(row[6]);
+    if (!Number.isFinite(time.getTime()) || ![open, high, low, close, volume].every(Number.isFinite) || low > Math.min(open, close) || high < Math.max(open, close) || low < 0 || volume < 0) {
+      throw new Error("Kraken market data response contains an invalid Spot OHLC candle.");
     }
-
     return { time, open, high, low, close, volume };
   }
 
-  private validateTimeframe(timeframe: string): void {
-    const supportedTimeframes = ["15m", "1h", "4h", "1d"];
+  private toKrakenInterval(timeframe: string): number {
+    return { "15m": 15, "1h": 60, "4h": 240, "1d": 1440 }[timeframe]!;
+  }
 
-    if (!supportedTimeframes.includes(timeframe)) {
-      throw new Error(`Unsupported timeframe: ${timeframe}`);
-    }
+  private validateTimeframe(timeframe: string): void {
+    if (!(timeframe in { "15m": true, "1h": true, "4h": true, "1d": true })) throw new Error(`Unsupported timeframe: ${timeframe}`);
   }
 }

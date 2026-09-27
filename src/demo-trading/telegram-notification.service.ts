@@ -87,6 +87,7 @@ export class TelegramNotificationService {
     status: "WIN" | "LOSS";
     exitPrice: number | null;
     resultR: number | null;
+    realizedPnlQuote?: number | null;
     exitReason?: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
     mode?: "APPROVED" | "EXPERIMENTAL";
   }): Promise<boolean> {
@@ -112,6 +113,7 @@ export class TelegramNotificationService {
       `Entry: ${Number(position.entry).toFixed(2)}`,
       `Exit: ${Number(position.exitPrice ?? position.takeProfit ?? position.stopLoss).toFixed(2)}`,
       `Result: ${this.formatResultR(position.resultR, isWin ? 1 : -1)}`,
+      `Net P/L: ${(Number(position.realizedPnlQuote ?? 0) >= 0 ? "+" : "") + Number(position.realizedPnlQuote ?? 0).toFixed(2)} EUR`,
       `Exit reason: ${position.exitReason ?? "UNKNOWN"}`,
     ].join("\n");
 

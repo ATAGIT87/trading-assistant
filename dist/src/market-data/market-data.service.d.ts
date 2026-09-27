@@ -32,14 +32,14 @@ export declare class MarketDataService {
     getDataQuality(symbol: string, timeframe: Timeframe): Promise<MarketDataQualityReport>;
     getHistoricalCandlesUntil(symbol: string, timeframe: Timeframe, until: Date): Promise<MarketCandle[]>;
     buildFourHourCandles(symbol: string): Promise<number>;
-    repairBinanceGaps(symbol: string, timeframe: Exclude<Timeframe, Timeframe.FOUR_HOURS>): Promise<{
+    repairSpotGaps(symbol: string, timeframe: Exclude<Timeframe, Timeframe.FOUR_HOURS>): Promise<{
         gapsFound: number;
         received: number;
         saved: number;
     }>;
-    syncBinanceCandles(symbol: string, timeframe: Timeframe): Promise<number>;
+    syncSpotCandles(symbol: string, timeframe: Timeframe): Promise<number>;
     getLiveCandleOpen(symbol: string, timeframe: Timeframe, expectedOpenTime: Date): Promise<number | null>;
-    backfillBinanceCandles(symbol: string, timeframe: Timeframe, days: number): Promise<{
+    backfillSpotCandles(symbol: string, timeframe: Timeframe, days: number): Promise<{
         received: number;
         saved: number;
     }>;

@@ -77,11 +77,11 @@ let MarketDataController = class MarketDataController {
     getLatestAdx(symbol, timeframe, period) {
         return this.marketDataService.getLatestAdx(symbol, timeframe, period);
     }
-    getBinanceCandles(symbol) {
-        return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
+    getSpotCandles(symbol) {
+        return this.marketDataProviderService.getSpotCandles(symbol, "1h", 100);
     }
-    async syncBinanceCandles(symbol, timeframe) {
-        const candles = await this.marketDataProviderService.getBinanceCandles(symbol, timeframe, 10000);
+    async syncSpotCandles(symbol, timeframe) {
+        const candles = await this.marketDataProviderService.getSpotCandles(symbol, timeframe, 720);
         const savedCount = await this.marketDataService.saveCandles(symbol, timeframe, candles);
         return {
             symbol,
@@ -90,18 +90,18 @@ let MarketDataController = class MarketDataController {
             saved: savedCount,
         };
     }
-    async backfillBinanceCandles(symbol, timeframe, days = "365") {
+    async backfillSpotCandles(symbol, timeframe, days = "365") {
         const parsedDays = Number(days);
         if (!Number.isInteger(parsedDays) || parsedDays < 30 || parsedDays > 1825) {
             throw new common_1.BadRequestException("days must be an integer between 30 and 1825.");
         }
-        return this.marketDataService.backfillBinanceCandles(symbol, timeframe, parsedDays);
+        return this.marketDataService.backfillSpotCandles(symbol, timeframe, parsedDays);
     }
-    async repairBinanceGaps(symbol, timeframe) {
+    async repairSpotGaps(symbol, timeframe) {
         if (timeframe === timeframe_enum_1.Timeframe.FOUR_HOURS) {
             throw new common_1.BadRequestException("4h candles are derived from 1h data; repair 1h first, then rebuild 4h.");
         }
-        return this.marketDataService.repairBinanceGaps(symbol, timeframe);
+        return this.marketDataService.repairSpotGaps(symbol, timeframe);
     }
     async buildFourHourCandles(symbol) {
         const saved = await this.marketDataService.buildFourHourCandles(symbol);
@@ -261,32 +261,32 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], MarketDataController.prototype, "getBinanceCandles", null);
+], MarketDataController.prototype, "getSpotCandles", null);
 __decorate([
-    (0, common_1.Post)("sync-binance/:symbol/:timeframe"),
+    (0, common_1.Post)("sync-spot/:symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol")),
     __param(1, (0, common_1.Param)("timeframe")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], MarketDataController.prototype, "syncBinanceCandles", null);
+], MarketDataController.prototype, "syncSpotCandles", null);
 __decorate([
-    (0, common_1.Post)("backfill-binance/:symbol/:timeframe"),
+    (0, common_1.Post)("backfill-spot/:symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol")),
     __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
     __param(2, (0, common_1.Query)("days")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
-], MarketDataController.prototype, "backfillBinanceCandles", null);
+], MarketDataController.prototype, "backfillSpotCandles", null);
 __decorate([
-    (0, common_1.Post)("repair-binance-gaps/:symbol/:timeframe"),
+    (0, common_1.Post)("repair-spot-gaps/:symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol")),
     __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
-], MarketDataController.prototype, "repairBinanceGaps", null);
+], MarketDataController.prototype, "repairSpotGaps", null);
 __decorate([
     (0, common_1.Post)("build-4h/:symbol"),
     __param(0, (0, common_1.Param)("symbol")),

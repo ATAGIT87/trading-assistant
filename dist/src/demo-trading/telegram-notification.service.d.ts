@@ -29,6 +29,7 @@ export declare class TelegramNotificationService {
         status: "WIN" | "LOSS";
         exitPrice: number | null;
         resultR: number | null;
+        realizedPnlQuote?: number | null;
         exitReason?: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
         mode?: "APPROVED" | "EXPERIMENTAL";
     }): Promise<boolean>;

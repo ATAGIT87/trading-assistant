@@ -57,10 +57,10 @@ let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
             return;
         }
         for (const market of demoMarkets) {
-            await this.marketDataService.syncBinanceCandles(market.symbol, market.timeframe);
+            await this.marketDataService.syncSpotCandles(market.symbol, market.timeframe);
             const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(market.timeframe);
             if (higherTimeframe !== null) {
-                await this.marketDataService.syncBinanceCandles(market.symbol, higherTimeframe);
+                await this.marketDataService.syncSpotCandles(market.symbol, higherTimeframe);
             }
         }
         const checkResult = await this.demoTradingService.checkOpenPositions();

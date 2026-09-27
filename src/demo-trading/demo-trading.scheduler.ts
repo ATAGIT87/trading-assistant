@@ -29,7 +29,7 @@ export class DemoTradingScheduler {
     private readonly configService: ConfigService,
   ) {}
 
-  // Run shortly after a candle boundary, when Binance has published the new
+  // Run shortly after a candle boundary, when Kraken has published the new
   // candle's opening price.  The signal itself still uses closed candles only.
   @Cron("10 */15 * * * *")
   async handleDemoTradingCycle() {
@@ -60,13 +60,13 @@ export class DemoTradingScheduler {
     }
 
     for (const market of demoMarkets) {
-      await this.marketDataService.syncBinanceCandles(
+      await this.marketDataService.syncSpotCandles(
         market.symbol,
         market.timeframe,
       );
       const higherTimeframe = getHigherTimeframe(market.timeframe);
       if (higherTimeframe !== null) {
-        await this.marketDataService.syncBinanceCandles(
+        await this.marketDataService.syncSpotCandles(
           market.symbol,
           higherTimeframe,
         );

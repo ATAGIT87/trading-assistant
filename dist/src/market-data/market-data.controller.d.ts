@@ -23,25 +23,18 @@ export declare class MarketDataController {
     getMarketCondition(symbol: string, timeframe: Timeframe, period: string): Promise<"NEUTRAL" | "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | null>;
     getLatestAtr(symbol: string, timeframe: Timeframe, period: string): Promise<number | null>;
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
-    getBinanceCandles(symbol: string): Promise<{
-        time: Date;
-        open: number;
-        high: number;
-        low: number;
-        close: number;
-        volume: number;
-    }[]>;
-    syncBinanceCandles(symbol: string, timeframe: Timeframe): Promise<{
+    getSpotCandles(symbol: string): Promise<import("./market-data-provider.service").SpotCandle[]>;
+    syncSpotCandles(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
         received: number;
         saved: number;
     }>;
-    backfillBinanceCandles(symbol: string, timeframe: Timeframe, days?: string): Promise<{
+    backfillSpotCandles(symbol: string, timeframe: Timeframe, days?: string): Promise<{
         received: number;
         saved: number;
     }>;
-    repairBinanceGaps(symbol: string, timeframe: Timeframe): Promise<{
+    repairSpotGaps(symbol: string, timeframe: Timeframe): Promise<{
         gapsFound: number;
         received: number;
         saved: number;

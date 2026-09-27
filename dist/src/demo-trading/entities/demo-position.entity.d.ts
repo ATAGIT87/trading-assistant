@@ -14,7 +14,7 @@ export declare class DemoPosition {
     investedAmount: number;
     entryFee: number;
     exitFee: number;
-    realizedPnlUsdt: number | null;
+    realizedPnlQuote: number | null;
     stopLoss: number;
     takeProfit: number;
     riskReward: number | null;

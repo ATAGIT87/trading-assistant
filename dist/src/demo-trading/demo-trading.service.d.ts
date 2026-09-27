@@ -46,6 +46,10 @@ export declare class DemoTradingService {
         winRate: number;
         totalR: number;
         expectancyR: number;
+        quoteCurrency: string;
+        realizedPnlQuote: number;
+        startingBalance: number;
+        estimatedBalance: number;
     }>;
     private isDuplicateSignalError;
     checkOpenPositions(): Promise<{
@@ -62,6 +66,7 @@ export declare class DemoTradingService {
             exitPrice: number | null;
             closedAt: Date | null;
             resultR: number | null;
+            realizedPnlQuote: number | null;
             exitReason: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
             reason: string;
         }[];

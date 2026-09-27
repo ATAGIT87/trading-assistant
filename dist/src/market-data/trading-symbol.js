@@ -10,16 +10,8 @@ exports.ParseTradingSymbolPipe = exports.supportedTradingSymbols = void 0;
 exports.normalizeTradingSymbol = normalizeTradingSymbol;
 const common_1 = require("@nestjs/common");
 exports.supportedTradingSymbols = [
-    "BTCUSDT",
-    "ETHUSDT",
-    "SOLUSDT",
-    "BNBUSDT",
-    "XRPUSDT",
-    "ADAUSDT",
-    "DOGEUSDT",
-    "AVAXUSDT",
-    "LINKUSDT",
-    "LTCUSDT",
+    "BTCEUR",
+    "ETHEUR",
 ];
 function normalizeTradingSymbol(value) {
     const symbol = value.trim().toUpperCase();

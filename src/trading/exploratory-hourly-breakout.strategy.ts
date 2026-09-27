@@ -52,7 +52,7 @@ export class ExploratoryHourlyBreakoutStrategy implements TradingStrategy {
     if (
       !latest ||
       candles.length < 201 ||
-      (symbol !== "BTCUSDT" && symbol !== "ETHUSDT")
+      (symbol !== "BTCEUR" && symbol !== "ETHEUR")
     )
       return no("NO_TRADE: exploratory universe/history requirement not met.");
     const closes = candles.map((c) => Number(c.close));

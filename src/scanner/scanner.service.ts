@@ -33,10 +33,10 @@ export class ScannerService {
   }
 
   async scan(symbol: string, timeframe: Timeframe) {
-    await this.marketDataService.syncBinanceCandles(symbol, timeframe);
+    await this.marketDataService.syncSpotCandles(symbol, timeframe);
     const higherTimeframe = getHigherTimeframe(timeframe);
     if (higherTimeframe !== null) {
-      await this.marketDataService.syncBinanceCandles(symbol, higherTimeframe);
+      await this.marketDataService.syncSpotCandles(symbol, higherTimeframe);
     }
 
     const candles = await this.marketDataService.getHistoricalCandles(
