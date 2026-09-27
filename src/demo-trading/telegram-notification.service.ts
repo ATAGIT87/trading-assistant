@@ -39,7 +39,16 @@ export class TelegramNotificationService {
   }
 
   async sendOpenNotification(
-    position: { symbol: string; timeframe: string; side: string; entry: number; stopLoss: number; takeProfit: number; riskReward: number | null } | null,
+    position: {
+      symbol: string;
+      timeframe: string;
+      side: string;
+      entry: number;
+      stopLoss: number;
+      takeProfit: number;
+      riskReward: number | null;
+      mode?: "APPROVED" | "EXPERIMENTAL";
+    } | null,
     action: string,
     signal: TradingSignal | null,
   ): Promise<boolean> {
@@ -49,13 +58,15 @@ export class TelegramNotificationService {
     }
 
     const message = [
-      "🚨 V2 DEMO SIGNAL",
+      position.mode === "EXPERIMENTAL"
+        ? "🧪 EXPERIMENTAL SPOT DEMO BUY"
+        : "🚨 SPOT DEMO BUY",
       "",
       `${position.symbol} ${position.timeframe}`,
       "",
       action,
       "",
-      `Entry: ${signal.entryPrice.toFixed(2)}`,
+      `Entry: ${Number(position.entry).toFixed(2)}`,
       `SL: ${Number(signal.stopLoss ?? position.stopLoss).toFixed(2)}`,
       `TP: ${Number(signal.takeProfit ?? position.takeProfit).toFixed(2)}`,
       `R:R: ${position.riskReward ?? 0}:${1}`,
@@ -76,6 +87,8 @@ export class TelegramNotificationService {
     status: "WIN" | "LOSS";
     exitPrice: number | null;
     resultR: number | null;
+    exitReason?: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
+    mode?: "APPROVED" | "EXPERIMENTAL";
   }): Promise<boolean> {
     if (!this.isEnabled()) {
       this.warnIfDisabled();
@@ -84,7 +97,13 @@ export class TelegramNotificationService {
 
     const isWin = position.status === "WIN";
     const message = [
-      isWin ? "✅ V2 DEMO WIN" : "❌ V2 DEMO LOSS",
+      position.mode === "EXPERIMENTAL"
+        ? isWin
+          ? "🧪 EXPERIMENTAL DEMO WIN"
+          : "🧪 EXPERIMENTAL DEMO LOSS"
+        : isWin
+          ? "✅ SPOT DEMO WIN"
+          : "❌ SPOT DEMO LOSS",
       "",
       `${position.symbol} ${position.timeframe}`,
       "",
@@ -92,10 +111,16 @@ export class TelegramNotificationService {
       "",
       `Entry: ${Number(position.entry).toFixed(2)}`,
       `Exit: ${Number(position.exitPrice ?? position.takeProfit ?? position.stopLoss).toFixed(2)}`,
-      `Result: ${isWin ? "+1R" : "-1R"}`,
+      `Result: ${this.formatResultR(position.resultR, isWin ? 1 : -1)}`,
+      `Exit reason: ${position.exitReason ?? "UNKNOWN"}`,
     ].join("\n");
 
     return this.sendMessage(message);
+  }
+
+  private formatResultR(resultR: number | null, fallback: number): string {
+    const value = Number(resultR ?? fallback);
+    return `${value >= 0 ? "+" : ""}${value.toFixed(4)}R`;
   }
 
   private async sendMessage(text: string): Promise<boolean> {

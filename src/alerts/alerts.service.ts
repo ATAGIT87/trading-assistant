@@ -18,7 +18,7 @@ export class AlertsService {
     timeframe: Timeframe,
     signal: TradingSignal,
   ): Promise<void> {
-    if (signal.action !== "BUY" && signal.action !== "SELL") {
+    if (signal.action !== "BUY") {
       return;
     }
 

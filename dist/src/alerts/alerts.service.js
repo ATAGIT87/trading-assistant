@@ -23,7 +23,7 @@ let AlertsService = class AlertsService {
         this.alertDeliveryRepository = alertDeliveryRepository;
     }
     async sendSignalAlert(symbol, timeframe, signal) {
-        if (signal.action !== "BUY" && signal.action !== "SELL") {
+        if (signal.action !== "BUY") {
             return;
         }
         const existingDelivery = await this.alertDeliveryRepository.findOne({

@@ -26,7 +26,10 @@ import { SignalsModule } from "./signals/signals.module";
       password: process.env.DB_PASSWORD ?? "admin",
       database: process.env.DB_DATABASE ?? "trading_assistant",
       autoLoadEntities: true,
-      synchronize: process.env.DB_SYNCHRONIZE !== "false",
+      // Schema synchronization can mutate a long-lived database at startup.
+      // It is opt-in for throwaway local development only; durable instances
+      // must use reviewed migrations.
+      synchronize: process.env.DB_SYNCHRONIZE === "true",
     }),
 
     ScheduleModule.forRoot(),

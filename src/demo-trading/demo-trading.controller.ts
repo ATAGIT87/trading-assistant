@@ -38,12 +38,20 @@ export class DemoTradingController {
         entry: position.entry,
         exitPrice: position.exitPrice,
         resultR: position.resultR,
+        exitReason: position.exitReason,
         openedAt: position.openedAt,
         closedAt: position.closedAt,
         symbol: position.symbol,
         timeframe: position.timeframe,
         side: position.side,
+        mode: position.mode,
+        strategyVersion: position.strategyVersion,
       })),
     };
+  }
+
+  @Get("summary")
+  async getSummary() {
+    return this.demoTradingService.getSummary();
   }
 }

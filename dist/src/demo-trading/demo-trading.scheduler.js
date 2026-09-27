@@ -12,38 +12,51 @@ var DemoTradingScheduler_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DemoTradingScheduler = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
-const timeframe_enum_1 = require("../assets/enums/timeframe.enum");
+const spot_trading_policy_1 = require("../trading/spot-trading-policy");
 const timeframe_utils_1 = require("../assets/timeframe.utils");
 const market_data_service_1 = require("../market-data/market-data.service");
 const signals_service_1 = require("../signals/signals.service");
 const backtesting_service_1 = require("../backtesting/backtesting.service");
 const demo_trading_service_1 = require("./demo-trading.service");
 const telegram_notification_service_1 = require("./telegram-notification.service");
+const assets_service_1 = require("../assets/assets.service");
 let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
     demoTradingService;
     signalsService;
     marketDataService;
     backtestingService;
     telegramNotificationService;
+    assetsService;
+    configService;
     logger = new common_1.Logger(DemoTradingScheduler_1.name);
-    demoMarkets = [
-        { symbol: "BTCUSD", timeframe: timeframe_enum_1.Timeframe.FIFTEEN_MINUTES },
-        { symbol: "ETHUSD", timeframe: timeframe_enum_1.Timeframe.FIFTEEN_MINUTES },
-    ];
-    constructor(demoTradingService, signalsService, marketDataService, backtestingService, telegramNotificationService) {
+    constructor(demoTradingService, signalsService, marketDataService, backtestingService, telegramNotificationService, assetsService, configService) {
         this.demoTradingService = demoTradingService;
         this.signalsService = signalsService;
         this.marketDataService = marketDataService;
         this.backtestingService = backtestingService;
         this.telegramNotificationService = telegramNotificationService;
+        this.assetsService = assetsService;
+        this.configService = configService;
     }
     async handleDemoTradingCycle() {
         const runAt = new Date();
+        const approvedDemo = this.configService.get("DEMO_TRADING_ENABLED", "false") === "true";
+        const exploratoryDemo = this.isExploratoryDemoDue(runAt);
+        if (!approvedDemo && !exploratoryDemo) {
+            this.logger.log("[demo-scheduler] Demo trading is disabled; exploratory Demo is not enabled.");
+            return;
+        }
         if (!this.telegramNotificationService.isEnabled()) {
             this.logger.warn("Telegram notifications disabled: missing TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID.");
         }
-        for (const market of this.demoMarkets) {
+        const demoMarkets = await this.assetsService.findActiveAssets();
+        if (demoMarkets.length === 0) {
+            this.logger.warn("[demo-scheduler] no active assets configured; Demo cycle skipped.");
+            return;
+        }
+        for (const market of demoMarkets) {
             await this.marketDataService.syncBinanceCandles(market.symbol, market.timeframe);
             const higherTimeframe = (0, timeframe_utils_1.getHigherTimeframe)(market.timeframe);
             if (higherTimeframe !== null) {
@@ -56,19 +69,24 @@ let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
             await this.telegramNotificationService.sendCloseNotification(position);
         }
         this.logger.log(`[demo-scheduler] tick=${runAt.toISOString()} closed=${closedPositions.length}`);
-        for (const market of this.demoMarkets) {
-            const readiness = await this.backtestingService.getReadiness(market.symbol, market.timeframe);
-            if (!readiness.isReady) {
-                this.logger.warn(`[demo-scheduler] ${market.symbol} / ${market.timeframe} skipped: ${readiness.reason}`);
+        for (const market of demoMarkets) {
+            if (!(0, timeframe_utils_1.isTimeframeBoundary)(market.timeframe, runAt)) {
                 continue;
+            }
+            if (approvedDemo) {
+                const readiness = await this.backtestingService.getReadiness(market.symbol, market.timeframe);
+                if (!readiness.isReady) {
+                    this.logger.warn(`[demo-scheduler] ${market.symbol} / ${market.timeframe} skipped: ${readiness.reason}`);
+                    continue;
+                }
             }
             const signal = await this.signalsService.getLiveV2Signal(market.symbol, market.timeframe);
             const action = signal?.action ?? "NO_TRADE";
-            if (action !== "BUY" && action !== "SELL") {
+            if (!(0, spot_trading_policy_1.isAllowedSpotEntry)(action)) {
                 this.logger.log(`[demo-scheduler] timestamp=${runAt.toISOString()} symbol=${market.symbol} timeframe=${market.timeframe} action=${action} positionOpened=false existingClosed=${String(closedPositions.length > 0)}`);
                 continue;
             }
-            const openResult = await this.demoTradingService.openPosition(market.symbol, market.timeframe);
+            const openResult = await this.demoTradingService.openPosition(market.symbol, market.timeframe, !approvedDemo && exploratoryDemo);
             const isDuplicateOpen = Boolean(openResult?.position) &&
                 openResult?.reason?.includes("Duplicate open demo position");
             const positionOpened = Boolean(openResult?.position) && !isDuplicateOpen;
@@ -78,10 +96,17 @@ let DemoTradingScheduler = DemoTradingScheduler_1 = class DemoTradingScheduler {
             this.logger.log(`[demo-scheduler] timestamp=${runAt.toISOString()} symbol=${market.symbol} timeframe=${market.timeframe} action=${action} positionOpened=${String(positionOpened)} existingClosed=${String(closedPositions.length > 0)}`);
         }
     }
+    isExploratoryDemoDue(now) {
+        if (this.configService.get("EXPLORATORY_DEMO_ENABLED", "false") !== "true") {
+            return false;
+        }
+        const start = new Date(this.configService.get("EXPLORATORY_DEMO_START_AT", ""));
+        return Number.isFinite(start.getTime()) && now.getTime() >= start.getTime();
+    }
 };
 exports.DemoTradingScheduler = DemoTradingScheduler;
 __decorate([
-    (0, schedule_1.Cron)("0 */15 * * * *"),
+    (0, schedule_1.Cron)("10 */15 * * * *"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -92,6 +117,8 @@ exports.DemoTradingScheduler = DemoTradingScheduler = DemoTradingScheduler_1 = _
         signals_service_1.SignalsService,
         market_data_service_1.MarketDataService,
         backtesting_service_1.BacktestingService,
-        telegram_notification_service_1.TelegramNotificationService])
+        telegram_notification_service_1.TelegramNotificationService,
+        assets_service_1.AssetsService,
+        config_1.ConfigService])
 ], DemoTradingScheduler);
 //# sourceMappingURL=demo-trading.scheduler.js.map

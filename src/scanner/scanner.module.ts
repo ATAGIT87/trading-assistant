@@ -8,7 +8,13 @@ import { AssetsModule } from "../assets/assets.module";
 import { BacktestingModule } from "../backtesting/backtesting.module";
 
 @Module({
-  imports: [SignalsModule, AlertsModule, MarketDataModule, AssetsModule, BacktestingModule],
+  imports: [
+    SignalsModule,
+    AlertsModule,
+    MarketDataModule,
+    AssetsModule,
+    BacktestingModule,
+  ],
   providers: [ScannerService],
   controllers: [ScannerController],
 })

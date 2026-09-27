@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findTradeOutcome = findTradeOutcome;
-function findTradeOutcome(signal, futureCandles) {
+function findTradeOutcome(signal, futureCandles, maxHoldingCandles) {
     if (signal.stopLoss === null || signal.takeProfit === null) {
         return {
             result: null,
+            exitReason: null,
             exitIndex: null,
             exitPrice: null,
             maeR: 0,
@@ -16,6 +17,7 @@ function findTradeOutcome(signal, futureCandles) {
     if (riskAmount <= 0) {
         return {
             result: null,
+            exitReason: null,
             exitIndex: null,
             exitPrice: null,
             maeR: 0,
@@ -39,6 +41,7 @@ function findTradeOutcome(signal, futureCandles) {
             if (hitStopLoss && hitTakeProfit) {
                 return {
                     result: false,
+                    exitReason: "STOP_LOSS",
                     exitIndex: i,
                     exitPrice: signal.stopLoss,
                     maeR: maxMae,
@@ -49,6 +52,7 @@ function findTradeOutcome(signal, futureCandles) {
             if (hitStopLoss) {
                 return {
                     result: false,
+                    exitReason: "STOP_LOSS",
                     exitIndex: i,
                     exitPrice: signal.stopLoss,
                     maeR: maxMae,
@@ -59,6 +63,7 @@ function findTradeOutcome(signal, futureCandles) {
             if (hitTakeProfit) {
                 return {
                     result: true,
+                    exitReason: "TAKE_PROFIT",
                     exitIndex: i,
                     exitPrice: signal.takeProfit,
                     maeR: maxMae,
@@ -77,6 +82,7 @@ function findTradeOutcome(signal, futureCandles) {
             if (hitStopLoss && hitTakeProfit) {
                 return {
                     result: false,
+                    exitReason: "STOP_LOSS",
                     exitIndex: i,
                     exitPrice: signal.stopLoss,
                     maeR: maxMae,
@@ -87,6 +93,7 @@ function findTradeOutcome(signal, futureCandles) {
             if (hitStopLoss) {
                 return {
                     result: false,
+                    exitReason: "STOP_LOSS",
                     exitIndex: i,
                     exitPrice: signal.stopLoss,
                     maeR: maxMae,
@@ -97,6 +104,7 @@ function findTradeOutcome(signal, futureCandles) {
             if (hitTakeProfit) {
                 return {
                     result: true,
+                    exitReason: "TAKE_PROFIT",
                     exitIndex: i,
                     exitPrice: signal.takeProfit,
                     maeR: maxMae,
@@ -105,9 +113,25 @@ function findTradeOutcome(signal, futureCandles) {
                 };
             }
         }
+        if (i + 1 >= maxHoldingCandles) {
+            const close = Number(candle.close);
+            const timeExitResult = signal.action === "BUY"
+                ? close >= signal.entryPrice
+                : close <= signal.entryPrice;
+            return {
+                result: timeExitResult,
+                exitReason: "TIME_EXIT",
+                exitIndex: i,
+                exitPrice: close,
+                maeR: maxMae,
+                mfeR: maxMfe,
+                durationCandles: i + 1,
+            };
+        }
     }
     return {
         result: null,
+        exitReason: null,
         exitIndex: null,
         exitPrice: null,
         maeR: maxMae,

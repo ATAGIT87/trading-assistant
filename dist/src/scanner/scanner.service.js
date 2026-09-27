@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScannerService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const signals_service_1 = require("../signals/signals.service");
 const market_data_service_1 = require("../market-data/market-data.service");
@@ -24,12 +25,14 @@ let ScannerService = class ScannerService {
     alertsService;
     assetsService;
     backtestingService;
-    constructor(signalsService, marketDataService, alertsService, assetsService, backtestingService) {
+    configService;
+    constructor(signalsService, marketDataService, alertsService, assetsService, backtestingService, configService) {
         this.signalsService = signalsService;
         this.marketDataService = marketDataService;
         this.alertsService = alertsService;
         this.assetsService = assetsService;
         this.backtestingService = backtestingService;
+        this.configService = configService;
     }
     isMarketDataFresh(candleTime, timeframe) {
         const maxAge = timeframe_utils_1.timeframeDurationMs[timeframe] * 2;
@@ -60,11 +63,17 @@ let ScannerService = class ScannerService {
         }
         if (signal.action === "BUY" || signal.action === "SELL") {
             const readiness = await this.backtestingService.getReadiness(symbol, timeframe);
-            if (readiness.isReady) {
+            const activeStrategy = this.configService.get("ACTIVE_STRATEGY_VERSION", "");
+            const approvedStrategy = this.configService.get("APPROVED_STRATEGY_VERSION", "");
+            if (readiness.isReady &&
+                approvedStrategy &&
+                approvedStrategy === activeStrategy) {
                 await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
             }
             else {
-                console.warn(`[Scanner] Alert blocked for ${symbol} / ${timeframe}: ${readiness.reason}`);
+                console.warn(`[Scanner] Alert blocked for ${symbol} / ${timeframe}: ${readiness.isReady
+                    ? "selected strategy is not explicitly approved"
+                    : readiness.reason}`);
             }
         }
         console.log(`[Scanner] ${symbol} / ${timeframe} → ${signal.action} (signalTime: ${signal.candleTime.toISOString()}, reason: ${signal.reason})`);
@@ -103,6 +112,7 @@ exports.ScannerService = ScannerService = __decorate([
         market_data_service_1.MarketDataService,
         alerts_service_1.AlertsService,
         assets_service_1.AssetsService,
-        backtesting_service_1.BacktestingService])
+        backtesting_service_1.BacktestingService,
+        config_1.ConfigService])
 ], ScannerService);
 //# sourceMappingURL=scanner.service.js.map

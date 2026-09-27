@@ -17,6 +17,7 @@ export declare class TelegramNotificationService {
         stopLoss: number;
         takeProfit: number;
         riskReward: number | null;
+        mode?: "APPROVED" | "EXPERIMENTAL";
     } | null, action: string, signal: TradingSignal | null): Promise<boolean>;
     sendCloseNotification(position: {
         symbol: string;
@@ -28,6 +29,9 @@ export declare class TelegramNotificationService {
         status: "WIN" | "LOSS";
         exitPrice: number | null;
         resultR: number | null;
+        exitReason?: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
+        mode?: "APPROVED" | "EXPERIMENTAL";
     }): Promise<boolean>;
+    private formatResultR;
     private sendMessage;
 }

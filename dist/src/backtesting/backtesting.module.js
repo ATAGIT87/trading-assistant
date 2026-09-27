@@ -24,15 +24,9 @@ exports.BacktestingModule = BacktestingModule = __decorate([
             market_data_module_1.MarketDataModule,
             signals_module_1.SignalsModule,
         ],
-        controllers: [
-            backtesting_controller_1.BacktestingController,
-        ],
-        providers: [
-            backtesting_service_1.BacktestingService,
-        ],
-        exports: [
-            backtesting_service_1.BacktestingService,
-        ],
+        controllers: [backtesting_controller_1.BacktestingController],
+        providers: [backtesting_service_1.BacktestingService],
+        exports: [backtesting_service_1.BacktestingService],
     })
 ], BacktestingModule);
 //# sourceMappingURL=backtesting.module.js.map

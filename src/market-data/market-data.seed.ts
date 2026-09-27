@@ -23,7 +23,7 @@ export class MarketDataSeed implements OnModuleInit {
     // 1h candles
     for (let i = 0; i < 120; i++) {
       candles.push({
-        symbol: "BTCUSD",
+        symbol: "BTCUSDT",
         timeframe: Timeframe.ONE_HOUR,
         time: new Date(Date.UTC(2026, 8, 14, i, 0)),
         open: price.toString(),
@@ -47,7 +47,7 @@ export class MarketDataSeed implements OnModuleInit {
       }
 
       fourHourCandles.push({
-        symbol: "BTCUSD",
+        symbol: "BTCUSDT",
         timeframe: Timeframe.FOUR_HOURS,
         time: group[0].time,
         open: group[0].open,
@@ -64,12 +64,12 @@ export class MarketDataSeed implements OnModuleInit {
 
     // Clear old seed data
     await this.marketCandleRepository.delete({
-      symbol: "BTCUSD",
+      symbol: "BTCUSDT",
       timeframe: Timeframe.ONE_HOUR,
     });
 
     await this.marketCandleRepository.delete({
-      symbol: "BTCUSD",
+      symbol: "BTCUSDT",
       timeframe: Timeframe.FOUR_HOURS,
     });
 

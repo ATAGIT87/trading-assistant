@@ -82,6 +82,16 @@ export class MarketCandleStorageService {
     });
   }
 
+  findEarliestCandle(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<MarketCandle | null> {
+    return this.marketCandleRepository.findOne({
+      where: { symbol, timeframe },
+      order: { time: "ASC" },
+    });
+  }
+
   getCandlesForAnalysis(
     symbol: string,
     timeframe: Timeframe,
@@ -138,6 +148,36 @@ export class MarketCandleStorageService {
   }
 
   async saveCandles(candles: MarketCandle[]): Promise<MarketCandle[]> {
-    return this.marketCandleRepository.save(candles);
+    const saved: MarketCandle[] = [];
+    const batchSize = 500;
+
+    for (let start = 0; start < candles.length; start += batchSize) {
+      const batch = candles.slice(start, start + batchSize);
+      saved.push(...(await this.marketCandleRepository.save(batch)));
+    }
+
+    return saved;
+  }
+
+  async replaceFourHourCandles(
+    symbol: string,
+    candles: MarketCandle[],
+  ): Promise<void> {
+    await this.marketCandleRepository.manager.transaction(async (manager) => {
+      await manager.delete(MarketCandle, {
+        symbol,
+        timeframe: Timeframe.FOUR_HOURS,
+      });
+      // PostgreSQL has a bind-parameter limit. A five-year 4h rebuild is much
+      // larger than one safe INSERT, so keep replacement atomic but write it
+      // in bounded batches.
+      const batchSize = 500;
+      for (let start = 0; start < candles.length; start += batchSize) {
+        await manager.save(
+          MarketCandle,
+          candles.slice(start, start + batchSize),
+        );
+      }
+    });
   }
 }

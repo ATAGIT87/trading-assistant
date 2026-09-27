@@ -5,6 +5,7 @@ import { MarketDataModule } from "../market-data/market-data.module";
 import { BacktestingModule } from "../backtesting/backtesting.module";
 import { SignalsModule } from "../signals/signals.module";
 import { ConfigModule } from "@nestjs/config";
+import { AssetsModule } from "../assets/assets.module";
 
 import { DemoTradingController } from "./demo-trading.controller";
 import { DemoTradingScheduler } from "./demo-trading.scheduler";
@@ -19,8 +20,13 @@ import { DemoPosition } from "./entities/demo-position.entity";
     SignalsModule,
     MarketDataModule,
     BacktestingModule,
+    AssetsModule,
   ],
-  providers: [DemoTradingService, DemoTradingScheduler, TelegramNotificationService],
+  providers: [
+    DemoTradingService,
+    DemoTradingScheduler,
+    TelegramNotificationService,
+  ],
   controllers: [DemoTradingController],
   exports: [DemoTradingService, TelegramNotificationService],
 })

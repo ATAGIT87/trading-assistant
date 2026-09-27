@@ -1,7 +1,35 @@
 import { z } from "zod";
 export declare const BacktestResponseSchema: z.ZodObject<{
     strategyVersion: z.ZodString;
+    researchContext: z.ZodObject<{
+        engineVersion: z.ZodString;
+        codeRevision: z.ZodString;
+        feeRate: z.ZodNumber;
+        slippageRate: z.ZodNumber;
+        protectedHoldoutStart: z.ZodString;
+        primaryCandleRange: z.ZodObject<{
+            firstCandleTime: z.ZodNullable<z.ZodCoercedDate<unknown>>;
+            lastCompletedCandleTime: z.ZodNullable<z.ZodCoercedDate<unknown>>;
+        }, z.core.$strip>;
+    }, z.core.$strip>;
+    dataQuality: z.ZodObject<{
+        primary: z.ZodObject<{
+            totalCandles: z.ZodNumber;
+            completedCandles: z.ZodNumber;
+            invalidOhlcCandles: z.ZodNumber;
+            gapCount: z.ZodNumber;
+            isUsableForResearch: z.ZodBoolean;
+        }, z.core.$loose>;
+        higherTimeframe: z.ZodNullable<z.ZodObject<{
+            totalCandles: z.ZodNumber;
+            invalidOhlcCandles: z.ZodNumber;
+            gapCount: z.ZodNumber;
+            isUsableForResearch: z.ZodBoolean;
+        }, z.core.$loose>>;
+    }, z.core.$strip>;
     higherTimeframeConfirmation: z.ZodBoolean;
+    includesProtectedHoldout: z.ZodBoolean;
+    protectedHoldoutDays: z.ZodNumber;
     totalTrades: z.ZodNumber;
     winningTrades: z.ZodNumber;
     losingTrades: z.ZodNumber;
@@ -15,9 +43,15 @@ export declare const BacktestResponseSchema: z.ZodObject<{
     training: z.ZodObject<{
         totalTrades: z.ZodNumber;
     }, z.core.$loose>;
+    validation: z.ZodObject<{
+        totalTrades: z.ZodNumber;
+    }, z.core.$loose>;
     test: z.ZodObject<{
         totalTrades: z.ZodNumber;
     }, z.core.$loose>;
+    protectedHoldout: z.ZodNullable<z.ZodObject<{
+        totalTrades: z.ZodNumber;
+    }, z.core.$loose>>;
     trades: z.ZodArray<z.ZodObject<{
         result: z.ZodEnum<{
             WIN: "WIN";

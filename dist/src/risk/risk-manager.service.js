@@ -9,11 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RiskManagerService = void 0;
 const common_1 = require("@nestjs/common");
 let RiskManagerService = class RiskManagerService {
-    calculateLevels(action, entryPrice, candles, atr) {
+    calculateLevels(action, entryPrice, candles, atr, rewardToRisk = 2) {
         if ((action !== "BUY" && action !== "SELL") ||
             entryPrice <= 0 ||
             atr <= 0 ||
-            candles.length < 5) {
+            candles.length < 5 ||
+            !Number.isFinite(rewardToRisk) ||
+            rewardToRisk < 1) {
             return {
                 stopLoss: null,
                 takeProfit: null,
@@ -29,14 +31,12 @@ let RiskManagerService = class RiskManagerService {
         if (action === "BUY") {
             stopLoss = Math.min(entryPrice - atrRisk, recentLow);
             const risk = entryPrice - stopLoss;
-            takeProfit =
-                entryPrice + risk * 2;
+            takeProfit = entryPrice + risk * rewardToRisk;
         }
         else {
             stopLoss = Math.max(entryPrice + atrRisk, recentHigh);
             const risk = stopLoss - entryPrice;
-            takeProfit =
-                entryPrice - risk * 2;
+            takeProfit = entryPrice - risk * rewardToRisk;
         }
         const risk = Math.abs(entryPrice - stopLoss);
         const reward = Math.abs(takeProfit - entryPrice);

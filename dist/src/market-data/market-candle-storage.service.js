@@ -78,6 +78,12 @@ let MarketCandleStorageService = class MarketCandleStorageService {
             },
         });
     }
+    findEarliestCandle(symbol, timeframe) {
+        return this.marketCandleRepository.findOne({
+            where: { symbol, timeframe },
+            order: { time: "ASC" },
+        });
+    }
     getCandlesForAnalysis(symbol, timeframe) {
         return this.marketCandleRepository.find({
             where: {
@@ -120,7 +126,25 @@ let MarketCandleStorageService = class MarketCandleStorageService {
         });
     }
     async saveCandles(candles) {
-        return this.marketCandleRepository.save(candles);
+        const saved = [];
+        const batchSize = 500;
+        for (let start = 0; start < candles.length; start += batchSize) {
+            const batch = candles.slice(start, start + batchSize);
+            saved.push(...(await this.marketCandleRepository.save(batch)));
+        }
+        return saved;
+    }
+    async replaceFourHourCandles(symbol, candles) {
+        await this.marketCandleRepository.manager.transaction(async (manager) => {
+            await manager.delete(market_candle_entity_1.MarketCandle, {
+                symbol,
+                timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
+            });
+            const batchSize = 500;
+            for (let start = 0; start < candles.length; start += batchSize) {
+                await manager.save(market_candle_entity_1.MarketCandle, candles.slice(start, start + batchSize));
+            }
+        });
     }
 };
 exports.MarketCandleStorageService = MarketCandleStorageService;

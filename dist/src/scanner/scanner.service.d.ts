@@ -1,3 +1,4 @@
+import { ConfigService } from "@nestjs/config";
 import { SignalsService } from "../signals/signals.service";
 import { MarketDataService } from "../market-data/market-data.service";
 import { AlertsService } from "../alerts/alerts.service";
@@ -10,7 +11,8 @@ export declare class ScannerService {
     private readonly alertsService;
     private readonly assetsService;
     private readonly backtestingService;
-    constructor(signalsService: SignalsService, marketDataService: MarketDataService, alertsService: AlertsService, assetsService: AssetsService, backtestingService: BacktestingService);
+    private readonly configService;
+    constructor(signalsService: SignalsService, marketDataService: MarketDataService, alertsService: AlertsService, assetsService: AssetsService, backtestingService: BacktestingService, configService: ConfigService);
     private isMarketDataFresh;
     scan(symbol: string, timeframe: Timeframe): Promise<import("../signals/signal.types").TradingSignal | null>;
     scheduledScan(): Promise<void>;

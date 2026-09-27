@@ -7,11 +7,12 @@ export const timeframeDurationMs: Record<Timeframe, number> = {
   [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
 };
 
-export const higherTimeframeByTimeframe: Partial<Record<Timeframe, Timeframe>> = {
-  [Timeframe.FIFTEEN_MINUTES]: Timeframe.ONE_HOUR,
-  [Timeframe.ONE_HOUR]: Timeframe.FOUR_HOURS,
-  [Timeframe.FOUR_HOURS]: Timeframe.ONE_DAY,
-};
+export const higherTimeframeByTimeframe: Partial<Record<Timeframe, Timeframe>> =
+  {
+    [Timeframe.FIFTEEN_MINUTES]: Timeframe.ONE_HOUR,
+    [Timeframe.ONE_HOUR]: Timeframe.FOUR_HOURS,
+    [Timeframe.FOUR_HOURS]: Timeframe.ONE_DAY,
+  };
 
 export function getHigherTimeframe(timeframe: Timeframe): Timeframe | null {
   return higherTimeframeByTimeframe[timeframe] ?? null;

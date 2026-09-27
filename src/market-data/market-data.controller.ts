@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, Param } from "@nestjs/common";
+import {
+  BadRequestException,
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  ParseEnumPipe,
+  Query,
+} from "@nestjs/common";
 import { MarketDataProviderService } from "./market-data-provider.service";
 import { CreateMarketCandleDto } from "./dto/create-market-candle.dto";
 import { MarketDataService } from "./market-data.service";
@@ -40,6 +49,14 @@ export class MarketDataController {
     @Param("timeframe") timeframe: Timeframe,
   ) {
     return this.marketDataService.findLatestCandle(symbol, timeframe);
+  }
+
+  @Get("candles/:symbol/:timeframe/quality")
+  getDataQuality(
+    @Param("symbol") symbol: string,
+    @Param("timeframe") timeframe: Timeframe,
+  ) {
+    return this.marketDataService.getDataQuality(symbol, timeframe);
   }
 
   @Get("candles/:symbol/:timeframe/rsi")
@@ -167,17 +184,7 @@ export class MarketDataController {
     return this.marketDataService.getLatestAdx(symbol, timeframe, period);
   }
 
-  @Get("price/:symbol")
-  getLatestMarketPrice(@Param("symbol") symbol: string) {
-    return this.marketDataProviderService.getLatestPrice(symbol);
-  }
-
-  @Get("real-candles/:symbol")
-  getRealCandles(@Param("symbol") symbol: string) {
-    return this.marketDataProviderService.getHourlyCandles(symbol, 2);
-  }
-
-  @Get("binance-candles/:symbol")
+  @Get("spot-candles/:symbol")
   getBinanceCandles(@Param("symbol") symbol: string) {
     return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
   }
@@ -205,6 +212,40 @@ export class MarketDataController {
       received: candles.length,
       saved: savedCount,
     };
+  }
+
+  @Post("backfill-binance/:symbol/:timeframe")
+  async backfillBinanceCandles(
+    @Param("symbol") symbol: string,
+    @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
+    @Query("days") days = "365",
+  ) {
+    const parsedDays = Number(days);
+    if (!Number.isInteger(parsedDays) || parsedDays < 30 || parsedDays > 1825) {
+      throw new BadRequestException(
+        "days must be an integer between 30 and 1825.",
+      );
+    }
+
+    return this.marketDataService.backfillBinanceCandles(
+      symbol,
+      timeframe,
+      parsedDays,
+    );
+  }
+
+  @Post("repair-binance-gaps/:symbol/:timeframe")
+  async repairBinanceGaps(
+    @Param("symbol") symbol: string,
+    @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
+  ) {
+    if (timeframe === Timeframe.FOUR_HOURS) {
+      throw new BadRequestException(
+        "4h candles are derived from 1h data; repair 1h first, then rebuild 4h.",
+      );
+    }
+
+    return this.marketDataService.repairBinanceGaps(symbol, timeframe);
   }
 
   @Post("build-4h/:symbol")

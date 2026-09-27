@@ -6,17 +6,17 @@ export declare class DemoTradingController {
     openPosition(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
-        action: "WAIT" | "NO_TRADE";
+        action: "SELL" | "WAIT" | "NO_TRADE";
         reason: string;
         position: null;
         signal?: undefined;
     } | {
         symbol: string;
         timeframe: Timeframe;
-        action: "BUY" | "SELL";
+        action: "BUY";
         signal: import("../signals/signal.types").TradingSignal;
         reason: string;
-        position: import("./entities/demo-position.entity").DemoPosition;
+        position: any;
     }>;
     getOpenPositions(): Promise<{
         openPositions: import("./entities/demo-position.entity").DemoPosition[];
@@ -26,7 +26,8 @@ export declare class DemoTradingController {
         processed: {
             symbol: string;
             timeframe: Timeframe;
-            side: "BUY" | "SELL";
+            side: "BUY";
+            mode: import("./entities/demo-position.entity").DemoPosition["mode"];
             entry: number;
             stopLoss: number;
             takeProfit: number;
@@ -34,6 +35,7 @@ export declare class DemoTradingController {
             exitPrice: number | null;
             closedAt: Date | null;
             resultR: number | null;
+            exitReason: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
             reason: string;
         }[];
     }>;
@@ -43,11 +45,23 @@ export declare class DemoTradingController {
             entry: number;
             exitPrice: number | null;
             resultR: number | null;
+            exitReason: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
             openedAt: Date;
             closedAt: Date | null;
             symbol: string;
             timeframe: Timeframe;
-            side: import("./entities/demo-position.entity").DemoPositionSide;
+            side: "BUY";
+            mode: import("./entities/demo-position.entity").DemoPositionMode;
+            strategyVersion: string | null;
         }[];
+    }>;
+    getSummary(): Promise<{
+        openPositions: number;
+        completedTrades: number;
+        winningTrades: number;
+        losingTrades: number;
+        winRate: number;
+        totalR: number;
+        expectancyR: number;
     }>;
 }

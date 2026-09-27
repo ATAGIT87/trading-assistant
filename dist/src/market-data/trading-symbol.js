@@ -9,7 +9,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ParseTradingSymbolPipe = exports.supportedTradingSymbols = void 0;
 exports.normalizeTradingSymbol = normalizeTradingSymbol;
 const common_1 = require("@nestjs/common");
-exports.supportedTradingSymbols = ["BTCUSD", "ETHUSD"];
+exports.supportedTradingSymbols = [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+];
 function normalizeTradingSymbol(value) {
     const symbol = value.trim().toUpperCase();
     if (!exports.supportedTradingSymbols.includes(symbol)) {

@@ -41,6 +41,9 @@ let MarketDataController = class MarketDataController {
     findLatestCandle(symbol, timeframe) {
         return this.marketDataService.findLatestCandle(symbol, timeframe);
     }
+    getDataQuality(symbol, timeframe) {
+        return this.marketDataService.getDataQuality(symbol, timeframe);
+    }
     getLatestRsi(symbol, timeframe) {
         return this.marketDataService.getLatestRsi(symbol, timeframe);
     }
@@ -74,12 +77,6 @@ let MarketDataController = class MarketDataController {
     getLatestAdx(symbol, timeframe, period) {
         return this.marketDataService.getLatestAdx(symbol, timeframe, period);
     }
-    getLatestMarketPrice(symbol) {
-        return this.marketDataProviderService.getLatestPrice(symbol);
-    }
-    getRealCandles(symbol) {
-        return this.marketDataProviderService.getHourlyCandles(symbol, 2);
-    }
     getBinanceCandles(symbol) {
         return this.marketDataProviderService.getBinanceHourlyCandles(symbol, 100);
     }
@@ -92,6 +89,19 @@ let MarketDataController = class MarketDataController {
             received: candles.length,
             saved: savedCount,
         };
+    }
+    async backfillBinanceCandles(symbol, timeframe, days = "365") {
+        const parsedDays = Number(days);
+        if (!Number.isInteger(parsedDays) || parsedDays < 30 || parsedDays > 1825) {
+            throw new common_1.BadRequestException("days must be an integer between 30 and 1825.");
+        }
+        return this.marketDataService.backfillBinanceCandles(symbol, timeframe, parsedDays);
+    }
+    async repairBinanceGaps(symbol, timeframe) {
+        if (timeframe === timeframe_enum_1.Timeframe.FOUR_HOURS) {
+            throw new common_1.BadRequestException("4h candles are derived from 1h data; repair 1h first, then rebuild 4h.");
+        }
+        return this.marketDataService.repairBinanceGaps(symbol, timeframe);
     }
     async buildFourHourCandles(symbol) {
         const saved = await this.marketDataService.buildFourHourCandles(symbol);
@@ -139,6 +149,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "findLatestCandle", null);
+__decorate([
+    (0, common_1.Get)("candles/:symbol/:timeframe/quality"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], MarketDataController.prototype, "getDataQuality", null);
 __decorate([
     (0, common_1.Get)("candles/:symbol/:timeframe/rsi"),
     __param(0, (0, common_1.Param)("symbol")),
@@ -238,21 +256,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MarketDataController.prototype, "getLatestAdx", null);
 __decorate([
-    (0, common_1.Get)("price/:symbol"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], MarketDataController.prototype, "getLatestMarketPrice", null);
-__decorate([
-    (0, common_1.Get)("real-candles/:symbol"),
-    __param(0, (0, common_1.Param)("symbol")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], MarketDataController.prototype, "getRealCandles", null);
-__decorate([
-    (0, common_1.Get)("binance-candles/:symbol"),
+    (0, common_1.Get)("spot-candles/:symbol"),
     __param(0, (0, common_1.Param)("symbol")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -266,6 +270,23 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], MarketDataController.prototype, "syncBinanceCandles", null);
+__decorate([
+    (0, common_1.Post)("backfill-binance/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __param(2, (0, common_1.Query)("days")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], MarketDataController.prototype, "backfillBinanceCandles", null);
+__decorate([
+    (0, common_1.Post)("repair-binance-gaps/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol")),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], MarketDataController.prototype, "repairBinanceGaps", null);
 __decorate([
     (0, common_1.Post)("build-4h/:symbol"),
     __param(0, (0, common_1.Param)("symbol")),

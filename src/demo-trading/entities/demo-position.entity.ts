@@ -1,16 +1,32 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 import { Timeframe } from "../../assets/enums/timeframe.enum";
 
-export type DemoPositionSide = "BUY" | "SELL";
+export type DemoPositionSide = "BUY";
 export type DemoPositionStatus = "OPEN" | "WIN" | "LOSS";
+export type DemoPositionMode = "APPROVED" | "EXPERIMENTAL";
 
 @Entity()
+@Index(
+  "UQ_demo_position_strategy_signal",
+  ["strategyVersion", "symbol", "timeframe", "openedAt"],
+  { unique: true },
+)
 export class DemoPosition {
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Column()
   symbol!: string;
+
+  @Column({ type: "varchar", nullable: true })
+  strategyVersion!: string | null;
+
+  @Column({
+    type: "enum",
+    enum: ["APPROVED", "EXPERIMENTAL"],
+    default: "APPROVED",
+  })
+  mode!: DemoPositionMode;
 
   @Column({
     type: "enum",
@@ -20,6 +36,9 @@ export class DemoPosition {
 
   @Column({
     type: "enum",
+    // Keep the database enum compatible with existing Demo rows. The
+    // application-level Spot policy permits only BUY openings; removing the
+    // legacy enum value belongs in an explicit reviewed migration.
     enum: ["BUY", "SELL"],
   })
   side!: DemoPositionSide;
@@ -54,4 +73,7 @@ export class DemoPosition {
 
   @Column("decimal", { precision: 12, scale: 4, nullable: true })
   resultR!: number | null;
+
+  @Column({ type: "varchar", nullable: true })
+  exitReason!: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
 }

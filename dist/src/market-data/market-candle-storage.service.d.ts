@@ -10,9 +10,11 @@ export declare class MarketCandleStorageService {
     findCandlesBySymbol(symbol: string): Promise<MarketCandle[]>;
     findCandlesBySymbolAndTimeframe(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     findLatestCandle(symbol: string, timeframe: Timeframe): Promise<MarketCandle | null>;
+    findEarliestCandle(symbol: string, timeframe: Timeframe): Promise<MarketCandle | null>;
     getCandlesForAnalysis(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     getHistoricalCandles(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
     getHistoricalCandlesUntil(symbol: string, timeframe: Timeframe, until: Date): Promise<MarketCandle[]>;
     deleteFourHourCandles(symbol: string): Promise<void>;
     saveCandles(candles: MarketCandle[]): Promise<MarketCandle[]>;
+    replaceFourHourCandles(symbol: string, candles: MarketCandle[]): Promise<void>;
 }
