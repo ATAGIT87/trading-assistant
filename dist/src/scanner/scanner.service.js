@@ -11,10 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScannerService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const signals_service_1 = require("../signals/signals.service");
 const market_data_service_1 = require("../market-data/market-data.service");
 const alerts_service_1 = require("../alerts/alerts.service");
+const backtesting_service_1 = require("../backtesting/backtesting.service");
 const assets_service_1 = require("../assets/assets.service");
 const timeframe_utils_1 = require("../assets/timeframe.utils");
 let ScannerService = class ScannerService {
@@ -22,11 +24,15 @@ let ScannerService = class ScannerService {
     marketDataService;
     alertsService;
     assetsService;
-    constructor(signalsService, marketDataService, alertsService, assetsService) {
+    backtestingService;
+    configService;
+    constructor(signalsService, marketDataService, alertsService, assetsService, backtestingService, configService) {
         this.signalsService = signalsService;
         this.marketDataService = marketDataService;
         this.alertsService = alertsService;
         this.assetsService = assetsService;
+        this.backtestingService = backtestingService;
+        this.configService = configService;
     }
     isMarketDataFresh(candleTime, timeframe) {
         const maxAge = timeframe_utils_1.timeframeDurationMs[timeframe] * 2;
@@ -56,7 +62,19 @@ let ScannerService = class ScannerService {
             return null;
         }
         if (signal.action === "BUY" || signal.action === "SELL") {
-            await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+            const readiness = await this.backtestingService.getReadiness(symbol, timeframe);
+            const activeStrategy = this.configService.get("ACTIVE_STRATEGY_VERSION", "");
+            const approvedStrategy = this.configService.get("APPROVED_STRATEGY_VERSION", "");
+            if (readiness.isReady &&
+                approvedStrategy &&
+                approvedStrategy === activeStrategy) {
+                await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+            }
+            else {
+                console.warn(`[Scanner] Alert blocked for ${symbol} / ${timeframe}: ${readiness.isReady
+                    ? "selected strategy is not explicitly approved"
+                    : readiness.reason}`);
+            }
         }
         console.log(`[Scanner] ${symbol} / ${timeframe} → ${signal.action} (signalTime: ${signal.candleTime.toISOString()}, reason: ${signal.reason})`);
         return signal;
@@ -93,6 +111,8 @@ exports.ScannerService = ScannerService = __decorate([
     __metadata("design:paramtypes", [signals_service_1.SignalsService,
         market_data_service_1.MarketDataService,
         alerts_service_1.AlertsService,
-        assets_service_1.AssetsService])
+        assets_service_1.AssetsService,
+        backtesting_service_1.BacktestingService,
+        config_1.ConfigService])
 ], ScannerService);
 //# sourceMappingURL=scanner.service.js.map

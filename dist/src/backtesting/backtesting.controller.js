@@ -26,11 +26,20 @@ let BacktestingController = class BacktestingController {
     async getHistory(symbol, timeframe) {
         return this.backtestingService.findRuns(symbol, timeframe);
     }
+    async getReadiness(symbol, timeframe) {
+        return this.backtestingService.getReadiness(symbol, timeframe);
+    }
     async compareLatestRuns(symbol, timeframe, baselineVersion = "v2-baseline", candidateVersion = "v2-baseline") {
         return this.backtestingService.compareLatestRuns(symbol, timeframe, baselineVersion, candidateVersion);
     }
-    async runBacktest(symbol, timeframe) {
-        const result = await this.backtestingService.run(symbol, timeframe);
+    async runPortfolioBacktest(timeframe, strategyVersion) {
+        return this.backtestingService.runPortfolio(timeframe, strategyVersion);
+    }
+    async runWalkForwardPortfolio(timeframe, strategyVersion) {
+        return this.backtestingService.runWalkForwardPortfolio(timeframe, strategyVersion);
+    }
+    async runBacktest(symbol, timeframe, strategyVersion, includeHoldout = "false") {
+        const result = await this.backtestingService.run(symbol, timeframe, strategyVersion, includeHoldout === "true");
         return backtest_response_schema_1.BacktestResponseSchema.parse(result);
     }
 };
@@ -44,6 +53,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BacktestingController.prototype, "getHistory", null);
 __decorate([
+    (0, common_1.Get)("readiness/:symbol/:timeframe"),
+    __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
+    __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], BacktestingController.prototype, "getReadiness", null);
+__decorate([
     (0, common_1.Get)("compare/:symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
     __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
@@ -54,11 +71,29 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BacktestingController.prototype, "compareLatestRuns", null);
 __decorate([
+    (0, common_1.Get)("portfolio/:timeframe"),
+    __param(0, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __param(1, (0, common_1.Query)("strategy")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], BacktestingController.prototype, "runPortfolioBacktest", null);
+__decorate([
+    (0, common_1.Get)("walk-forward/portfolio/:timeframe"),
+    __param(0, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __param(1, (0, common_1.Query)("strategy")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], BacktestingController.prototype, "runWalkForwardPortfolio", null);
+__decorate([
     (0, common_1.Get)(":symbol/:timeframe"),
     __param(0, (0, common_1.Param)("symbol", trading_symbol_1.ParseTradingSymbolPipe)),
     __param(1, (0, common_1.Param)("timeframe", new common_1.ParseEnumPipe(timeframe_enum_1.Timeframe))),
+    __param(2, (0, common_1.Query)("strategy")),
+    __param(3, (0, common_1.Query)("includeHoldout")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String, Object]),
     __metadata("design:returntype", Promise)
 ], BacktestingController.prototype, "runBacktest", null);
 exports.BacktestingController = BacktestingController = __decorate([

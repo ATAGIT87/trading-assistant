@@ -4,6 +4,7 @@ import { MarketCandleStorageService } from "./market-candle-storage.service";
 import { MarketDataAnalysisService } from "./market-data-analysis.service";
 import { MarketDataProviderService } from "./market-data-provider.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { MarketDataQualityReport } from "./market-data-quality";
 export declare class MarketDataService {
     private readonly storageService;
     private readonly analysisService;
@@ -28,9 +29,20 @@ export declare class MarketDataService {
     getLatestAtr(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
     getHistoricalCandles(symbol: string, timeframe: Timeframe): Promise<MarketCandle[]>;
+    getDataQuality(symbol: string, timeframe: Timeframe): Promise<MarketDataQualityReport>;
     getHistoricalCandlesUntil(symbol: string, timeframe: Timeframe, until: Date): Promise<MarketCandle[]>;
     buildFourHourCandles(symbol: string): Promise<number>;
+    repairBinanceGaps(symbol: string, timeframe: Exclude<Timeframe, Timeframe.FOUR_HOURS>): Promise<{
+        gapsFound: number;
+        received: number;
+        saved: number;
+    }>;
     syncBinanceCandles(symbol: string, timeframe: Timeframe): Promise<number>;
+    getLiveCandleOpen(symbol: string, timeframe: Timeframe, expectedOpenTime: Date): Promise<number | null>;
+    backfillBinanceCandles(symbol: string, timeframe: Timeframe, days: number): Promise<{
+        received: number;
+        saved: number;
+    }>;
     saveCandles(symbol: string, timeframe: Timeframe, candles: {
         time: Date;
         open: number;

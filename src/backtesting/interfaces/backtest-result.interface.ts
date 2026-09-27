@@ -1,4 +1,5 @@
 import { BacktestTrade } from "./backtest-trade.interface";
+import { MarketDataQualityReport } from "../../market-data/market-data-quality";
 
 export interface BacktestSummary {
   totalTrades: number;
@@ -9,48 +10,36 @@ export interface BacktestSummary {
   expectancyR: number;
 }
 
+export interface BacktestResearchContext {
+  engineVersion: string;
+  codeRevision: string;
+  feeRate: number;
+  slippageRate: number;
+  protectedHoldoutStart: string;
+  primaryCandleRange: {
+    firstCandleTime: Date | null;
+    lastCompletedCandleTime: Date | null;
+  };
+}
+
 export interface BacktestResult {
   strategyVersion: string;
+  researchContext: BacktestResearchContext;
+  dataQuality: {
+    primary: MarketDataQualityReport;
+    higherTimeframe: MarketDataQualityReport | null;
+  };
   higherTimeframeConfirmation: boolean;
-  sellAdxBelow25Trades: number;
-  sellAdxBelow25Wins: number;
-  sellAdxBelow25R: number;
-
-  sellAdx25To30Trades: number;
-  sellAdx25To30Wins: number;
-  sellAdx25To30R: number;
-
-  sellAdx30To35Trades: number;
-  sellAdx30To35Wins: number;
-  sellAdx30To35R: number;
-
-  sellAdx35To40Trades: number;
-  sellAdx35To40Wins: number;
-  sellAdx35To40R: number;
-
-  sellAdxAbove40Trades: number;
-  sellAdxAbove40Wins: number;
-  sellAdxAbove40R: number;
-
-  sellWinAverageRsi: number;
-  sellLossAverageRsi: number;
-  sellWinAverageAdx: number;
-  sellLossAverageAdx: number;
-
-  buyWinAverageRsi: number;
-  buyLossAverageRsi: number;
-  buyWinAverageAdx: number;
-  buyLossAverageAdx: number;
-
-  buyTrades: number;
-  buyWins: number;
-  buyLosses: number;
-  buyTotalR: number;
-
-  sellTrades: number;
-  sellWins: number;
-  sellLosses: number;
-  sellTotalR: number;
+  includesProtectedHoldout: boolean;
+  protectedHoldoutDays: number;
+  entryTrades: number;
+  entryWins: number;
+  entryLosses: number;
+  entryTotalR: number;
+  winAverageRsi: number;
+  lossAverageRsi: number;
+  winAverageAdx: number;
+  lossAverageAdx: number;
 
   totalTrades: number;
   winningTrades: number;
@@ -74,7 +63,9 @@ export interface BacktestResult {
   lossMfeAtLeast2R: number;
 
   training: BacktestSummary;
+  validation: BacktestSummary;
   test: BacktestSummary;
+  protectedHoldout: BacktestSummary | null;
 
   trades: BacktestTrade[];
 

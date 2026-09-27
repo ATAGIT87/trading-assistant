@@ -6,5 +6,5 @@ export interface RiskLevels {
     riskReward: number | null;
 }
 export declare class RiskManagerService {
-    calculateLevels(action: SignalAction, entryPrice: number, candles: MarketCandle[], atr: number): RiskLevels;
+    calculateLevels(action: SignalAction, entryPrice: number, candles: MarketCandle[], atr: number, rewardToRisk?: number): RiskLevels;
 }

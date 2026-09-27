@@ -41,13 +41,19 @@ let DemoTradingController = class DemoTradingController {
                 entry: position.entry,
                 exitPrice: position.exitPrice,
                 resultR: position.resultR,
+                exitReason: position.exitReason,
                 openedAt: position.openedAt,
                 closedAt: position.closedAt,
                 symbol: position.symbol,
                 timeframe: position.timeframe,
                 side: position.side,
+                mode: position.mode,
+                strategyVersion: position.strategyVersion,
             })),
         };
+    }
+    async getSummary() {
+        return this.demoTradingService.getSummary();
     }
 };
 exports.DemoTradingController = DemoTradingController;
@@ -77,6 +83,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], DemoTradingController.prototype, "getHistory", null);
+__decorate([
+    (0, common_1.Get)("summary"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], DemoTradingController.prototype, "getSummary", null);
 exports.DemoTradingController = DemoTradingController = __decorate([
     (0, common_1.Controller)("demo-trading"),
     __metadata("design:paramtypes", [demo_trading_service_1.DemoTradingService])

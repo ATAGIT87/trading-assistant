@@ -1,9 +1,11 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 
 import { SignalsService } from "../signals/signals.service";
 import { MarketDataService } from "../market-data/market-data.service";
 import { AlertsService } from "../alerts/alerts.service";
+import { BacktestingService } from "../backtesting/backtesting.service";
 import { AssetsService } from "../assets/assets.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import {
@@ -19,6 +21,8 @@ export class ScannerService {
     private readonly marketDataService: MarketDataService,
     private readonly alertsService: AlertsService,
     private readonly assetsService: AssetsService,
+    private readonly backtestingService: BacktestingService,
+    private readonly configService: ConfigService,
   ) {}
 
   private isMarketDataFresh(candleTime: Date, timeframe: Timeframe): boolean {
@@ -70,7 +74,33 @@ export class ScannerService {
     }
 
     if (signal.action === "BUY" || signal.action === "SELL") {
-      await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+      const readiness = await this.backtestingService.getReadiness(
+        symbol,
+        timeframe,
+      );
+      const activeStrategy = this.configService.get(
+        "ACTIVE_STRATEGY_VERSION",
+        "",
+      );
+      const approvedStrategy = this.configService.get(
+        "APPROVED_STRATEGY_VERSION",
+        "",
+      );
+      if (
+        readiness.isReady &&
+        approvedStrategy &&
+        approvedStrategy === activeStrategy
+      ) {
+        await this.alertsService.sendSignalAlert(symbol, timeframe, signal);
+      } else {
+        console.warn(
+          `[Scanner] Alert blocked for ${symbol} / ${timeframe}: ${
+            readiness.isReady
+              ? "selected strategy is not explicitly approved"
+              : readiness.reason
+          }`,
+        );
+      }
     }
 
     console.log(

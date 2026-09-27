@@ -6,6 +6,11 @@ import { MarketCandleStorageService } from "./market-candle-storage.service";
 import { MarketDataAnalysisService } from "./market-data-analysis.service";
 import { MarketDataProviderService } from "./market-data-provider.service";
 import { Timeframe } from "../assets/enums/timeframe.enum";
+import { timeframeDurationMs } from "../assets/timeframe.utils";
+import {
+  MarketDataQualityReport,
+  assessMarketDataQuality,
+} from "./market-data-quality";
 
 @Injectable()
 export class MarketDataService {
@@ -225,6 +230,17 @@ export class MarketDataService {
     return this.storageService.getHistoricalCandles(symbol, timeframe);
   }
 
+  async getDataQuality(
+    symbol: string,
+    timeframe: Timeframe,
+  ): Promise<MarketDataQualityReport> {
+    return assessMarketDataQuality(
+      symbol,
+      timeframe,
+      await this.getHistoricalCandles(symbol, timeframe),
+    );
+  }
+
   getHistoricalCandlesUntil(
     symbol: string,
     timeframe: Timeframe,
@@ -308,15 +324,50 @@ export class MarketDataService {
       fourHourCandles.push(fourHourCandle);
     }
 
-    await this.storageService.deleteFourHourCandles(symbol);
-
-    if (fourHourCandles.length === 0) {
-      return 0;
-    }
-
-    await this.storageService.saveCandles(fourHourCandles);
+    await this.storageService.replaceFourHourCandles(symbol, fourHourCandles);
 
     return fourHourCandles.length;
+  }
+
+  async repairBinanceGaps(
+    symbol: string,
+    timeframe: Exclude<Timeframe, Timeframe.FOUR_HOURS>,
+  ): Promise<{ gapsFound: number; received: number; saved: number }> {
+    const durationMs = timeframeDurationMs[timeframe];
+    const candles = await this.getHistoricalCandles(symbol, timeframe);
+    let gapsFound = 0;
+    let received = 0;
+    let saved = 0;
+
+    for (let index = 1; index < candles.length; index++) {
+      const previous = candles[index - 1];
+      const next = candles[index];
+      const missing =
+        Math.round(
+          (next.time.getTime() - previous.time.getTime()) / durationMs,
+        ) - 1;
+      if (missing <= 0) {
+        continue;
+      }
+
+      gapsFound++;
+      const batch = await this.marketDataProviderService.getBinanceCandles(
+        symbol,
+        timeframe,
+        Math.min(missing + 2, 1000),
+        next.time.getTime() - 1,
+      );
+      const missingCandles = batch.filter(
+        (candle) =>
+          candle.time.getTime() > previous.time.getTime() &&
+          candle.time.getTime() < next.time.getTime() &&
+          candle.time.getTime() + durationMs <= Date.now(),
+      );
+      received += missingCandles.length;
+      saved += await this.saveCandles(symbol, timeframe, missingCandles);
+    }
+
+    return { gapsFound, received, saved };
   }
 
   async syncBinanceCandles(
@@ -346,6 +397,100 @@ export class MarketDataService {
     );
 
     return this.saveCandles(symbol, timeframe, closedCandles);
+  }
+
+  /**
+   * Reads the opening price of the currently live candle without persisting it.
+   *
+   * Persisted market candles are deliberately closed candles only, so strategy
+   * calculation cannot accidentally use an unfinished candle.  A live paper
+   * entry is the one exception: its fill must use the next candle's actual
+   * opening price, which Binance exposes while that candle is in progress.
+   */
+  async getLiveCandleOpen(
+    symbol: string,
+    timeframe: Timeframe,
+    expectedOpenTime: Date,
+  ): Promise<number | null> {
+    const candles = await this.marketDataProviderService.getBinanceCandles(
+      symbol,
+      timeframe,
+      2,
+    );
+    const candle = candles.find(
+      (candidate) => candidate.time.getTime() === expectedOpenTime.getTime(),
+    );
+
+    if (
+      !candle ||
+      candle.time.getTime() + timeframeDurationMs[timeframe] <= Date.now() ||
+      !Number.isFinite(candle.open)
+    ) {
+      return null;
+    }
+
+    return candle.open;
+  }
+
+  async backfillBinanceCandles(
+    symbol: string,
+    timeframe: Timeframe,
+    days: number,
+  ): Promise<{ received: number; saved: number }> {
+    const timeframeMs: Record<Timeframe, number> = {
+      [Timeframe.FIFTEEN_MINUTES]: 15 * 60 * 1000,
+      [Timeframe.ONE_HOUR]: 60 * 60 * 1000,
+      [Timeframe.FOUR_HOURS]: 4 * 60 * 60 * 1000,
+      [Timeframe.ONE_DAY]: 24 * 60 * 60 * 1000,
+    };
+    const startTime = Date.now() - days * 24 * 60 * 60 * 1000;
+    const earliestStoredCandle = await this.storageService.findEarliestCandle(
+      symbol,
+      timeframe,
+    );
+    if (
+      earliestStoredCandle !== null &&
+      earliestStoredCandle.time.getTime() <= startTime
+    ) {
+      return { received: 0, saved: 0 };
+    }
+    let endTime =
+      earliestStoredCandle === null
+        ? Date.now()
+        : earliestStoredCandle.time.getTime() - 1;
+    let received = 0;
+    let saved = 0;
+
+    while (endTime >= startTime) {
+      // The provider pages Binance requests internally. Requesting its safe
+      // maximum here avoids dozens of needless database/backfill iterations.
+      const batch = await this.marketDataProviderService.getBinanceCandles(
+        symbol,
+        timeframe,
+        10_000,
+        endTime,
+      );
+      const closedBatch = batch.filter(
+        (candle) =>
+          candle.time.getTime() >= startTime &&
+          candle.time.getTime() + timeframeMs[timeframe] <= Date.now(),
+      );
+
+      if (closedBatch.length === 0) {
+        break;
+      }
+
+      received += closedBatch.length;
+      saved += await this.saveCandles(symbol, timeframe, closedBatch);
+
+      const oldestTime = closedBatch[0].time.getTime();
+      if (oldestTime <= startTime || batch.length < 1000) {
+        break;
+      }
+      endTime = oldestTime - 1;
+    }
+
+    return { received, saved };
   }
 
   async saveCandles(

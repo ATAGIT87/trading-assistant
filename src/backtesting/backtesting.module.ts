@@ -13,14 +13,8 @@ import { BacktestRun } from "./entities/backtest-run.entity";
     MarketDataModule,
     SignalsModule,
   ],
-  controllers: [
-    BacktestingController,
-  ],
-  providers: [
-    BacktestingService,
-  ],
-  exports: [
-    BacktestingService,
-  ],
+  controllers: [BacktestingController],
+  providers: [BacktestingService],
+  exports: [BacktestingService],
 })
 export class BacktestingModule {}

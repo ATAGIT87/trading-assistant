@@ -3,14 +3,21 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { MARKET_DATA_SERVICE } from "./market-data.token";
 import { SignalsService } from "./signals.service";
-import { StrategyV2Service } from "./strategy-v2.service";
+import { StrategyRegistryService } from "./strategy-registry.service";
 
 describe("SignalsService", () => {
   let service: SignalsService;
   const marketDataServiceMock = { getHistoricalCandles: jest.fn() };
   const strategyV2ServiceMock = {
+    version: "test-strategy",
+    supportedTimeframes: Object.values(Timeframe),
+    requiresHigherTimeframeConfirmation: true,
+    maxHoldingCandles: 48,
     evaluateCandles: jest.fn(),
     getTrend: jest.fn().mockReturnValue("BULLISH"),
+  };
+  const strategyRegistryMock = {
+    getActive: jest.fn(() => strategyV2ServiceMock),
   };
 
   beforeEach(async () => {
@@ -20,7 +27,7 @@ describe("SignalsService", () => {
       providers: [
         SignalsService,
         { provide: MARKET_DATA_SERVICE, useValue: marketDataServiceMock },
-        { provide: StrategyV2Service, useValue: strategyV2ServiceMock },
+        { provide: StrategyRegistryService, useValue: strategyRegistryMock },
       ],
     }).compile();
 
@@ -35,7 +42,7 @@ describe("SignalsService", () => {
     marketDataServiceMock.getHistoricalCandles.mockResolvedValue([]);
 
     await expect(
-      service.generateSignalV2("BTCUSD", Timeframe.FIFTEEN_MINUTES, 14),
+      service.generateSignalV2("BTCUSDT", Timeframe.FIFTEEN_MINUTES, 14),
     ).resolves.toBeNull();
   });
 
@@ -46,13 +53,14 @@ describe("SignalsService", () => {
     strategyV2ServiceMock.evaluateCandles.mockReturnValue(signal);
 
     await expect(
-      service.generateSignalV2("BTCUSD", Timeframe.ONE_HOUR, 14),
+      service.generateSignalV2("BTCUSDT", Timeframe.ONE_HOUR, 14),
     ).resolves.toBe(signal);
     expect(strategyV2ServiceMock.evaluateCandles).toHaveBeenCalledWith(
       candles,
       0,
       candles.length,
       undefined,
+      "BTCUSDT",
     );
   });
 
@@ -74,14 +82,37 @@ describe("SignalsService", () => {
     strategyV2ServiceMock.evaluateCandles.mockReturnValue(signal);
 
     await expect(
-      service.getLiveV2Signal("BTCUSD", Timeframe.FIFTEEN_MINUTES),
+      service.getLiveV2Signal("BTCUSDT", Timeframe.FIFTEEN_MINUTES),
     ).resolves.toBe(signal);
     expect(strategyV2ServiceMock.evaluateCandles).toHaveBeenCalledWith(
       [completedCandle],
       0,
       1,
       "BULLISH",
+      "BTCUSDT",
     );
+  });
+
+  it("does not expose a short-entry signal in Spot mode", async () => {
+    const now = Date.now();
+    marketDataServiceMock.getHistoricalCandles.mockResolvedValue([
+      { time: new Date(now - 16 * 60 * 1000), close: "100" },
+    ]);
+    strategyV2ServiceMock.evaluateCandles.mockReturnValue({
+      action: "SELL",
+      stopLoss: 110,
+      takeProfit: 90,
+      isStrongSetup: true,
+      reason: "bearish setup",
+    });
+
+    await expect(
+      service.getLiveV2Signal("BTCUSDT", Timeframe.FIFTEEN_MINUTES),
+    ).resolves.toMatchObject({
+      action: "NO_TRADE",
+      stopLoss: null,
+      takeProfit: null,
+    });
   });
 
   it("returns a NO_TRADE signal when no candle has closed", async () => {
@@ -90,7 +121,7 @@ describe("SignalsService", () => {
     ]);
 
     const signal = await service.getLiveV2Signal(
-      "BTCUSD",
+      "BTCUSDT",
       Timeframe.FIFTEEN_MINUTES,
     );
 

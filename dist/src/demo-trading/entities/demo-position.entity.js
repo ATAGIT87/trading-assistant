@@ -15,6 +15,8 @@ const timeframe_enum_1 = require("../../assets/enums/timeframe.enum");
 let DemoPosition = class DemoPosition {
     id;
     symbol;
+    strategyVersion;
+    mode;
     timeframe;
     side;
     entry;
@@ -26,6 +28,7 @@ let DemoPosition = class DemoPosition {
     closedAt;
     exitPrice;
     resultR;
+    exitReason;
 };
 exports.DemoPosition = DemoPosition;
 __decorate([
@@ -36,6 +39,18 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], DemoPosition.prototype, "symbol", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: "varchar", nullable: true }),
+    __metadata("design:type", Object)
+], DemoPosition.prototype, "strategyVersion", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: "enum",
+        enum: ["APPROVED", "EXPERIMENTAL"],
+        default: "APPROVED",
+    }),
+    __metadata("design:type", String)
+], DemoPosition.prototype, "mode", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "enum",
@@ -90,7 +105,12 @@ __decorate([
     (0, typeorm_1.Column)("decimal", { precision: 12, scale: 4, nullable: true }),
     __metadata("design:type", Object)
 ], DemoPosition.prototype, "resultR", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: "varchar", nullable: true }),
+    __metadata("design:type", Object)
+], DemoPosition.prototype, "exitReason", void 0);
 exports.DemoPosition = DemoPosition = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)(),
+    (0, typeorm_1.Index)("UQ_demo_position_strategy_signal", ["strategyVersion", "symbol", "timeframe", "openedAt"], { unique: true })
 ], DemoPosition);
 //# sourceMappingURL=demo-position.entity.js.map

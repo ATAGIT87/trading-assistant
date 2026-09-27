@@ -10,8 +10,10 @@ exports.DemoTradingModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const market_data_module_1 = require("../market-data/market-data.module");
+const backtesting_module_1 = require("../backtesting/backtesting.module");
 const signals_module_1 = require("../signals/signals.module");
 const config_1 = require("@nestjs/config");
+const assets_module_1 = require("../assets/assets.module");
 const demo_trading_controller_1 = require("./demo-trading.controller");
 const demo_trading_scheduler_1 = require("./demo-trading.scheduler");
 const demo_trading_service_1 = require("./demo-trading.service");
@@ -27,8 +29,14 @@ exports.DemoTradingModule = DemoTradingModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([demo_position_entity_1.DemoPosition]),
             signals_module_1.SignalsModule,
             market_data_module_1.MarketDataModule,
+            backtesting_module_1.BacktestingModule,
+            assets_module_1.AssetsModule,
         ],
-        providers: [demo_trading_service_1.DemoTradingService, demo_trading_scheduler_1.DemoTradingScheduler, telegram_notification_service_1.TelegramNotificationService],
+        providers: [
+            demo_trading_service_1.DemoTradingService,
+            demo_trading_scheduler_1.DemoTradingScheduler,
+            telegram_notification_service_1.TelegramNotificationService,
+        ],
         controllers: [demo_trading_controller_1.DemoTradingController],
         exports: [demo_trading_service_1.DemoTradingService, telegram_notification_service_1.TelegramNotificationService],
     })

@@ -36,7 +36,7 @@ exports.AppModule = AppModule = __decorate([
                 password: process.env.DB_PASSWORD ?? "admin",
                 database: process.env.DB_DATABASE ?? "trading_assistant",
                 autoLoadEntities: true,
-                synchronize: process.env.DB_SYNCHRONIZE !== "false",
+                synchronize: process.env.DB_SYNCHRONIZE === "true",
             }),
             schedule_1.ScheduleModule.forRoot(),
             assets_module_1.AssetsModule,

@@ -1,6 +1,17 @@
 import { BadRequestException, Injectable, PipeTransform } from "@nestjs/common";
 
-export const supportedTradingSymbols = ["BTCUSD", "ETHUSD"] as const;
+export const supportedTradingSymbols = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "BNBUSDT",
+  "XRPUSDT",
+  "ADAUSDT",
+  "DOGEUSDT",
+  "AVAXUSDT",
+  "LINKUSDT",
+  "LTCUSDT",
+] as const;
 export type SupportedTradingSymbol = (typeof supportedTradingSymbols)[number];
 
 export function normalizeTradingSymbol(value: string): SupportedTradingSymbol {
@@ -16,7 +27,10 @@ export function normalizeTradingSymbol(value: string): SupportedTradingSymbol {
 }
 
 @Injectable()
-export class ParseTradingSymbolPipe implements PipeTransform<string, SupportedTradingSymbol> {
+export class ParseTradingSymbolPipe implements PipeTransform<
+  string,
+  SupportedTradingSymbol
+> {
   transform(value: string): SupportedTradingSymbol {
     return normalizeTradingSymbol(value);
   }

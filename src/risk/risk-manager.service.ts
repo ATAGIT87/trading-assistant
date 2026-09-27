@@ -16,12 +16,15 @@ export class RiskManagerService {
     entryPrice: number,
     candles: MarketCandle[],
     atr: number,
+    rewardToRisk = 2,
   ): RiskLevels {
     if (
       (action !== "BUY" && action !== "SELL") ||
       entryPrice <= 0 ||
       atr <= 0 ||
-      candles.length < 5
+      candles.length < 5 ||
+      !Number.isFinite(rewardToRisk) ||
+      rewardToRisk < 1
     ) {
       return {
         stopLoss: null,
@@ -33,15 +36,11 @@ export class RiskManagerService {
     const recentCandles = candles.slice(-10);
 
     const recentHigh = Math.max(
-      ...recentCandles.map((candle) =>
-        Number(candle.high),
-      ),
+      ...recentCandles.map((candle) => Number(candle.high)),
     );
 
     const recentLow = Math.min(
-      ...recentCandles.map((candle) =>
-        Number(candle.low),
-      ),
+      ...recentCandles.map((candle) => Number(candle.low)),
     );
 
     const atrRisk = atr * 1.5;
@@ -50,34 +49,22 @@ export class RiskManagerService {
     let takeProfit: number;
 
     if (action === "BUY") {
-      stopLoss = Math.min(
-        entryPrice - atrRisk,
-        recentLow,
-      );
+      stopLoss = Math.min(entryPrice - atrRisk, recentLow);
 
-      const risk =
-        entryPrice - stopLoss;
+      const risk = entryPrice - stopLoss;
 
-      takeProfit =
-        entryPrice + risk * 2;
+      takeProfit = entryPrice + risk * rewardToRisk;
     } else {
-      stopLoss = Math.max(
-        entryPrice + atrRisk,
-        recentHigh,
-      );
+      stopLoss = Math.max(entryPrice + atrRisk, recentHigh);
 
-      const risk =
-        stopLoss - entryPrice;
+      const risk = stopLoss - entryPrice;
 
-      takeProfit =
-        entryPrice - risk * 2;
+      takeProfit = entryPrice - risk * rewardToRisk;
     }
 
-    const risk =
-      Math.abs(entryPrice - stopLoss);
+    const risk = Math.abs(entryPrice - stopLoss);
 
-    const reward =
-      Math.abs(takeProfit - entryPrice);
+    const reward = Math.abs(takeProfit - entryPrice);
 
     if (risk <= 0) {
       return {

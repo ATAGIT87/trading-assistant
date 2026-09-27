@@ -45,13 +45,15 @@ let TelegramNotificationService = TelegramNotificationService_1 = class Telegram
             return false;
         }
         const message = [
-            "🚨 V2 DEMO SIGNAL",
+            position.mode === "EXPERIMENTAL"
+                ? "🧪 EXPERIMENTAL SPOT DEMO BUY"
+                : "🚨 SPOT DEMO BUY",
             "",
             `${position.symbol} ${position.timeframe}`,
             "",
             action,
             "",
-            `Entry: ${signal.entryPrice.toFixed(2)}`,
+            `Entry: ${Number(position.entry).toFixed(2)}`,
             `SL: ${Number(signal.stopLoss ?? position.stopLoss).toFixed(2)}`,
             `TP: ${Number(signal.takeProfit ?? position.takeProfit).toFixed(2)}`,
             `R:R: ${position.riskReward ?? 0}:${1}`,
@@ -67,7 +69,13 @@ let TelegramNotificationService = TelegramNotificationService_1 = class Telegram
         }
         const isWin = position.status === "WIN";
         const message = [
-            isWin ? "✅ V2 DEMO WIN" : "❌ V2 DEMO LOSS",
+            position.mode === "EXPERIMENTAL"
+                ? isWin
+                    ? "🧪 EXPERIMENTAL DEMO WIN"
+                    : "🧪 EXPERIMENTAL DEMO LOSS"
+                : isWin
+                    ? "✅ SPOT DEMO WIN"
+                    : "❌ SPOT DEMO LOSS",
             "",
             `${position.symbol} ${position.timeframe}`,
             "",
@@ -75,9 +83,14 @@ let TelegramNotificationService = TelegramNotificationService_1 = class Telegram
             "",
             `Entry: ${Number(position.entry).toFixed(2)}`,
             `Exit: ${Number(position.exitPrice ?? position.takeProfit ?? position.stopLoss).toFixed(2)}`,
-            `Result: ${isWin ? "+1R" : "-1R"}`,
+            `Result: ${this.formatResultR(position.resultR, isWin ? 1 : -1)}`,
+            `Exit reason: ${position.exitReason ?? "UNKNOWN"}`,
         ].join("\n");
         return this.sendMessage(message);
+    }
+    formatResultR(resultR, fallback) {
+        const value = Number(resultR ?? fallback);
+        return `${value >= 0 ? "+" : ""}${value.toFixed(4)}R`;
     }
     async sendMessage(text) {
         if (!this.isEnabled()) {

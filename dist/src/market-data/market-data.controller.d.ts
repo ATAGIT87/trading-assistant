@@ -11,6 +11,7 @@ export declare class MarketDataController {
     findCandlesBySymbol(symbol: string): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
     findCandlesBySymbolAndTimeframe(symbol: string, timeframe: Timeframe): Promise<import("./entities/market-candle.entity").MarketCandle[]>;
     findLatestCandle(symbol: string, timeframe: Timeframe): Promise<import("./entities/market-candle.entity").MarketCandle | null>;
+    getDataQuality(symbol: string, timeframe: Timeframe): Promise<import("./market-data-quality").MarketDataQualityReport>;
     getLatestRsi(symbol: string, timeframe: Timeframe): Promise<number | null>;
     getLatestSma(symbol: string, timeframe: Timeframe, period: string): Promise<number | null>;
     getLatestEma(symbol: string, period: string, timeframe: Timeframe): Promise<number | null>;
@@ -22,14 +23,6 @@ export declare class MarketDataController {
     getMarketCondition(symbol: string, timeframe: Timeframe, period: string): Promise<"NEUTRAL" | "POSSIBLE_REVERSAL" | "BEARISH_CONTINUATION" | "BULLISH_CONTINUATION" | null>;
     getLatestAtr(symbol: string, timeframe: Timeframe, period: string): Promise<number | null>;
     getLatestAdx(symbol: string, timeframe: Timeframe, period: number): Promise<number | null>;
-    getLatestMarketPrice(symbol: string): Promise<number>;
-    getRealCandles(symbol: string): Promise<{
-        time: Date;
-        open: number;
-        high: number;
-        low: number;
-        close: number;
-    }[]>;
     getBinanceCandles(symbol: string): Promise<{
         time: Date;
         open: number;
@@ -41,6 +34,15 @@ export declare class MarketDataController {
     syncBinanceCandles(symbol: string, timeframe: Timeframe): Promise<{
         symbol: string;
         timeframe: Timeframe;
+        received: number;
+        saved: number;
+    }>;
+    backfillBinanceCandles(symbol: string, timeframe: Timeframe, days?: string): Promise<{
+        received: number;
+        saved: number;
+    }>;
+    repairBinanceGaps(symbol: string, timeframe: Timeframe): Promise<{
+        gapsFound: number;
         received: number;
         saved: number;
     }>;

@@ -31,7 +31,7 @@ let MarketDataSeed = class MarketDataSeed {
         let price = 115000;
         for (let i = 0; i < 120; i++) {
             candles.push({
-                symbol: "BTCUSD",
+                symbol: "BTCUSDT",
                 timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
                 time: new Date(Date.UTC(2026, 8, 14, i, 0)),
                 open: price.toString(),
@@ -49,7 +49,7 @@ let MarketDataSeed = class MarketDataSeed {
                 continue;
             }
             fourHourCandles.push({
-                symbol: "BTCUSD",
+                symbol: "BTCUSDT",
                 timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
                 time: group[0].time,
                 open: group[0].open,
@@ -62,11 +62,11 @@ let MarketDataSeed = class MarketDataSeed {
             });
         }
         await this.marketCandleRepository.delete({
-            symbol: "BTCUSD",
+            symbol: "BTCUSDT",
             timeframe: timeframe_enum_1.Timeframe.ONE_HOUR,
         });
         await this.marketCandleRepository.delete({
-            symbol: "BTCUSD",
+            symbol: "BTCUSDT",
             timeframe: timeframe_enum_1.Timeframe.FOUR_HOURS,
         });
         await this.marketCandleRepository.save(candles);

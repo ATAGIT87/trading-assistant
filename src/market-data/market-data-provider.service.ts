@@ -2,171 +2,13 @@ import { Injectable } from "@nestjs/common";
 
 import { normalizeTradingSymbol } from "./trading-symbol";
 
-interface CoinGeckoMarketChartResponse {
-  prices: [number, number][];
-  total_volumes: [number, number][];
-}
-
 @Injectable()
 export class MarketDataProviderService {
-  private readonly baseUrl = "https://api.coingecko.com/api/v3";
-
-  async getLatestPrice(symbol: string): Promise<number> {
-    normalizeTradingSymbol(symbol);
-
-    const response = await fetch(
-      `${this.baseUrl}/simple/price?ids=bitcoin&vs_currencies=usd`,
-    );
-
-    if (!response.ok) {
-      throw new Error(`Market data request failed: ${response.status}`);
-    }
-
-    const data = (await response.json()) as {
-      bitcoin?: {
-        usd?: number;
-      };
-    };
-
-    const price = data.bitcoin?.usd;
-
-    if (typeof price !== "number") {
-      throw new Error("Invalid BTC price returned by market data provider");
-    }
-
-    return price;
-  }
-
-  async getHourlyMarketData(
-    symbol: string,
-    days = 30,
-  ): Promise<
-    {
-      time: Date;
-      price: number;
-      volume: number;
-    }[]
-  > {
-    normalizeTradingSymbol(symbol);
-
-    const response = await fetch(
-      `${this.baseUrl}/coins/bitcoin/market_chart?vs_currency=usd&days=${days}&interval=hourly`,
-    );
-
-    if (!response.ok) {
-      throw new Error(`Market data request failed: ${response.status}`);
-    }
-
-    const data = (await response.json()) as CoinGeckoMarketChartResponse;
-
-    return data.prices.map(([timestamp, price], index) => ({
-      time: new Date(timestamp),
-      price,
-      volume: data.total_volumes[index]?.[1] ?? 0,
-    }));
-  }
-
-  async getRealCandles(
-    symbol: string,
-    days = 30,
-  ): Promise<
-    {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-    }[]
-  > {
-    normalizeTradingSymbol(symbol);
-
-    const response = await fetch(
-      `${this.baseUrl}/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`,
-    );
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-
-      console.error("CoinGecko OHLC error:", response.status, errorBody);
-
-      throw new Error(
-        `Market OHLC request failed: ${response.status} ${errorBody}`,
-      );
-    }
-
-    const data = (await response.json()) as number[][];
-
-    return data.map(([timestamp, open, high, low, close]) => ({
-      time: new Date(timestamp),
-      open,
-      high,
-      low,
-      close,
-    }));
-  }
-
-  async getHourlyCandles(
-    symbol: string,
-    days = 1,
-  ): Promise<
-    {
-      time: Date;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-    }[]
-  > {
-    const candles = await this.getRealCandles(symbol, days);
-
-    const hourlyCandles = new Map<
-      string,
-      {
-        time: Date;
-        open: number;
-        high: number;
-        low: number;
-        close: number;
-      }
-    >();
-
-    for (const candle of candles) {
-      const hour = new Date(candle.time);
-
-      hour.setUTCMinutes(0, 0, 0);
-
-      const key = hour.toISOString();
-
-      const existing = hourlyCandles.get(key);
-
-      if (!existing) {
-        hourlyCandles.set(key, {
-          time: hour,
-          open: candle.open,
-          high: candle.high,
-          low: candle.low,
-          close: candle.close,
-        });
-
-        continue;
-      }
-
-      existing.high = Math.max(existing.high, candle.high);
-
-      existing.low = Math.min(existing.low, candle.low);
-
-      existing.close = candle.close;
-    }
-
-    return Array.from(hourlyCandles.values()).sort(
-      (a, b) => a.time.getTime() - b.time.getTime(),
-    );
-  }
-
   async getBinanceCandles(
     symbol: string,
     timeframe: string,
     limit = 1000,
+    initialEndTime = Date.now(),
   ): Promise<
     {
       time: Date;
@@ -181,16 +23,8 @@ export class MarketDataProviderService {
 
     this.validateTimeframe(timeframe);
 
-    const binanceSymbolMap: Record<string, string> = {
-      BTCUSD: "BTCUSDT",
-      ETHUSD: "ETHUSDT",
-    };
-
-    const binanceSymbol = binanceSymbolMap[normalizedSymbol];
-
-    if (!binanceSymbol) {
-      throw new Error(`Unsupported symbol: ${normalizedSymbol}`);
-    }
+    // Internal names intentionally match Binance Spot's tradable symbols.
+    const binanceSymbol = normalizedSymbol;
 
     if (limit < 1 || limit > 10000) {
       throw new Error(
@@ -198,6 +32,31 @@ export class MarketDataProviderService {
       );
     }
 
+    return this.getBinanceCandlesFromUrl(
+      "https://api.binance.com/api/v3/klines",
+      binanceSymbol,
+      timeframe,
+      limit,
+      initialEndTime,
+    );
+  }
+
+  private async getBinanceCandlesFromUrl(
+    endpoint: string,
+    binanceSymbol: string,
+    timeframe: string,
+    limit: number,
+    initialEndTime: number,
+  ): Promise<
+    {
+      time: Date;
+      open: number;
+      high: number;
+      low: number;
+      close: number;
+      volume: number;
+    }[]
+  > {
     const allCandles: {
       time: Date;
       open: number;
@@ -207,13 +66,14 @@ export class MarketDataProviderService {
       volume: number;
     }[] = [];
 
-    let endTime = Date.now();
+    let endTime = initialEndTime;
 
     while (allCandles.length < limit) {
       const requestLimit = Math.min(1000, limit - allCandles.length);
 
       const response = await fetch(
-        `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${timeframe}&limit=${requestLimit}&endTime=${endTime}`,
+        `${endpoint}?symbol=${binanceSymbol}&interval=${timeframe}&limit=${requestLimit}&endTime=${endTime}`,
+        { signal: AbortSignal.timeout(10_000) },
       );
 
       if (!response.ok) {
@@ -230,14 +90,7 @@ export class MarketDataProviderService {
         break;
       }
 
-      const candles = data.map((candle) => ({
-        time: new Date(Number(candle[0])),
-        open: Number(candle[1]),
-        high: Number(candle[2]),
-        low: Number(candle[3]),
-        close: Number(candle[4]),
-        volume: Number(candle[5]),
-      }));
+      const candles = data.map((candle) => this.parseSpotKline(candle));
 
       allCandles.unshift(...candles);
 
@@ -259,6 +112,43 @@ export class MarketDataProviderService {
 
   async getBinanceHourlyCandles(symbol: string, limit = 1000) {
     return this.getBinanceCandles(symbol, "1h", limit);
+  }
+
+  private parseSpotKline(candle: unknown[]): {
+    time: Date;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+  } {
+    if (candle.length < 6) {
+      throw new Error(
+        "Binance market data response contains an incomplete kline.",
+      );
+    }
+
+    const time = new Date(Number(candle[0]));
+    const open = Number(candle[1]);
+    const high = Number(candle[2]);
+    const low = Number(candle[3]);
+    const close = Number(candle[4]);
+    const volume = Number(candle[5]);
+
+    if (
+      !Number.isFinite(time.getTime()) ||
+      ![open, high, low, close, volume].every(Number.isFinite) ||
+      low > Math.min(open, close) ||
+      high < Math.max(open, close) ||
+      low < 0 ||
+      volume < 0
+    ) {
+      throw new Error(
+        "Binance market data response contains an invalid Spot kline.",
+      );
+    }
+
+    return { time, open, high, low, close, volume };
   }
 
   private validateTimeframe(timeframe: string): void {

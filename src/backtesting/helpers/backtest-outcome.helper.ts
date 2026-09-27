@@ -3,6 +3,7 @@ import { TradingSignal } from "../../signals/signal.types";
 
 export interface TradeOutcome {
   result: boolean | null;
+  exitReason: "STOP_LOSS" | "TAKE_PROFIT" | "TIME_EXIT" | null;
   exitIndex: number | null;
   exitPrice: number | null;
   maeR: number;
@@ -13,10 +14,12 @@ export interface TradeOutcome {
 export function findTradeOutcome(
   signal: TradingSignal,
   futureCandles: MarketCandle[],
+  maxHoldingCandles: number,
 ): TradeOutcome {
   if (signal.stopLoss === null || signal.takeProfit === null) {
     return {
       result: null,
+      exitReason: null,
       exitIndex: null,
       exitPrice: null,
       maeR: 0,
@@ -30,6 +33,7 @@ export function findTradeOutcome(
   if (riskAmount <= 0) {
     return {
       result: null,
+      exitReason: null,
       exitIndex: null,
       exitPrice: null,
       maeR: 0,
@@ -62,6 +66,7 @@ export function findTradeOutcome(
       if (hitStopLoss && hitTakeProfit) {
         return {
           result: false,
+          exitReason: "STOP_LOSS",
           exitIndex: i,
           exitPrice: signal.stopLoss,
           maeR: maxMae,
@@ -73,6 +78,7 @@ export function findTradeOutcome(
       if (hitStopLoss) {
         return {
           result: false,
+          exitReason: "STOP_LOSS",
           exitIndex: i,
           exitPrice: signal.stopLoss,
           maeR: maxMae,
@@ -84,6 +90,7 @@ export function findTradeOutcome(
       if (hitTakeProfit) {
         return {
           result: true,
+          exitReason: "TAKE_PROFIT",
           exitIndex: i,
           exitPrice: signal.takeProfit,
           maeR: maxMae,
@@ -108,6 +115,7 @@ export function findTradeOutcome(
       if (hitStopLoss && hitTakeProfit) {
         return {
           result: false,
+          exitReason: "STOP_LOSS",
           exitIndex: i,
           exitPrice: signal.stopLoss,
           maeR: maxMae,
@@ -119,6 +127,7 @@ export function findTradeOutcome(
       if (hitStopLoss) {
         return {
           result: false,
+          exitReason: "STOP_LOSS",
           exitIndex: i,
           exitPrice: signal.stopLoss,
           maeR: maxMae,
@@ -130,6 +139,7 @@ export function findTradeOutcome(
       if (hitTakeProfit) {
         return {
           result: true,
+          exitReason: "TAKE_PROFIT",
           exitIndex: i,
           exitPrice: signal.takeProfit,
           maeR: maxMae,
@@ -138,10 +148,28 @@ export function findTradeOutcome(
         };
       }
     }
+
+    if (i + 1 >= maxHoldingCandles) {
+      const close = Number(candle.close);
+      const timeExitResult =
+        signal.action === "BUY"
+          ? close >= signal.entryPrice
+          : close <= signal.entryPrice;
+      return {
+        result: timeExitResult,
+        exitReason: "TIME_EXIT",
+        exitIndex: i,
+        exitPrice: close,
+        maeR: maxMae,
+        mfeR: maxMfe,
+        durationCandles: i + 1,
+      };
+    }
   }
 
   return {
     result: null,
+    exitReason: null,
     exitIndex: null,
     exitPrice: null,
     maeR: maxMae,

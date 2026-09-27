@@ -13,19 +13,16 @@ const indicators_module_1 = require("../indicators/indicators.module");
 const risk_module_1 = require("../risk/risk.module");
 const signals_controller_1 = require("./signals.controller");
 const signals_service_1 = require("./signals.service");
-const strategy_v2_service_1 = require("./strategy-v2.service");
+const strategy_registry_service_1 = require("./strategy-registry.service");
 const market_data_service_1 = require("../market-data/market-data.service");
 const market_data_token_1 = require("./market-data.token");
+const exploratory_hourly_breakout_strategy_1 = require("../trading/exploratory-hourly-breakout.strategy");
 let SignalsModule = class SignalsModule {
 };
 exports.SignalsModule = SignalsModule;
 exports.SignalsModule = SignalsModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            market_data_module_1.MarketDataModule,
-            indicators_module_1.IndicatorsModule,
-            risk_module_1.RiskModule,
-        ],
+        imports: [market_data_module_1.MarketDataModule, indicators_module_1.IndicatorsModule, risk_module_1.RiskModule],
         controllers: [signals_controller_1.SignalsController],
         providers: [
             {
@@ -33,12 +30,10 @@ exports.SignalsModule = SignalsModule = __decorate([
                 useExisting: market_data_service_1.MarketDataService,
             },
             signals_service_1.SignalsService,
-            strategy_v2_service_1.StrategyV2Service,
+            strategy_registry_service_1.StrategyRegistryService,
+            exploratory_hourly_breakout_strategy_1.ExploratoryHourlyBreakoutStrategy,
         ],
-        exports: [
-            signals_service_1.SignalsService,
-            strategy_v2_service_1.StrategyV2Service,
-        ],
+        exports: [signals_service_1.SignalsService, strategy_registry_service_1.StrategyRegistryService],
     })
 ], SignalsModule);
 //# sourceMappingURL=signals.module.js.map
