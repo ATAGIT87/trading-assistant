@@ -1,1 +1,0 @@
-export const MARKET_DATA_SERVICE = Symbol("MARKET_DATA_SERVICE");
