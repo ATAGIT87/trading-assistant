@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../dist-test",
+    "tsBuildInfoFile": "../dist-test/research.tsbuildinfo"
+  },
+  "include": ["./**/*.ts", "../operations/**/*.ts"],
+  "exclude": ["../node_modules", "../dist", "../dist-test"]
+}

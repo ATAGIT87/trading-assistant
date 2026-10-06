@@ -1,0 +1,30 @@
+{
+  "archive": "Kraken_OHLCVT_Full_2026Q2.zip",
+  "sources": [
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part00",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part01",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part02",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part03",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part04"
+  ],
+  "wholeArchiveSha256Verified": false,
+  "files": [
+    {
+      "symbol": "BTCEUR",
+      "entry": "XBTEUR_60.csv",
+      "path": "/private/tmp/trading-assistant-kraken-history/BTCEUR_60.csv",
+      "bytes": 7105770,
+      "zipCrc32": "0739724e",
+      "crcVerified": true
+    },
+    {
+      "symbol": "ETHEUR",
+      "entry": "ETHEUR_60.csv",
+      "path": "/private/tmp/trading-assistant-kraken-history/ETHEUR_60.csv",
+      "bytes": 5892092,
+      "zipCrc32": "333f90e0",
+      "crcVerified": true
+    }
+  ],
+  "downloadedBytes": 7949923
+}

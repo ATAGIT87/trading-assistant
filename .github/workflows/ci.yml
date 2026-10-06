@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test-and-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,8 +30,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
-        run: pnpm test
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Typecheck research and operations
+        run: pnpm typecheck:test
 
       - name: Build
         run: pnpm build
+
+      - name: Verify boundaries and regression checks
+        run: pnpm test

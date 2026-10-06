@@ -12,14 +12,19 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
+    "outDir": "./dist/production",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "rootDir": "./src/production",
+    "tsBuildInfoFile": "./dist/production/typecheck.tsbuildinfo",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src/production/**/*.ts"],
+  "exclude": ["node_modules", "dist", "dist-test", "test", "operations"]
 }

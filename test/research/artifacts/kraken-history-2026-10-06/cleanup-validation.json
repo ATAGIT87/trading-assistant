@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-10-06T07:59:19.523Z",
+  "productionFiles": 66,
+  "productionBuild": "passed",
+  "typecheck": "passed",
+  "regressionChecks": 6,
+  "structuralBoundary": "passed",
+  "baselineEvaluatedAt": "2026-10-06T07:45:12.161Z",
+  "afterEvaluatedAt": "2026-10-06T07:57:14.038Z",
+  "markets": [
+    {
+      "symbol": "BTCEUR",
+      "identicalSignals": true,
+      "identicalTrades": true,
+      "identicalSequentialResults": true,
+      "closedTrades": 9,
+      "netTotalR": -0.6101679576368899
+    },
+    {
+      "symbol": "ETHEUR",
+      "identicalSignals": true,
+      "identicalTrades": true,
+      "identicalSequentialResults": true,
+      "closedTrades": 6,
+      "netTotalR": -3.3494967095336805
+    }
+  ],
+  "databaseWrites": 0,
+  "telegramMessages": 0,
+  "offlineProductionAndResearchBootstrap": "passed"
+}
