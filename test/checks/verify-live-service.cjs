@@ -2,7 +2,7 @@
 require('dotenv').config({quiet:true});const fs=require('node:fs');
 (async()=>{
  const base='http://127.0.0.1:3000',checks=[];
- for(const path of ['/technical-analysis/BTCEUR','/technical-analysis/ETHEUR','/signals/BTCEUR/1h','/signals/ETHEUR/1h','/demo-trading/open','/demo-trading/summary','/trading-assistant/status']){
+ for(const path of ['/technical-analysis/BTCEUR','/technical-analysis/ETHEUR','/signals/BTCEUR/4h','/signals/ETHEUR/1h','/demo-trading/open','/demo-trading/summary','/trading-assistant/status']){
   const res=await fetch(base+path,{signal:AbortSignal.timeout(10000)});const body=await res.json();
   if(!res.ok)throw new Error('Local API rejected '+path);
   if(path.startsWith('/signals/') && (body.strategyVersion!==process.env.ACTIVE_STRATEGY_VERSION || body.analysis?.modelVersion!==process.env.ACTIVE_STRATEGY_VERSION))throw new Error('Local API strategy/model mismatch '+path);

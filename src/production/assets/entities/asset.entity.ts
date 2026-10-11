@@ -24,7 +24,7 @@ export class Asset {
   @Column({
     type: "enum",
     enum: Timeframe,
-    default: Timeframe.ONE_HOUR,
+    default: Timeframe.FOUR_HOURS,
   })
   timeframe!: Timeframe;
 }

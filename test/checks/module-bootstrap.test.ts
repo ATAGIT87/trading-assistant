@@ -49,6 +49,7 @@ const productionRoutes = [
   "GET /trading-assistant/status",
   "POST /demo-trading/open/:symbol/:timeframe",
   "GET /demo-trading/open",
+  "GET /demo-trading/orders",
   "POST /demo-trading/check",
   "GET /demo-trading/history",
   "GET /demo-trading/summary",
@@ -56,7 +57,7 @@ const productionRoutes = [
 
 test("production and research resolve their own dependency graphs without database connections", async () => {
   const switches = {
-    ACTIVE_STRATEGY_VERSION: "ccxt-ema50-rsi14-v1",
+    ACTIVE_STRATEGY_VERSION: "spot-4h-pullback-daily-ema200-basket-v4",
     CCXT_ASSISTANT_ENABLED: "false",
     DEMO_TRADING_ENABLED: "false",
     EXPLORATORY_DEMO_ENABLED: "false",
@@ -101,12 +102,8 @@ test("production and research resolve their own dependency graphs without databa
       await import("../research/backtesting/backtesting.service.js");
     const { DemoTradingService } =
       await import("../../src/production/demo-trading/demo-trading.service.js");
-    const { ResearchStrategyRegistryService } =
-      await import("../research/strategies/research-strategy-registry.service.js");
-    const { IndicatorsService } =
-      await import("../research/indicators/indicators.service.js");
-    const { ResearchMarketDataService } =
-      await import("../research/data/research-market-data.service.js");
+    const { EmaRsiReplayStrategy } =
+      await import("../research/strategies/ema-rsi-replay.strategy.js");
     for (const [module, research] of [
       [AppModule, false],
       [ResearchModule, true],
@@ -122,30 +119,20 @@ test("production and research resolve their own dependency graphs without databa
         assert.equal(app.get(DataSource).isInitialized, true);
         const routes = registeredRoutes(app.get(ModulesContainer));
         if (research) {
-          assert(routes.includes("POST /research-data/build-4h/:symbol"));
           assert(routes.includes("GET /backtesting/readiness/:timeframe"));
-          assert(app.get(IndicatorsService) instanceof IndicatorsService);
-          assert(
-            app.get(ResearchMarketDataService) instanceof
-              ResearchMarketDataService,
-          );
           assert(
             app.get(BacktestingController) instanceof BacktestingController,
           );
           assert(app.get(BacktestingService) instanceof BacktestingService);
           assert.equal(
-            app
-              .get(ResearchStrategyRegistryService)
-              .get("research-hourly-integrated-spot-v7").version,
-            "research-hourly-integrated-spot-v7",
+            app.get(EmaRsiReplayStrategy).version,
+            "spot-4h-pullback-daily-ema200-basket-v4",
           );
         } else {
           assert.deepEqual(routes, productionRoutes);
           assert.throws(() => app.get(BacktestingController));
           assert.throws(() => app.get(BacktestingService));
-          assert.throws(() => app.get(ResearchStrategyRegistryService));
-          assert.throws(() => app.get(IndicatorsService));
-          assert.throws(() => app.get(ResearchMarketDataService));
+          assert.throws(() => app.get(EmaRsiReplayStrategy));
         }
       } finally {
         await app.close();

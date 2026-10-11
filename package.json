@@ -19,8 +19,8 @@
     "build:test": "node -e \"require('node:fs').rmSync('dist-test', { recursive: true, force: true })\" && tsc -p test/tsconfig.json",
     "test": "pnpm check:structure && pnpm build:test && node --test dist-test/test/checks/*.test.js",
     "start:research": "node dist-test/test/research/main.js",
-    "backtest:kraken-csv": "node dist-test/test/research/scripts/backtest-kraken-hourly-csv.js",
-    "check:structure": "node test/checks/check-structure.cjs"
+    "check:structure": "node test/checks/check-structure.cjs",
+    "backtest:spot-basket": "node dist-test/test/research/scripts/backtest-spot-basket.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

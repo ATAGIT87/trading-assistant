@@ -1,74 +1,76 @@
-# APIهای فعلی و مسئولیت آن‌ها
+# API فعلی
 
-برنامهٔ فعال ۶ کنترلر و ۱۹ route دارد. این فهرست با metadata واقعی Nest در تست راه‌اندازی تطبیق داده می‌شود. تحلیل جاری فقط از هستهٔ EMA50/RSI14 می‌آید؛ endpoint مستقل برای تحلیل قدیمی باقی نمانده است.
+محصول۶ کنترلر و۲۰ مسیر دارد. تست راه‌اندازی واقعی Nest به‌صورت آفلاین
+inventory را کنترل می‌کند. نمادهای crypto/EUR معتبر پذیرفته می‌شوند؛ حلقه ورود۳۰بازار آنلاین را با حجم EUR انتخاب می‌کند. سیگنال و ورود فقط4h را می‌پذیرند؛ سایر تایم‌فریم‌ها برای داده و
+metadata سابق قابل‌خواندن‌اند، نه استراتژی فعال جداگانه.
 
-| کنترلر | سرویس کاربردی | دلیل باقی‌ماندن |
+| روش | مسیر | مسئولیت |
 | --- | --- | --- |
-| `AssetsController` | `AssetsService` | مدیریت بازارهایی که runner و زمان‌بند می‌خوانند؛ فعال/غیرفعال کردن بازار |
-| `MarketDataController` | `MarketDataService` | دیدن کندل‌های بستهٔ ذخیره‌شده، بررسی کیفیت و بازیابی دادهٔ لازم برای خروج دمو |
-| `SignalsController` | `SignalsService` | دریافت تصمیم جاری BUY/NO_TRADE از همان snapshot مورد استفادهٔ runner |
-| `TechnicalAnalysisController` | `TechnicalAnalysisService` | توضیح snapshot، اندیکاتورها و دلیل تصمیم جاری؛ استراتژی جدا ندارد |
-| `DemoTradingController` | `DemoTradingService` | وضعیت پوزیشن‌ها، نتیجهٔ خالص، reconciliation دستی و ورود دستی با مجوز |
-| `TradingAssistantController` | `RunTradingAssistant` | وضعیت حلقه، بازارها، آخرین تصمیم و سلامت dedup پایدار |
-
-## برنامهٔ فعال
-
-| روش | مسیر | کاربرد |
-| --- | --- | --- |
-| GET | `/assets` | دارایی‌های ثبت‌شده |
-| GET | `/assets/active` | دارایی‌های فعال |
-| GET | `/assets/:id` | مشخصات یک دارایی |
-| POST | `/assets` | ثبت دارایی با نماد پشتیبانی‌شده |
-| PATCH | `/assets/:id` | تغییر مشخصات و `isActive` |
-| DELETE | `/assets/:id` | حذف تنظیم دارایی؛ پوزیشن‌های قبلی همچنان مستقل پایش می‌شوند |
-| GET | `/market-data/candles/:symbol/:timeframe` | حداکثر ۱۰۰ کندل بستهٔ اخیر، جدیدترین ابتدا |
+| GET | `/assets` | فهرست metadata |
+| GET | `/assets/active` | metadata دارای isActive؛ سبد ثابت runner را تغییر نمی‌دهد |
+| GET | `/assets/:id` | مشخصات metadata |
+| POST | `/assets` | ثبت metadata با نماد مجاز |
+| PATCH | `/assets/:id` | تغییر metadata |
+| DELETE | `/assets/:id` | حذف metadata؛ پوزیشن را حذف نمی‌کند |
+| GET | `/market-data/candles/:symbol/:timeframe` | حداکثر۱۰۰ کندل بسته اخیر |
 | GET | `/market-data/candles/:symbol/:timeframe/latest` | آخرین کندل بسته |
-| GET | `/market-data/candles/:symbol/:timeframe/quality` | کیفیت، پیوستگی و تازگی تاریخچهٔ ذخیره‌شده |
-| POST | `/market-data/sync-spot/:symbol/:timeframe` | همگام‌سازی از Kraken؛ فقط کندل بسته ذخیره می‌شود |
-| POST | `/market-data/repair-spot-gaps/:symbol/:timeframe` | تلاش برای ترمیم فاصله‌ها در پنجرهٔ موجود API |
-| GET | `/signals/:symbol/:timeframe` | تصمیم استراتژی فعال؛ قاعدهٔ فعلی فقط 1h را پشتیبانی می‌کند |
-| GET | `/technical-analysis/:symbol` | snapshot یک‌ساعته و دلیل همان تصمیم |
-| GET | `/trading-assistant/status` | وضعیت عملیاتی runner |
-| POST | `/demo-trading/open/:symbol/:timeframe` | ورود دستی از قاعدهٔ فعلی در حالت APPROVED با کنترل مجوز/هزینه/ظرفیت |
-| GET | `/demo-trading/open` | پوزیشن‌های باز |
-| POST | `/demo-trading/check` | اجرای دستی بررسی خروج |
-| GET | `/demo-trading/history` | تاریخچه و نتیجهٔ خالص معاملات |
-| GET | `/demo-trading/summary` | وضعیت سرمایه و خلاصهٔ دمو |
+| GET | `/market-data/candles/:symbol/:timeframe/quality` | اعتبار و پوشش داده |
+| POST | `/market-data/sync-spot/:symbol/:timeframe` | دریافت و ذخیرهٔ فقط کندل بسته |
+| POST | `/market-data/repair-spot-gaps/:symbol/:timeframe` | ترمیم در محدودهٔ recent API، اکنون شامل4h |
+| GET | `/signals/:symbol/:timeframe` | سیگنال4h با فیلترDaily از همان هستهٔ فعال |
+| GET | `/technical-analysis/:symbol` | snapshot و علت تصمیم4h با فیلترDaily |
+| GET | `/trading-assistant/status` | ۳۰ بازار پویا، حلقه و سیاست اجرا |
+| POST | `/demo-trading/open/:symbol/:timeframe` | درخواست صف Maker در حالت APPROVED، مشروط به شواهد/سرمایه |
+| GET | `/demo-trading/orders` | سفارش‌های Maker معلق، قیمت، زمان انقضا و رزرو EUR |
+| GET | `/demo-trading/open` | پوزیشن‌های پرشده و باز |
+| POST | `/demo-trading/check` | بررسی fill سفارش و خروج Maker |
+| GET | `/demo-trading/history` | نتیجهٔ خالص، هزینه و قیمت خروج |
+| GET | `/demo-trading/summary` | نقد آزاد، سرمایه رزرو، ظرفیت و عملکرد |
 
-ورود خودکار فقط توسط `RunTradingAssistant` انجام می‌شود. ورود دستی دمو تحلیل مستقلی ندارد و همان snapshot را اجرا می‌کند؛ فلگ دمو، نسخهٔ تأییدشده و شواهد اجرا با تفکیک دقیقه‌ای باید اجازه بدهند؛ شواهد ساعتی کافی نیستند. این endpoint سفارش واقعی نمی‌فرستد. کیفیت تاریخچهٔ دیتابیس برای نگهداری داده و خروج است؛ برای تشخیص ورود از API سیگنال یا تحلیل جاری استفاده می‌شود.
+ورود خودکار فقط از RunTradingAssistant است. انطباق سیگنال به معنی fill نیست؛
+سفارش لیمیت ممکن است منقضی شود یا استاپ sell پر نشود. همهٔ مسیرها دمو هستند
+و سفارش صرافی ارسال نمی‌کنند. تاریخچهٔ OHLC شواهد معتبر Maker تلقی نمی‌شود.
+برای توقف ورود از DEMO_ENTRIES_PAUSED استفاده می‌شود.
 
-نمادهای جاری `BTCEUR` و `ETHEUR` هستند. نماد و تایم‌فریم ورودی‌های دادهٔ بازار اعتبارسنجی می‌شوند. مسیرهای sync و repair مستقیماً سرویس نگهداری فعال را صدا می‌زنند؛ دیگر منطق ورود یا تحلیل قدیمی در کنترلر ندارند. پاسخ sync اکنون `{ symbol, timeframe, saved }` است؛ شمارش خام `received` که کندل باز را هم شامل می‌شد حذف شد.
+سیگنال همچنان4h است؛ سفارش‌های نسخهٔ فعلی با کندل بسته1h بررسی می‌شوند.
+`/demo-trading/orders` و summary فیلدهای `signalTimeframe` و `executionTimeframe` را دارند؛
+پوزیشن جدید `executionTimeframe=1h` را برای خروج پس از restart ذخیره می‌کند.
+مقدار null در پوزیشن‌های قبلی یعنی استفاده از timeframe ثبت‌شدهٔ همان پوزیشن.
+Scheduler فقط بازارهای دارای سفارش/پوزیشن را sync می‌کند و دریافت موفق را
+تا مرز کندل بعدی تکرار نمی‌کند. migration لازم: `operations/migrations/20261006-hourly-demo-execution.sql`.
 
-## تحقیق؛ فقط روی سرور جدا
+## تحقیق فقط روی127.0.0.1:3001
 
-پس از `pnpm build:test` و `pnpm start:research`، مسیرهای زیر روی `127.0.0.1:3001` وجود دارند:
-
-| روش | مسیر | کاربرد |
+| روش | مسیر | مسئولیت |
 | --- | --- | --- |
-| GET | `/backtesting/:symbol/:timeframe` | replay و ثبت نتیجه در دیتابیس تنظیم‌شده |
-| GET | `/backtesting/history/:symbol/:timeframe` | نتیجه‌های ذخیره‌شده |
-| GET | `/backtesting/readiness/:timeframe` | مجوز مبتنی بر شواهد پرتفوی برای نسخهٔ فعال |
-| GET | `/backtesting/compare/:symbol/:timeframe` | مقایسهٔ نسخه‌های داده‌شده با queryهای `baseline` و `candidate` |
-| GET | `/backtesting/portfolio/:timeframe` | بک‌تست پرتفوی |
-| GET | `/backtesting/walk-forward/portfolio/:timeframe` | walk-forward پرتفوی |
-| POST | `/research-data/build-4h/:symbol` | آماده‌سازی دادهٔ 4h فقط برای استراتژی‌های تاریخی |
+| GET | `/backtesting/readiness/:timeframe` | خواندن مجوز شواهد نسخهٔ جاری |
+| GET | `/backtesting/portfolio/:timeframe` | حساب مشترک سبد فعلی۳۰دارایی، فقط4h با ماکرویDaily، بدون نوشتن شواهد |
 
-ساخت 4h دیگر در زمان‌بند محصول اجرا نمی‌شود؛ ورود فعلی از آن استفاده نمی‌کند. بازسازی تحقیقاتی همان جدول دادهٔ 4h را در یک تراکنش جایگزین می‌کند و باید صریحاً فراخوان شود. پاک‌سازی کد هیچ‌کدام از این عملیات دیتابیس را اجرا نکرده است.
+دادهٔ سال محفوظ به‌طور پیش‌فرض کنار گذاشته می‌شود؛ includeHoldout=true فقط
+درخواست صریح تحقیق برای آن داده است. پیش‌فرض شبیه‌سازی طولانی‌ترین بازهٔ
+مشترک پیوسته را بر اساس پوشش انتخاب می‌کند و محدوده را گزارش می‌دهد.
+CLI `pnpm backtest:spot-basket --data-dir ...` موتور را با دادهٔ رسمی4h/Daily و انتخاب۳۰بازار از حجم روز گذشته اجرا می‌کند.
+
+مسیرهای قدیمی تک‌نماد، history و walk-forward و helperهای next-open تحقیق
+حذف شدند؛ این تغییر API تحقیق است. قالب وضعیت Maker و سبد مشترک جای آن‌ها
+را گرفته است. [قاعده و محدودیت‌ها](STRATEGY.md) را ببینید.
 
 ## مسیرهای حذف‌شده
 
 - `/scanner/:symbol/:timeframe`: تکرار API سیگنال با یک wrapper جدا؛ کنترلر، سرویس، ماژول و schema حذف شدند.
-- endpointهای RSI/SMA/EMA/ATR/ADX، مقایسهٔ قیمت با میانگین، trend، rsi-status و market-condition زیر `/market-data/candles/...`: مسیر تحلیل قدیمی خارج از استراتژی فعلی؛ wrapperها و `MarketDataAnalysisService` حذف شدند. محاسبات استفاده‌شدهٔ تاریخی فقط در `test/research/indicators` هستند.
+- endpointهای RSI/SMA/EMA/ATR/ADX، مقایسهٔ قیمت با میانگین، trend، rsi-status و market-condition زیر `/market-data/candles/...`: مسیر تحلیل قدیمی خارج از استراتژی فعلی؛ wrapperها و `MarketDataAnalysisService` حذف شدند. استراتژی‌ها و سرویس اندیکاتور قدیمیِ تحقیق هم حذف شدند.
 - `POST /market-data/candles`: درج دستی/آزمایشی کندل؛ کنترلر و DTO حذف شدند. دادهٔ زنده از provider و تاریخچه از import صریح می‌آید.
 - `GET /market-data/candles` و `GET /market-data/candles/:symbol`: فهرست‌های کلی و بدون محدودیت از CRUD اولیه؛ از خواندن محدوده‌دار بازار/تایم‌فریم استفاده می‌شود.
 - `GET /market-data/spot-candles/:symbol`: دسترسی مستقیم به provider شامل کندل باز؛ برای snapshot از تحلیل جاری و برای تاریخچه از مسیر کندل بسته استفاده می‌شود.
-- `POST /market-data/build-4h/:symbol`: از محصول حذف و به مسیر صریح تحقیق منتقل شد.
+- `POST /market-data/build-4h/:symbol` و `/research-data/build-4h/:symbol`: حذف شدند؛ replay فعلی داده‌های رسمی مستقل4h وDaily را می‌خواند.
+- `GET /backtesting/compare/:symbol/:timeframe`: حذف شد؛ فقط یک نسخهٔ ورود قابل اجرا باقی مانده است.
 - `/backtesting/readiness/:symbol/:timeframe`: به `/backtesting/readiness/:timeframe` تبدیل شد؛ مجوز فعلی پرتفوی است و پارامتر بازار نقشی نداشت.
 
-شاخهٔ قدیمی بررسی مجوز تک‌نماد هم حذف شد؛ تنها مسیر پرتفوی با همان شروط قبلی باقی است. query تکراری `findActiveAssets` با `findActive` ادغام شد. فیلد `isActive` به DTO تغییر دارایی افزوده شد تا کنترل فعال‌بودن که واقعاً در محصول استفاده می‌شود از API قابل انجام باشد.
+## سیاست خروج نسخهٔ v4
 
-اعتبارسنجی این پاک‌سازی: TypeScript و build موفق، ۸ تست موفق، ۵۷ فایل production با مسیر استفادهٔ مشخص و بدون import از تحقیق. بک‌تست با ساعت مرجع قبلی تکرار شد؛ تمام سیگنال‌ها، معاملات و نتایج متوالی BTC و ETH یکسان ماندند. هیچ عملیات دیتابیس یا ارسال تلگرام برای این بررسی‌ها انجام نشد.
-
-اصلاح بعدی ریسک Spot: worker خروج هر دقیقه اجرا می‌شود و در ساعت باز
-از کندل بستهٔ 1m استفاده می‌کند. پاسخ بررسی، تایم‌فریم کندل خروج را نیز
-مشخص می‌کند. جزئیات و محدودیت‌ها در [بررسی ریسک](SPOT_RISK_REVIEW.md) هستند.
+سفارش‌های جدید `stopOrderType=market` دارند؛ خرید و TP همچنان Limit هستند.
+`stopExecutionPolicy` روی پوزیشن ذخیره می‌شود؛ null در رکوردهای قبلی یعنی
+MAKER_ONLY. summary کارمزد stop=0.004 و لغزش فرضی stop=0.001 را نمایش می‌دهد.
+خروج در کندل ساعتی بسته مدل می‌شود، نه سفارش واقعی یا پایش tick.
+Migration: `operations/migrations/20261006-demo-market-stop.sql`.
+API سبد تست، دادهٔ مستقل1h برای همهٔ نمادها می‌خواهد؛ نبود داده خطاست.

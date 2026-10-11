@@ -24,7 +24,33 @@
       "bytes": 5892092,
       "zipCrc32": "333f90e0",
       "crcVerified": true
+    },
+    {
+      "symbol": "SOLEUR",
+      "entry": "SOLEUR_60.csv",
+      "crcVerified": true,
+      "zipCrc32": "41d67959",
+      "bytes": 2545364,
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/SOLEUR_60.csv"
+    },
+    {
+      "symbol": "LINKEUR",
+      "entry": "LINKEUR_60.csv",
+      "crcVerified": true,
+      "zipCrc32": "99174f2b",
+      "bytes": 3743797,
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/LINKEUR_60.csv"
+    },
+    {
+      "symbol": "AVAXEUR",
+      "entry": "AVAXEUR_60.csv",
+      "crcVerified": true,
+      "zipCrc32": "9727cbb7",
+      "bytes": 2079209,
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/AVAXEUR_60.csv"
     }
   ],
-  "downloadedBytes": 7949923
+  "downloadedBytes": 7949923,
+  "additionalBasketDownloadBytes": 33334824,
+  "additionalBasketDownloadBytesNote": "Selective retrieval included 18 prior research markets; only the three current basket receipts and datasets are retained here."
 }

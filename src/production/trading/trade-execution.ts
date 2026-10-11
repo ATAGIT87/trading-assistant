@@ -1,16 +1,16 @@
 import { TradingSignal } from "../signals/signal.types";
 
 export type ExecutableSignal = TradingSignal & {
-  action: "BUY" | "SELL";
+  action: "BUY";
   stopLoss: number;
   takeProfit: number;
 };
 
 /**
  * Keep the structural stop from the closed-candle setup, but calculate the
- * target from the price actually available at the next candle's open.
+ * target from the passive limit price chosen at submission.
  *
- * Without this, a favourable overnight/next-candle gap can accidentally turn
+ * Without this, a changed passive quote can accidentally turn
  * a planned 2R trade into a much more distant target (for example 3.3R).
  */
 export function rebaseSignalAtEntry(
@@ -18,7 +18,7 @@ export function rebaseSignalAtEntry(
   entryPrice: number,
 ): ExecutableSignal | null {
   if (
-    (signal.action !== "BUY" && signal.action !== "SELL") ||
+    signal.action !== "BUY" ||
     signal.stopLoss === null ||
     signal.takeProfit === null ||
     signal.stopLoss <= 0 ||
@@ -52,33 +52,21 @@ export function rebaseSignalAtEntry(
     return null;
 
   const validLevels =
-    signal.action === "BUY"
-      ? signal.stopLoss < signal.entryPrice &&
-        signal.takeProfit > signal.entryPrice &&
-        entryPrice > signal.stopLoss &&
-        entryPrice < signal.takeProfit
-      : signal.stopLoss > signal.entryPrice &&
-        signal.takeProfit < signal.entryPrice &&
-        entryPrice < signal.stopLoss &&
-        entryPrice > signal.takeProfit;
+    signal.stopLoss < signal.entryPrice &&
+    signal.takeProfit > signal.entryPrice &&
+    entryPrice > signal.stopLoss &&
+    entryPrice < signal.takeProfit;
   if (!validLevels) return null;
 
   const rebasedTarget = signal.preserveTakeProfit
     ? signal.takeProfit
-    : signal.action === "BUY"
-      ? entryPrice + actualRisk * rewardToRisk
-      : entryPrice - actualRisk * rewardToRisk;
+    : entryPrice + actualRisk * rewardToRisk;
   const limit = signal.takeProfitLimit;
   if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0))
     return null;
   const takeProfit =
-    limit === undefined
-      ? rebasedTarget
-      : signal.action === "BUY"
-        ? Math.min(rebasedTarget, limit)
-        : Math.max(rebasedTarget, limit);
-  const actualReward =
-    signal.action === "BUY" ? takeProfit - entryPrice : entryPrice - takeProfit;
+    limit === undefined ? rebasedTarget : Math.min(rebasedTarget, limit);
+  const actualReward = takeProfit - entryPrice;
   const minimumRewardRisk = signal.minimumRewardRisk ?? 0;
   if (
     !Number.isFinite(takeProfit) ||
@@ -103,10 +91,7 @@ export function hasPositiveNetTarget(
     ![feeRate, slippageRate].every((rate) => Number.isFinite(rate) && rate >= 0)
   )
     return false;
-  const reward =
-    signal.action === "BUY"
-      ? signal.takeProfit - signal.entryPrice
-      : signal.entryPrice - signal.takeProfit;
+  const reward = signal.takeProfit - signal.entryPrice;
   const netReward =
     reward - (signal.entryPrice + signal.takeProfit) * (feeRate + slippageRate);
   const minimumNetR = signal.minimumNetRewardRisk ?? 0;

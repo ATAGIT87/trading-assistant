@@ -10,9 +10,13 @@ import { Repository } from "typeorm";
 import { AlertDelivery } from "../../alerts/entities/alert-delivery.entity";
 import { Timeframe } from "../../assets/enums/timeframe.enum";
 import { DemoTradingService } from "../../demo-trading/demo-trading.service";
-import { MarketAnalysis, EMA_RSI_STRATEGY_VERSION } from "./analyze-market";
+import { MarketAnalysis, SPOT_STRATEGY_VERSION } from "./analyze-market";
 import { SignalsService } from "../../signals/signals.service";
-import { AssetsService } from "../../assets/assets.service";
+import {
+  supportedTradingSymbols,
+  refreshTradingWatchlist,
+  watchlistStatus,
+} from "../../market-data/trading-symbol";
 
 @Injectable()
 export class RunTradingAssistant
@@ -32,7 +36,6 @@ export class RunTradingAssistant
     string,
     { result: Omit<MarketAnalysis, "closedHistory">; demoReason: string | null }
   >();
-  private enabledMarkets: string[] = [];
 
   constructor(
     private readonly config: ConfigService,
@@ -40,7 +43,6 @@ export class RunTradingAssistant
     private readonly ledger: Repository<AlertDelivery>,
     private readonly demo: DemoTradingService,
     private readonly signals: SignalsService,
-    private readonly assets: AssetsService,
   ) {
     this.intervalMs = Number(config.get("CCXT_ASSISTANT_INTERVAL_MS", 60000));
     if (
@@ -82,12 +84,13 @@ export class RunTradingAssistant
       active: this.active,
       executing: this.inFlight !== null,
       symbol: "BTC/EUR", // Backwards-compatible primary-market field.
-      symbols: this.enabledMarkets,
-      strategyVersion: EMA_RSI_STRATEGY_VERSION,
+      symbols: [...supportedTradingSymbols],
+      watchlist: watchlistStatus(),
+      strategyVersion: SPOT_STRATEGY_VERSION,
       entryOwner: "RunTradingAssistant",
       unifiedStrategyActive: this.signals.isUnifiedStrategyActive(),
       markets: Object.fromEntries(this.marketResults),
-      timeframe: "1h",
+      timeframe: "4h",
       intervalMs: this.intervalMs,
       persistentDeduplication: {
         active: this.persistentDeduplicationActive,
@@ -102,8 +105,18 @@ export class RunTradingAssistant
       telegram: "PERSISTENT_DEMO_OUTBOX",
       exitMonitoring: {
         pollCadenceMs: 60_000,
-        entryTimeframe: "1h",
-        intrahourFeed: "CLOSED_1M_CANDLES",
+        entryTimeframe: "4h",
+        executionTimeframe: "1h",
+        legacyExecution: "STORED_POSITION_TIMEFRAME",
+        feed: "CLOSED_1H_CANDLES",
+        orderType: "limit",
+        postOnly: true,
+        postOnlyAppliesTo: "ENTRY_AND_TAKE_PROFIT",
+        stopOrderType: "market",
+        legacyStopPolicy: "STORED_POSITION_POLICY_OR_MAKER_ONLY",
+        maximumPositions: 6,
+        capacityCounts: "FILLED_OPEN_ONLY",
+        pendingTTLHours: 24,
         mode: "SIMULATED",
         nativeExchangeStop: false,
       },
@@ -112,14 +125,14 @@ export class RunTradingAssistant
 
   private schedule(delay: number): void {
     if (!this.active) return;
-    const hourAge = Date.now() % 3_600_000;
+    const hourAge = Date.now() % 14_400_000;
     const safetyDelay =
       delay === 0 && hourAge < 10000 ? 10000 - hourAge : delay;
     this.timer = setTimeout(() => {
       this.timer = undefined;
       if (!this.active) return;
       // Re-check at execution time: a normal interval may land at the hour boundary.
-      if (Date.now() % 3_600_000 < 10000) {
+      if (Date.now() % 14_400_000 < 10000) {
         this.schedule(0);
         return;
       }
@@ -133,7 +146,7 @@ export class RunTradingAssistant
   private async analyzeAndExecute(symbol: string): Promise<void> {
     const result = await this.signals.getMarketAnalysis(
       symbol,
-      Timeframe.ONE_HOUR,
+      Timeframe.FOUR_HOURS,
     );
     const { closedHistory: _history, ...summary } = result;
     this.marketResults.set(symbol, { result: summary, demoReason: null });
@@ -154,7 +167,7 @@ export class RunTradingAssistant
     if (!result.candle) throw new Error("Missing evaluated candle.");
     const seen = await this.ledger.existsBy({
       symbol,
-      timeframe: Timeframe.ONE_HOUR,
+      timeframe: Timeframe.FOUR_HOURS,
       candleTime: new Date(result.candle.timestamp),
       action: "CCXT_SIGNAL_COMMITTED",
     });
@@ -185,17 +198,14 @@ export class RunTradingAssistant
       // Probe the actual mapped schema, including the migration-required payload.
       await this.ledger.find({ take: 1 });
       this.persistentDeduplicationActive = true;
-      const activeAssets = (await this.assets.findActive()).filter(
-        (asset) => asset.timeframe === Timeframe.ONE_HOUR,
-      );
-      this.enabledMarkets = activeAssets.map((asset) => asset.symbol);
       this.lastError = null;
-      for (const asset of activeAssets) {
+      await refreshTradingWatchlist();
+      for (const symbol of [...supportedTradingSymbols]) {
         if (!this.active) break;
         try {
-          await this.analyzeAndExecute(asset.symbol);
+          await this.analyzeAndExecute(symbol);
         } catch {
-          this.lastError = `Analysis or demo integration failed for ${asset.symbol}; next cycle will retry.`;
+          this.lastError = `Analysis or demo integration failed for ${symbol}; next cycle will retry.`;
           this.logger.error(this.lastError);
         }
       }

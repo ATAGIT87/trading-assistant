@@ -13,7 +13,7 @@ export class StrategyRegistryService {
   ) {
     const selected = config.get<string>("ACTIVE_STRATEGY_VERSION", "");
     if (selected && selected !== strategy.version)
-      throw new Error("Only ccxt-ema50-rsi14-v1 can drive live entries.");
+      throw new Error(`Only ${strategy.version} can drive live entries.`);
     this.activeVersion = selected === strategy.version ? selected : null;
   }
 

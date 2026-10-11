@@ -6,7 +6,8 @@ After every change, keep the project structure clean:
 - Remove temporary artifacts and empty source directories created during the work.
 - Keep meaningful regression tests; remove obsolete tests and disposable debugging scripts.
 - Keep production code in `src/production`, tests and research in `test`, and maintenance tools in `operations`. Production must not import tests or research.
-- Preserve useful historical evidence, datasets, user changes, and secrets. Source cleanup does not authorize deleting database records.
+- Keep one current entry implementation and its regression tests. Remove failed candidate implementations and their full reports after selecting a replacement; keep a concise explanation of the selection and the current result.
+- Preserve source datasets, user changes, and secrets. Source cleanup does not authorize deleting database records. Keep only the exit compatibility needed to manage previously persisted positions.
 - Keep generated build output ignored. Use `build:test`, which clears its previous generated output before compiling.
 - Run checks appropriate to the change, including `pnpm check:structure` for source changes and `git diff --check`. Update structure and API documentation when responsibilities or routes change.
 

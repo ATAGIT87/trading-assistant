@@ -36,11 +36,16 @@ export class DemoNotificationDeliveryService {
       // Filter acknowledged rows in SQL before applying the bounded batch.
       const pending = await this.ledger
         .createQueryBuilder("pending")
-        .where("pending.action LIKE :pattern", { pattern: "DEMO_%_PENDING:%" })
+        .where("(pending.action LIKE :pattern OR pending.action = :maker)", {
+          pattern: "DEMO_%_PENDING:%",
+          maker: "MAKER_ENTRY_PENDING",
+        })
         .andWhere(
           `NOT EXISTS (SELECT 1 FROM alert_delivery sent WHERE sent.symbol = pending.symbol
           AND sent.timeframe = pending.timeframe AND sent."candleTime" = pending."candleTime"
-          AND sent.action = REPLACE(pending.action, '_PENDING:', '_SENT:'))`,
+          AND sent.action = CASE WHEN pending.action = 'MAKER_ENTRY_PENDING'
+          THEN 'MAKER_ENTRY_NOTIFICATION_SENT'
+          ELSE REPLACE(pending.action, '_PENDING:', '_SENT:') END)`,
         )
         .orderBy('pending."sentAt"', "ASC")
         .addOrderBy("pending.id", "ASC")
@@ -48,6 +53,20 @@ export class DemoNotificationDeliveryService {
         .getMany();
       for (const event of pending) {
         try {
+          if (event.action === "MAKER_ENTRY_PENDING") {
+            if (!(await this.telegram.sendMakerEntryNotification(event)))
+              continue;
+            await this.ledger.upsert(
+              {
+                symbol: event.symbol,
+                timeframe: event.timeframe,
+                candleTime: event.candleTime,
+                action: "MAKER_ENTRY_NOTIFICATION_SENT",
+              },
+              ["symbol", "timeframe", "candleTime", "action"],
+            );
+            continue;
+          }
           const match = /^DEMO_(OPEN|CLOSE)_PENDING:(\d+)$/.exec(event.action);
           if (!match) continue;
           const position = await this.positions.findOneBy({

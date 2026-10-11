@@ -1,0 +1,2330 @@
+{
+  "archive": "Kraken_OHLCVT_Full_2026Q2.zip",
+  "sources": [
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part00",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part01",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part02",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part03",
+    "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_Full_2026Q2.zip.part04"
+  ],
+  "wholeArchiveSha256Verified": false,
+  "rankingAt": "2021-12-21T16:00:00Z",
+  "rankingWindowDays": 30,
+  "rankingMethod": "Sum of completed daily close times base volume; EUR turnover proxy, not order-book depth",
+  "eligibleUniverse": 92,
+  "dailyMarketsScanned": 648,
+  "excludedStablecoins": [
+    "AUD",
+    "CAD",
+    "CHF",
+    "DAI",
+    "EUR",
+    "EURC",
+    "EURQ",
+    "EURT",
+    "FDUSD",
+    "FRAX",
+    "GBP",
+    "JPY",
+    "LUSD",
+    "PYUSD",
+    "RLUSD",
+    "TUSD",
+    "USD",
+    "USD1",
+    "USDC",
+    "USDD",
+    "USDE",
+    "USDG",
+    "USDP",
+    "USDQ",
+    "USDS",
+    "USDT",
+    "UST",
+    "USTC"
+  ],
+  "selected": [
+    {
+      "symbol": "BTCEUR",
+      "turnoverEUR30d": 3171221127.4802966,
+      "dailyWarmupBars": 3019,
+      "dailySourceSha256": "bbee9c05c56cb91291a892d184ef39475ac4d107477fb63048e63006920eaca9",
+      "archiveBase": "XBTEUR"
+    },
+    {
+      "symbol": "ETHEUR",
+      "turnoverEUR30d": 1704729337.6732514,
+      "dailyWarmupBars": 2328,
+      "dailySourceSha256": "233ed0820b81920ebe0712c1d07db1bd74896da6e9641617bab6dfd3bb983ce7",
+      "archiveBase": "ETHEUR"
+    },
+    {
+      "symbol": "DOTEUR",
+      "turnoverEUR30d": 345853967.71144885,
+      "dailyWarmupBars": 490,
+      "dailySourceSha256": "18eef08d1427ceaf1f7780ce68d9f08ade492276ef4e31a06d776f9e139807b9",
+      "archiveBase": "DOTEUR"
+    },
+    {
+      "symbol": "ADAEUR",
+      "turnoverEUR30d": 298928690.9399083,
+      "dailyWarmupBars": 1180,
+      "dailySourceSha256": "c633ad332a6cf71cc11fc12d0e6ffe77b4731c2ad825d38583559b7887b4b0cf",
+      "archiveBase": "ADAEUR"
+    },
+    {
+      "symbol": "SOLEUR",
+      "turnoverEUR30d": 288720003.1036808,
+      "dailyWarmupBars": 187,
+      "dailySourceSha256": "bc0ec7bd414342ad9a1f6aec7575726f69b67695e8dbebc1d1f35b3f4b8488d3",
+      "archiveBase": "SOLEUR"
+    },
+    {
+      "symbol": "SANDEUR",
+      "turnoverEUR30d": 242662284.76179802,
+      "dailyWarmupBars": 215,
+      "dailySourceSha256": "155262103f9e164a5c77a3f20b11401932719734d17abbed70ee53a4e735dbfd",
+      "archiveBase": "SANDEUR"
+    },
+    {
+      "symbol": "XRPEUR",
+      "turnoverEUR30d": 237713037.98064852,
+      "dailyWarmupBars": 1677,
+      "dailySourceSha256": "31188d1423bf0525043a0186d12e7d39cf65b3d24ba913a0671dac44a594a97e",
+      "archiveBase": "XRPEUR"
+    },
+    {
+      "symbol": "MANAEUR",
+      "turnoverEUR30d": 195050264.79458886,
+      "dailyWarmupBars": 371,
+      "dailySourceSha256": "dde2abae06890cd9d3ccb4bb8bf8240c1ed4208e3e678a057db1e5dc3a0177d9",
+      "archiveBase": "MANAEUR"
+    },
+    {
+      "symbol": "MATICEUR",
+      "turnoverEUR30d": 155866300.51713553,
+      "dailyWarmupBars": 218,
+      "dailySourceSha256": "60a3bfb354e8b2da44caec8f683ef318ab5d65516bef5d748cf321d31dc55577",
+      "archiveBase": "MATICEUR"
+    },
+    {
+      "symbol": "LTCEUR",
+      "turnoverEUR30d": 150269120.2311714,
+      "dailyWarmupBars": 2980,
+      "dailySourceSha256": "dd1d190cc10123983dc06122dc3c4dbaecc16ee4d29e239649aad68e20206f7d",
+      "archiveBase": "LTCEUR"
+    },
+    {
+      "symbol": "DOGEEUR",
+      "turnoverEUR30d": 138222376.85871994,
+      "dailyWarmupBars": 733,
+      "dailySourceSha256": "343c00fb258d50fb73baee9c1586a4e5668656e701dffc073ff8ba109f4ddbe1",
+      "archiveBase": "XDGEUR"
+    },
+    {
+      "symbol": "ATOMEUR",
+      "turnoverEUR30d": 102655612.30452907,
+      "dailyWarmupBars": 974,
+      "dailySourceSha256": "c4c9e86e390a09aee58380e1f391a2e1f3f6d4dbcae54162b722cc913724737b",
+      "archiveBase": "ATOMEUR"
+    },
+    {
+      "symbol": "LINKEUR",
+      "turnoverEUR30d": 89755514.8664856,
+      "dailyWarmupBars": 818,
+      "dailySourceSha256": "ee919d9880bb677a42beceb013003409685cfc28bd28231e4a301c82a482362d",
+      "archiveBase": "LINKEUR"
+    },
+    {
+      "symbol": "ZECEUR",
+      "turnoverEUR30d": 78534116.09223771,
+      "dailyWarmupBars": 1879,
+      "dailySourceSha256": "f309dfc70b37324ffe091a2f39cb88953ed4b9c7c4d01ac0da6d1f87a99176db",
+      "archiveBase": "ZECEUR"
+    },
+    {
+      "symbol": "LRCEUR",
+      "turnoverEUR30d": 77775868.67156222,
+      "dailyWarmupBars": 140,
+      "dailySourceSha256": "ac1f757c36ba86d3d77412a1781274b3bc9b3791cfadf0465006538d875ecc8e",
+      "archiveBase": "LRCEUR"
+    },
+    {
+      "symbol": "XTZEUR",
+      "turnoverEUR30d": 70356307.75113589,
+      "dailyWarmupBars": 1162,
+      "dailySourceSha256": "40d45a096bc1d303a787b34d8823f86ab26d84505a5935a1f729fbcdc79fc1be",
+      "archiveBase": "XTZEUR"
+    },
+    {
+      "symbol": "BATEUR",
+      "turnoverEUR30d": 66689944.40255377,
+      "dailyWarmupBars": 852,
+      "dailySourceSha256": "1db2ca7e2c961c0418f9d957416c7addb118d3c29f0120edc6452942bffb930a",
+      "archiveBase": "BATEUR"
+    },
+    {
+      "symbol": "ALGOEUR",
+      "turnoverEUR30d": 65308499.4421955,
+      "dailyWarmupBars": 699,
+      "dailySourceSha256": "a98e38c27dddab32ac62c3ffd9d188f0a805615ca0c0291fcd087315237fe800",
+      "archiveBase": "ALGOEUR"
+    },
+    {
+      "symbol": "SCEUR",
+      "turnoverEUR30d": 51452685.8825036,
+      "dailyWarmupBars": 804,
+      "dailySourceSha256": "087574d6cdb95825a1cae56377dd9f2ca09688e9a5b713aebd078106509b37a7",
+      "archiveBase": "SCEUR"
+    },
+    {
+      "symbol": "XLMEUR",
+      "turnoverEUR30d": 44531234.451454945,
+      "dailyWarmupBars": 1621,
+      "dailySourceSha256": "09794d5a9c573b8c606b1cbec901fe5e54a3b4db8994d35a2f3bc23e77237160",
+      "archiveBase": "XLMEUR"
+    },
+    {
+      "symbol": "BCHEUR",
+      "turnoverEUR30d": 39523176.03786204,
+      "dailyWarmupBars": 1602,
+      "dailySourceSha256": "f2b866b9efc4486e34d7fd01492db6876b74daf18ab759cc440033cace83d134",
+      "archiveBase": "BCHEUR"
+    },
+    {
+      "symbol": "FLOWEUR",
+      "turnoverEUR30d": 35106993.88923415,
+      "dailyWarmupBars": 328,
+      "dailySourceSha256": "ae2acef0c07c3c8ed7a2b5be4c0d12e7e74648a7a071eb3f67f2ee442e8a8c6e",
+      "archiveBase": "FLOWEUR"
+    },
+    {
+      "symbol": "SHIBEUR",
+      "turnoverEUR30d": 34415839.741782226,
+      "dailyWarmupBars": 21,
+      "dailySourceSha256": "1023dee3bb84e2ad3408a1d3addfeab41781d1ad82b21a6f63dcdd03c66f5acf",
+      "archiveBase": "SHIBEUR"
+    },
+    {
+      "symbol": "CRVEUR",
+      "turnoverEUR30d": 34033287.18245359,
+      "dailyWarmupBars": 460,
+      "dailySourceSha256": "43f612538b9702c63852e8678ce5f2df205cfc811d508cb164f4e86145b123f2",
+      "archiveBase": "CRVEUR"
+    },
+    {
+      "symbol": "STORJEUR",
+      "turnoverEUR30d": 32792510.93641518,
+      "dailyWarmupBars": 524,
+      "dailySourceSha256": "10deb0f4db0943fba56b791a97304080db3034c2bd4616f6cc1bf6716b8bc342",
+      "archiveBase": "STORJEUR"
+    },
+    {
+      "symbol": "XMREUR",
+      "turnoverEUR30d": 32259230.257158075,
+      "dailyWarmupBars": 1813,
+      "dailySourceSha256": "bbad67371935588261ad7409ef60f020ab15fea2f2e8cfb6686dbdf3e9a1da05",
+      "archiveBase": "XMREUR"
+    },
+    {
+      "symbol": "EOSEUR",
+      "turnoverEUR30d": 32236552.71102531,
+      "dailyWarmupBars": 1457,
+      "dailySourceSha256": "586dd20e30c944329e3cd86864fee4c781df06207a8734f5620b48cc6781a399",
+      "archiveBase": "EOSEUR"
+    },
+    {
+      "symbol": "ENJEUR",
+      "turnoverEUR30d": 31345543.243949763,
+      "dailyWarmupBars": 215,
+      "dailySourceSha256": "5edad017588e7e3e6c1cd56aa95d03791ec40f8fb024f65ff806633956036d74",
+      "archiveBase": "ENJEUR"
+    },
+    {
+      "symbol": "UNIEUR",
+      "turnoverEUR30d": 27718396.467998177,
+      "dailyWarmupBars": 432,
+      "dailySourceSha256": "526defcfca5303a7d428aff5db0ec536efde507b685bea90efaa9b2ecefe2386",
+      "archiveBase": "UNIEUR"
+    },
+    {
+      "symbol": "KSMEUR",
+      "turnoverEUR30d": 27341545.18750254,
+      "dailyWarmupBars": 460,
+      "dailySourceSha256": "b0a9b611fcd3a89426b3ce05c0266a9a20e90a48ab2de0f0bf631840301140c8",
+      "archiveBase": "KSMEUR"
+    }
+  ],
+  "files": [
+    {
+      "symbol": "1INCHEUR",
+      "entry": "1INCHEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/1INCHEUR_240.csv",
+      "bytes": 546636,
+      "zipCrc32": "037f3a88",
+      "crcVerified": true,
+      "sha256": "2e7e6f04ccff6b9386c761db8ade6dceb08d76589aacdb96197fe8a97081a5e2"
+    },
+    {
+      "symbol": "AAVEEUR",
+      "entry": "AAVEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AAVEEUR_240.csv",
+      "bytes": 693294,
+      "zipCrc32": "de87ac16",
+      "crcVerified": true,
+      "sha256": "e4305a47d3e1d33eb3b9fad72165d858f0d0be099ac8f206e42660879e57dce1"
+    },
+    {
+      "symbol": "ACAEUR",
+      "entry": "ACAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ACAEUR_240.csv",
+      "bytes": 450376,
+      "zipCrc32": "00782b91",
+      "crcVerified": true,
+      "sha256": "ceb415d67789b4d69faec69f99a590fe54e5fc1d0da86d57c62c4a5d661e202e"
+    },
+    {
+      "symbol": "ADAEUR",
+      "entry": "ADAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ADAEUR_240.csv",
+      "bytes": 1153623,
+      "zipCrc32": "9e805f28",
+      "crcVerified": true,
+      "sha256": "7fa995f010788501542b4e833a8de79c80597f8b613a23b62628128e615cb995"
+    },
+    {
+      "symbol": "AGLDEUR",
+      "entry": "AGLDEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AGLDEUR_240.csv",
+      "bytes": 232680,
+      "zipCrc32": "44180d60",
+      "crcVerified": true,
+      "sha256": "9a88478ec6ec0ded33aa0f7555d52c5fe8750186f3571d13b2842e7816d01168"
+    },
+    {
+      "symbol": "AIREUR",
+      "entry": "AIREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AIREUR_240.csv",
+      "bytes": 427267,
+      "zipCrc32": "6ab900a4",
+      "crcVerified": true,
+      "sha256": "b0d9ed8adc82f989e9d543e78877c2e212d7c5680765941e25b2b61b2261fea4"
+    },
+    {
+      "symbol": "AKTEUR",
+      "entry": "AKTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AKTEUR_240.csv",
+      "bytes": 513586,
+      "zipCrc32": "3ecee994",
+      "crcVerified": true,
+      "sha256": "0d3d772a160ddedc2137c4146777f0c2bb08a03f88e2dc219d1ef6330d750d96"
+    },
+    {
+      "symbol": "ALCXEUR",
+      "entry": "ALCXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ALCXEUR_240.csv",
+      "bytes": 288348,
+      "zipCrc32": "47fd90a0",
+      "crcVerified": true,
+      "sha256": "8e5e62305655766b1743b2b7c46457e232197cfa6d8d108d1f53fa3613cc4dd2"
+    },
+    {
+      "symbol": "ALGOEUR",
+      "entry": "ALGOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ALGOEUR_240.csv",
+      "bytes": 894283,
+      "zipCrc32": "a82d4f69",
+      "crcVerified": true,
+      "sha256": "453271ab9e1526e2a88aa6ba30dc0a1db32042eb16b820c9090a2fe488b4764f"
+    },
+    {
+      "symbol": "ALICEEUR",
+      "entry": "ALICEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ALICEEUR_240.csv",
+      "bytes": 300278,
+      "zipCrc32": "6288130f",
+      "crcVerified": true,
+      "sha256": "91f0f870a2b88eaa0914bebcb91145b2321a328010efc1147ddc24eeaf15776a"
+    },
+    {
+      "symbol": "ANKREUR",
+      "entry": "ANKREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ANKREUR_240.csv",
+      "bytes": 663149,
+      "zipCrc32": "dc0f2f93",
+      "crcVerified": true,
+      "sha256": "802dc8dc5e4769f021215c6fe0705773e415bccd7240b620adbf1c8cea7e4c24"
+    },
+    {
+      "symbol": "ANTEUR",
+      "entry": "ANTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ANTEUR_240.csv",
+      "bytes": 435487,
+      "zipCrc32": "99bb5217",
+      "crcVerified": true,
+      "sha256": "5e0d5f54623421205906becdc031c4d0a5f5998d4969803f99e260256ead6703"
+    },
+    {
+      "symbol": "APEEUR",
+      "entry": "APEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/APEEUR_240.csv",
+      "bytes": 538129,
+      "zipCrc32": "90104f5c",
+      "crcVerified": true,
+      "sha256": "d77a5ddcacc0a33cb2d52f62c2e998a790ce0e16efc49cf2460fb8c3a9bdef22"
+    },
+    {
+      "symbol": "API3EUR",
+      "entry": "API3EUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/API3EUR_240.csv",
+      "bytes": 379483,
+      "zipCrc32": "e154e6f3",
+      "crcVerified": true,
+      "sha256": "95b79a1f4603d0b901913619df1f5c617b7f3fc0fccd38b25bb6b85b54c9523a"
+    },
+    {
+      "symbol": "ASTREUR",
+      "entry": "ASTREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ASTREUR_240.csv",
+      "bytes": 532903,
+      "zipCrc32": "bdb580ef",
+      "crcVerified": true,
+      "sha256": "f8f26d7da876e51c34bcbd8c68366f3f07e29be9cf4c8aec69eda76a6a9d19a2"
+    },
+    {
+      "symbol": "ATLASEUR",
+      "entry": "ATLASEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ATLASEUR_240.csv",
+      "bytes": 486352,
+      "zipCrc32": "e2fe0cc4",
+      "crcVerified": true,
+      "sha256": "64d3e3ddc7b1f04747dcde73cc1ec101e456a4d0ff46233861661e5b7e73abd5"
+    },
+    {
+      "symbol": "ATOMEUR",
+      "entry": "ATOMEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ATOMEUR_240.csv",
+      "bytes": 946874,
+      "zipCrc32": "315c4eaf",
+      "crcVerified": true,
+      "sha256": "9dd90810730668d15beb44f6777d423cdc9202a1ade241d53d51e9f834392fd9"
+    },
+    {
+      "symbol": "AUDIOEUR",
+      "entry": "AUDIOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AUDIOEUR_240.csv",
+      "bytes": 435201,
+      "zipCrc32": "7829cdbb",
+      "crcVerified": true,
+      "sha256": "3ba4598f403cbe76e786a2d5a1156a6dd8ccc6fcbabb21757289c6e82cf78e7b"
+    },
+    {
+      "symbol": "AVAXEUR",
+      "entry": "AVAXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AVAXEUR_240.csv",
+      "bytes": 545170,
+      "zipCrc32": "11db52d3",
+      "crcVerified": true,
+      "sha256": "8e19a4baf6535de4e50dadd178331d1ec5c7ea0bd2a252b2b2159c80c07468c9"
+    },
+    {
+      "symbol": "AXSEUR",
+      "entry": "AXSEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/AXSEUR_240.csv",
+      "bytes": 574407,
+      "zipCrc32": "768103b5",
+      "crcVerified": true,
+      "sha256": "8d8d4bf98aba6f730b21aa86fb9f8e48d2a339051f4211973669c02ee314957a"
+    },
+    {
+      "symbol": "BADGEREUR",
+      "entry": "BADGEREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BADGEREUR_240.csv",
+      "bytes": 460305,
+      "zipCrc32": "2b955b7c",
+      "crcVerified": true,
+      "sha256": "bdc455fd531c5bd2c7259715cfd54fb72a23457f28299db6c13d806d60c2d6a6"
+    },
+    {
+      "symbol": "BALEUR",
+      "entry": "BALEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BALEUR_240.csv",
+      "bytes": 502510,
+      "zipCrc32": "0f922e3f",
+      "crcVerified": true,
+      "sha256": "1c15fd53e091aeb938222f846e313ef8a7b0a01aa96041ec880ea4b710167a60"
+    },
+    {
+      "symbol": "BANDEUR",
+      "entry": "BANDEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BANDEUR_240.csv",
+      "bytes": 445530,
+      "zipCrc32": "2b2fd4cf",
+      "crcVerified": true,
+      "sha256": "26d0b3192311899dd124546c52ce3fdef17661bc7b7046a834d853fc8c443a58"
+    },
+    {
+      "symbol": "BATEUR",
+      "entry": "BATEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BATEUR_240.csv",
+      "bytes": 903967,
+      "zipCrc32": "a57a468f",
+      "crcVerified": true,
+      "sha256": "61da172d4f05f5f6cf8d554bc6831ff89b03571aa2964ebb4fc3a8de647cb175"
+    },
+    {
+      "symbol": "BCHEUR",
+      "entry": "BCHEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BCHEUR_240.csv",
+      "bytes": 1143325,
+      "zipCrc32": "78c667a3",
+      "crcVerified": true,
+      "sha256": "59494c97c5bbca67d2ce34b750a79c25d53d73fffd28ad7a07d59d354ea6584e"
+    },
+    {
+      "symbol": "BICOEUR",
+      "entry": "BICOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BICOEUR_240.csv",
+      "bytes": 349007,
+      "zipCrc32": "dc7ae430",
+      "crcVerified": true,
+      "sha256": "ae16a7f3bdd60dc24e8ee40fa864e906ceb7bd742ba286ba8b6330986cc9e467"
+    },
+    {
+      "symbol": "BNCEUR",
+      "entry": "BNCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BNCEUR_240.csv",
+      "bytes": 399030,
+      "zipCrc32": "f91edfe9",
+      "crcVerified": true,
+      "sha256": "66b8b26d66547515edaad9fd1b71cb89d90e2db83e81af0c521078e082ee4f9d"
+    },
+    {
+      "symbol": "BNTEUR",
+      "entry": "BNTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BNTEUR_240.csv",
+      "bytes": 419429,
+      "zipCrc32": "1155541e",
+      "crcVerified": true,
+      "sha256": "eaedc7e8260a0e8e8002eb53ffc143b713418c21728914b12a624344f3ae81d9"
+    },
+    {
+      "symbol": "BONDEUR",
+      "entry": "BONDEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BONDEUR_240.csv",
+      "bytes": 315272,
+      "zipCrc32": "cb866559",
+      "crcVerified": true,
+      "sha256": "d803ee74ad3ead63d52bd0e98b7e7a0453fe68cd5ef964c35eb8b8dd65cd246b"
+    },
+    {
+      "symbol": "BTCEUR",
+      "entry": "XBTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/BTCEUR_240.csv",
+      "bytes": 1808716,
+      "zipCrc32": "accc2411",
+      "crcVerified": true,
+      "sha256": "d36c7deaa3df265fa025a2ccdd7e035bc1ac43e670bf55061d28f25684619489"
+    },
+    {
+      "symbol": "CFGEUR",
+      "entry": "CFGEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CFGEUR_240.csv",
+      "bytes": 480242,
+      "zipCrc32": "e4cd5535",
+      "crcVerified": true,
+      "sha256": "d4defe2890b4ea9b3642dc9fd987510867adfede1957053edb7c19ced8bf46ef"
+    },
+    {
+      "symbol": "CHZEUR",
+      "entry": "CHZEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CHZEUR_240.csv",
+      "bytes": 629011,
+      "zipCrc32": "dfdc9045",
+      "crcVerified": true,
+      "sha256": "306c9c5835ae53432abcdf38277ca09a6a3db828480c4f970f834f45a21e2843"
+    },
+    {
+      "symbol": "COMPEUR",
+      "entry": "COMPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/COMPEUR_240.csv",
+      "bytes": 689401,
+      "zipCrc32": "9c126630",
+      "crcVerified": true,
+      "sha256": "45ea5dcbb6b4ed59bed59d0a058a6f6a2286657a17408c9da8a5ba0f2f56dd65"
+    },
+    {
+      "symbol": "CQTEUR",
+      "entry": "CQTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CQTEUR_240.csv",
+      "bytes": 541668,
+      "zipCrc32": "35de1294",
+      "crcVerified": true,
+      "sha256": "7899cc8ea66dab9c0acc7d7daad197432ab960ed29be02bdedba5febe81a13ca"
+    },
+    {
+      "symbol": "CRVEUR",
+      "entry": "CRVEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CRVEUR_240.csv",
+      "bytes": 696019,
+      "zipCrc32": "8896e403",
+      "crcVerified": true,
+      "sha256": "8c5698d2eefe126bfc6cc8e8a5704090d06bfbd907b614f1b15e44d5e195bf8f"
+    },
+    {
+      "symbol": "CTSIEUR",
+      "entry": "CTSIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CTSIEUR_240.csv",
+      "bytes": 510981,
+      "zipCrc32": "d3521918",
+      "crcVerified": true,
+      "sha256": "82bcd6652829c3e2a9b0c0347366bf182ccfd7f38a405a1a9ae60c48d480d77f"
+    },
+    {
+      "symbol": "CVCEUR",
+      "entry": "CVCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CVCEUR_240.csv",
+      "bytes": 293521,
+      "zipCrc32": "c6fcabbd",
+      "crcVerified": true,
+      "sha256": "720fb025b8f244a57dd3d54a26e68c105a7ce415ade90e9e0323d020381fd089"
+    },
+    {
+      "symbol": "CVXEUR",
+      "entry": "CVXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/CVXEUR_240.csv",
+      "bytes": 356777,
+      "zipCrc32": "6ed3ce44",
+      "crcVerified": true,
+      "sha256": "1a90fea0831c7d0c6aa4cba41c41f798026e190cd1d1dadfaea5550282870082"
+    },
+    {
+      "symbol": "DASHEUR",
+      "entry": "DASHEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/DASHEUR_240.csv",
+      "bytes": 1195681,
+      "zipCrc32": "c477c500",
+      "crcVerified": true,
+      "sha256": "cf0df2b3ebb0f4f1eee6b2ea4ff4ac84cb5772f016930b19df52d252234ec81c"
+    },
+    {
+      "symbol": "DOGEEUR",
+      "entry": "XDGEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/DOGEEUR_240.csv",
+      "bytes": 1022780,
+      "zipCrc32": "27b250a0",
+      "crcVerified": true,
+      "sha256": "85f6a696b78ed3c00ebebe9f5835e7f2400ce14b397cec939385b6fb9241b145"
+    },
+    {
+      "symbol": "DOTEUR",
+      "entry": "DOTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/DOTEUR_240.csv",
+      "bytes": 783245,
+      "zipCrc32": "183066f0",
+      "crcVerified": true,
+      "sha256": "a2e9e7288a3c1290cdd5729e022619543cce0f9aabd12e9b72570fb4d7f41e25"
+    },
+    {
+      "symbol": "DYDXEUR",
+      "entry": "DYDXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/DYDXEUR_240.csv",
+      "bytes": 560794,
+      "zipCrc32": "565776fb",
+      "crcVerified": true,
+      "sha256": "31fcdb16faab38ab0219ff3c24dd139389b66106e0f67c3740ac53bbe3fed465"
+    },
+    {
+      "symbol": "ENJEUR",
+      "entry": "ENJEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ENJEUR_240.csv",
+      "bytes": 598605,
+      "zipCrc32": "b50101f6",
+      "crcVerified": true,
+      "sha256": "dbeaacdcae50c18fa7c98b1e4f13313f82ed26a3444dd191a35384c80a3a9365"
+    },
+    {
+      "symbol": "ENSEUR",
+      "entry": "ENSEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ENSEUR_240.csv",
+      "bytes": 415609,
+      "zipCrc32": "1ddba4f2",
+      "crcVerified": true,
+      "sha256": "9fdaf85b1bba64f7b777122a11700dd3a5d55202b9ffb432749a8a4a1963c3b6"
+    },
+    {
+      "symbol": "EOSEUR",
+      "entry": "EOSEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/EOSEUR_240.csv",
+      "bytes": 964368,
+      "zipCrc32": "20119fe6",
+      "crcVerified": true,
+      "sha256": "4d577d68b60b3fb387a97ab5260f8ed300d622df67d869b63d72c21fb4eddbcb"
+    },
+    {
+      "symbol": "ETCEUR",
+      "entry": "ETCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ETCEUR_240.csv",
+      "bytes": 1238099,
+      "zipCrc32": "94ab2de4",
+      "crcVerified": true,
+      "sha256": "adf2ab6989adedd89e6e770986e02ab9444003e0a070cbdb5e9139b0d6c3a99c"
+    },
+    {
+      "symbol": "ETHEUR",
+      "entry": "ETHEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ETHEUR_240.csv",
+      "bytes": 1510310,
+      "zipCrc32": "1aa8d14a",
+      "crcVerified": true,
+      "sha256": "40b51e247b05e0de9b66f0b3402d0967f3b9a965a26c8e8e1075cc5979c44656"
+    },
+    {
+      "symbol": "EWTEUR",
+      "entry": "EWTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/EWTEUR_240.csv",
+      "bytes": 621892,
+      "zipCrc32": "771dccf6",
+      "crcVerified": true,
+      "sha256": "c8a733118e49c62c8aab3036ba59af94b1dddbb14758f2bbaaebcedd29bea1f0"
+    },
+    {
+      "symbol": "FETEUR",
+      "entry": "FETEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/FETEUR_240.csv",
+      "bytes": 518738,
+      "zipCrc32": "28654e4d",
+      "crcVerified": true,
+      "sha256": "2757e2fb31ba236902c3deae2d03b1777b3b0271edb19076afa14fa4afd15dcd"
+    },
+    {
+      "symbol": "FIDAEUR",
+      "entry": "FIDAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/FIDAEUR_240.csv",
+      "bytes": 386005,
+      "zipCrc32": "a921dda7",
+      "crcVerified": true,
+      "sha256": "b9c0d77b38f80f66ccb70cd203fb84bb12aa71f5748f0b12be5571b4c64b5402"
+    },
+    {
+      "symbol": "FILEUR",
+      "entry": "FILEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/FILEUR_240.csv",
+      "bytes": 687666,
+      "zipCrc32": "38ea800c",
+      "crcVerified": true,
+      "sha256": "ed880fc3b35f611812831457c9bd57953962237514b195dc484fe2e8464c1818"
+    },
+    {
+      "symbol": "FLOWEUR",
+      "entry": "FLOWEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/FLOWEUR_240.csv",
+      "bytes": 651383,
+      "zipCrc32": "0709c37d",
+      "crcVerified": true,
+      "sha256": "7ada356c9538edd343ef712903d485a098c4dbcc12cb78490746419b72750ee0"
+    },
+    {
+      "symbol": "FXSEUR",
+      "entry": "FXSEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/FXSEUR_240.csv",
+      "bytes": 381669,
+      "zipCrc32": "82200f0f",
+      "crcVerified": true,
+      "sha256": "f78b59e1144db91b505593babcfa7ff1401f874733c37542cdb733d3b4a2fe34"
+    },
+    {
+      "symbol": "GALAEUR",
+      "entry": "GALAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GALAEUR_240.csv",
+      "bytes": 566924,
+      "zipCrc32": "b0543a83",
+      "crcVerified": true,
+      "sha256": "e1e72ca3e12275e6a58e0fa6928e14af4a486ad0cf53d58896b36fa047e04b44"
+    },
+    {
+      "symbol": "GARIEUR",
+      "entry": "GARIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GARIEUR_240.csv",
+      "bytes": 338919,
+      "zipCrc32": "bf0d1b3b",
+      "crcVerified": true,
+      "sha256": "991f7b103d244ca040053497fbfd80898b56a2d344440a631cb88332d6bf7183"
+    },
+    {
+      "symbol": "GHSTEUR",
+      "entry": "GHSTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GHSTEUR_240.csv",
+      "bytes": 454162,
+      "zipCrc32": "631298b6",
+      "crcVerified": true,
+      "sha256": "edd2565a49a48a667f2c579357c0cc50da0b4e78cc42076ca1617a20c9de5c9c"
+    },
+    {
+      "symbol": "GLMREUR",
+      "entry": "GLMREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GLMREUR_240.csv",
+      "bytes": 502726,
+      "zipCrc32": "ae80942c",
+      "crcVerified": true,
+      "sha256": "e3a81487f1d2b28707ccc5291eab7233464d212622fb32dbcca7e0b918429377"
+    },
+    {
+      "symbol": "GMTEUR",
+      "entry": "GMTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GMTEUR_240.csv",
+      "bytes": 398473,
+      "zipCrc32": "9ec00c4f",
+      "crcVerified": true,
+      "sha256": "8fac2c6422231959a24cc4f83ff6e7af9fa5b1c580b22fd21c8118a81cae2204"
+    },
+    {
+      "symbol": "GNOEUR",
+      "entry": "GNOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GNOEUR_240.csv",
+      "bytes": 934770,
+      "zipCrc32": "05b0199d",
+      "crcVerified": true,
+      "sha256": "045ef12420eae9d743e8181e194f0a96ce18fc2618b49e288b0916f84e69d675"
+    },
+    {
+      "symbol": "GRTEUR",
+      "entry": "GRTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GRTEUR_240.csv",
+      "bytes": 761973,
+      "zipCrc32": "015814ae",
+      "crcVerified": true,
+      "sha256": "8055ccc1e424cbaf4f9a1eb3b1b75be3871cefb626118c69ddfc32cd29995eeb"
+    },
+    {
+      "symbol": "GSTEUR",
+      "entry": "GSTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/GSTEUR_240.csv",
+      "bytes": 357363,
+      "zipCrc32": "d0b90bae",
+      "crcVerified": true,
+      "sha256": "2648d0785c6d189a56f967cee13b81429f9be78c6c66112fbac5b4feb154bf65"
+    },
+    {
+      "symbol": "ICPEUR",
+      "entry": "ICPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ICPEUR_240.csv",
+      "bytes": 506529,
+      "zipCrc32": "0ebfc9d2",
+      "crcVerified": true,
+      "sha256": "b97d9cfc5306c7963d37cdd3d6414988f24d30034c63e6490b02266f850307fd"
+    },
+    {
+      "symbol": "ICXEUR",
+      "entry": "ICXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ICXEUR_240.csv",
+      "bytes": 801616,
+      "zipCrc32": "1782b4f4",
+      "crcVerified": true,
+      "sha256": "a4f37ec2f91ec3b93622f0167f84dbc82bbb818734c3ed678566451b8d02e0b8"
+    },
+    {
+      "symbol": "IMXEUR",
+      "entry": "IMXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/IMXEUR_240.csv",
+      "bytes": 509942,
+      "zipCrc32": "1054846f",
+      "crcVerified": true,
+      "sha256": "4ad45edaebcdb49a56edacd538c3762c9f9e22ebcdc80d0aa2cd42e30b382f1e"
+    },
+    {
+      "symbol": "INJEUR",
+      "entry": "INJEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/INJEUR_240.csv",
+      "bytes": 587873,
+      "zipCrc32": "72781d78",
+      "crcVerified": true,
+      "sha256": "fd5bf71ae7bc520d0c7c8501983b1e4e6f07151a27d3fba02aaa7718ebdc56d8"
+    },
+    {
+      "symbol": "JASMYEUR",
+      "entry": "JASMYEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/JASMYEUR_240.csv",
+      "bytes": 563070,
+      "zipCrc32": "1ac9fed8",
+      "crcVerified": true,
+      "sha256": "de0add56e5f95e0d579f12bb48b3b734f9c1f5d85194cec2e7c12e2611e1999f"
+    },
+    {
+      "symbol": "KAREUR",
+      "entry": "KAREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KAREUR_240.csv",
+      "bytes": 379252,
+      "zipCrc32": "8031fee1",
+      "crcVerified": true,
+      "sha256": "304a1e1831effe790cd0dd21ed20e1eac0d88a10c16fd8f80e09337518da9f59"
+    },
+    {
+      "symbol": "KAVAEUR",
+      "entry": "KAVAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KAVAEUR_240.csv",
+      "bytes": 758078,
+      "zipCrc32": "b0435265",
+      "crcVerified": true,
+      "sha256": "3aaa31820467e942dccffeb051dce419f9350c265f2694858205b26a60cb5a6e"
+    },
+    {
+      "symbol": "KEEPEUR",
+      "entry": "KEEPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KEEPEUR_240.csv",
+      "bytes": 503361,
+      "zipCrc32": "62283718",
+      "crcVerified": true,
+      "sha256": "acebd4fd32861c2de8ba8ee0ae3ad4810a1ff659191051d8b2d4bc25a2eff65a"
+    },
+    {
+      "symbol": "KILTEUR",
+      "entry": "KILTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KILTEUR_240.csv",
+      "bytes": 376067,
+      "zipCrc32": "3d48ea8e",
+      "crcVerified": true,
+      "sha256": "ed28eb0879b4d972b662d3c8ae8992e3df7b04c5518aa767c74573f60760f85c"
+    },
+    {
+      "symbol": "KINEUR",
+      "entry": "KINEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KINEUR_240.csv",
+      "bytes": 583867,
+      "zipCrc32": "264b557a",
+      "crcVerified": true,
+      "sha256": "04d17fd0a34302c979814965cac1a9cb29ee278caff61f96cf892636652749e1"
+    },
+    {
+      "symbol": "KINTEUR",
+      "entry": "KINTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KINTEUR_240.csv",
+      "bytes": 294626,
+      "zipCrc32": "72a46cde",
+      "crcVerified": true,
+      "sha256": "1695389f3f6f49b5ff1140f9d85d2e7fae5665ff6c08b2b35dc86f3e8c77f973"
+    },
+    {
+      "symbol": "KNCEUR",
+      "entry": "KNCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KNCEUR_240.csv",
+      "bytes": 663909,
+      "zipCrc32": "a44f5a4f",
+      "crcVerified": true,
+      "sha256": "8b46f985c568cd4781f926a6ac61e9216166a78e17f1329a3e9df3b03c8d683e"
+    },
+    {
+      "symbol": "KP3REUR",
+      "entry": "KP3REUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KP3REUR_240.csv",
+      "bytes": 328334,
+      "zipCrc32": "9c5022d2",
+      "crcVerified": true,
+      "sha256": "9e64a843b6f655703fa0ce6619cc18f29bf197213abbfab7d153588cd253bafc"
+    },
+    {
+      "symbol": "KSMEUR",
+      "entry": "KSMEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/KSMEUR_240.csv",
+      "bytes": 695619,
+      "zipCrc32": "2bef6d77",
+      "crcVerified": true,
+      "sha256": "6b3a31025c837c023e33de6ad9a40e8985e48812295b73a365981449bafbf16a"
+    },
+    {
+      "symbol": "LDOEUR",
+      "entry": "LDOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LDOEUR_240.csv",
+      "bytes": 476076,
+      "zipCrc32": "68768ed5",
+      "crcVerified": true,
+      "sha256": "c88938acfdd61f6fc4c84ef4c8eaf89d1c753d474e5d5fa93be70d29c2bf62db"
+    },
+    {
+      "symbol": "LINKEUR",
+      "entry": "LINKEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LINKEUR_240.csv",
+      "bytes": 968699,
+      "zipCrc32": "507f9539",
+      "crcVerified": true,
+      "sha256": "97ee3e9a3eabd3163f46966defe7e37c9be0d751f32863b722f66866048d21dd"
+    },
+    {
+      "symbol": "LPTEUR",
+      "entry": "LPTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LPTEUR_240.csv",
+      "bytes": 546849,
+      "zipCrc32": "70ab9457",
+      "crcVerified": true,
+      "sha256": "d27d516d68a80ae70d9057d5ce177f90b601123d4ebec38f4e0aa0c7f8082c6c"
+    },
+    {
+      "symbol": "LRCEUR",
+      "entry": "LRCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LRCEUR_240.csv",
+      "bytes": 585786,
+      "zipCrc32": "865298fb",
+      "crcVerified": true,
+      "sha256": "40818fa5f170ddff9e0c889138313baec2b168998577d8e02996056c5b5053a1"
+    },
+    {
+      "symbol": "LSKEUR",
+      "entry": "LSKEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LSKEUR_240.csv",
+      "bytes": 810244,
+      "zipCrc32": "20daf9a8",
+      "crcVerified": true,
+      "sha256": "78106275428fc5db629a7ed27c8c09527849d2010a01d50c31e886a8984e4dc4"
+    },
+    {
+      "symbol": "LTCEUR",
+      "entry": "LTCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LTCEUR_240.csv",
+      "bytes": 1568563,
+      "zipCrc32": "fb05d840",
+      "crcVerified": true,
+      "sha256": "00eb23c1f95b6a1cb522d02b46644f833d0500071b4773be6ecb5bbc3c405406"
+    },
+    {
+      "symbol": "LUNAEUR",
+      "entry": "LUNAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/LUNAEUR_240.csv",
+      "bytes": 703302,
+      "zipCrc32": "d4f64702",
+      "crcVerified": true,
+      "sha256": "92d56a237607578681c3873925c53422d1d23bc8fff3ba0e7f0ffc86f1f2b121"
+    },
+    {
+      "symbol": "MANAEUR",
+      "entry": "MANAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MANAEUR_240.csv",
+      "bytes": 757430,
+      "zipCrc32": "eb84cad4",
+      "crcVerified": true,
+      "sha256": "b6570c23e842b5eee7a4cc3c2de4f2ebc8e9f80661ea2f9f5f3bbce9e7dd25fd"
+    },
+    {
+      "symbol": "MASKEUR",
+      "entry": "MASKEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MASKEUR_240.csv",
+      "bytes": 329936,
+      "zipCrc32": "baa6fe68",
+      "crcVerified": true,
+      "sha256": "8eb59db787c3ce3b7f20304e4e32a58425153817497cf7cf6b98f439786f2406"
+    },
+    {
+      "symbol": "MATICEUR",
+      "entry": "MATICEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MATICEUR_240.csv",
+      "bytes": 507890,
+      "zipCrc32": "f80a822a",
+      "crcVerified": true,
+      "sha256": "f3675164974abb57ca194177b3e511f7cc7d5a9746c8c6118058dee9b22a3bcd"
+    },
+    {
+      "symbol": "MCEUR",
+      "entry": "MCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MCEUR_240.csv",
+      "bytes": 274623,
+      "zipCrc32": "b8f64623",
+      "crcVerified": true,
+      "sha256": "2c78a833de7c7608d9ab28977079c9aba54784aa4fa01309244da35d532da68e"
+    },
+    {
+      "symbol": "MINAEUR",
+      "entry": "MINAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MINAEUR_240.csv",
+      "bytes": 607571,
+      "zipCrc32": "c60c582e",
+      "crcVerified": true,
+      "sha256": "4e688dde319aa66c10828ec368343d4b9003cccd61afa94a63bbda7e056dc7b4"
+    },
+    {
+      "symbol": "MIREUR",
+      "entry": "MIREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MIREUR_240.csv",
+      "bytes": 466527,
+      "zipCrc32": "605e510a",
+      "crcVerified": true,
+      "sha256": "1fd2122e207247850f4f4eea5857eac6c6c9d58dc6dee0f06cc77a05571ac56f"
+    },
+    {
+      "symbol": "MKREUR",
+      "entry": "MKREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MKREUR_240.csv",
+      "bytes": 496348,
+      "zipCrc32": "d0bc9a11",
+      "crcVerified": true,
+      "sha256": "84ae4d3734ac3518d426fa8d021148c54560d2d714f86269aed697374e565985"
+    },
+    {
+      "symbol": "MLNEUR",
+      "entry": "MLNEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MLNEUR_240.csv",
+      "bytes": 727113,
+      "zipCrc32": "c4969895",
+      "crcVerified": true,
+      "sha256": "0fd5bdcf21bd6b2a17d853696eb7e8ef15383bb25cf97b833a9d93dda80d2f92"
+    },
+    {
+      "symbol": "MNGOEUR",
+      "entry": "MNGOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MNGOEUR_240.csv",
+      "bytes": 333754,
+      "zipCrc32": "3a615eee",
+      "crcVerified": true,
+      "sha256": "ff5d95d4203ae2c078be7d57639139d8f47f6912de3e96b36318dc0a538efec5"
+    },
+    {
+      "symbol": "MOVREUR",
+      "entry": "MOVREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MOVREUR_240.csv",
+      "bytes": 584236,
+      "zipCrc32": "50700e2f",
+      "crcVerified": true,
+      "sha256": "4952ce0aecd857e78013e35947c882af14b7c46f79d11ce89e0d07da90baaa9f"
+    },
+    {
+      "symbol": "MSOLEUR",
+      "entry": "MSOLEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MSOLEUR_240.csv",
+      "bytes": 205436,
+      "zipCrc32": "1d3ec6fa",
+      "crcVerified": true,
+      "sha256": "77ca8a164c13293678ce6fef8e4c1358159fd7efff27e3c6a4b7dc9d931b715f"
+    },
+    {
+      "symbol": "MULTIEUR",
+      "entry": "MULTIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/MULTIEUR_240.csv",
+      "bytes": 315644,
+      "zipCrc32": "0c963ce5",
+      "crcVerified": true,
+      "sha256": "64033c082b583e2824aac1670ec476360b6606bd726ed109e16819e0e6978ef1"
+    },
+    {
+      "symbol": "NANOEUR",
+      "entry": "NANOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/NANOEUR_240.csv",
+      "bytes": 922401,
+      "zipCrc32": "0b127c48",
+      "crcVerified": true,
+      "sha256": "af1f3a774a4921ca3bfc58265f1a4565ff967207aba408fe16ecbbb2050c958e"
+    },
+    {
+      "symbol": "NMREUR",
+      "entry": "NMREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/NMREUR_240.csv",
+      "bytes": 333029,
+      "zipCrc32": "b777117b",
+      "crcVerified": true,
+      "sha256": "8772d78dd0e850f0ceaed3429924d8c86e1cabaf6e428cde2b35909f79cf485a"
+    },
+    {
+      "symbol": "NYMEUR",
+      "entry": "NYMEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/NYMEUR_240.csv",
+      "bytes": 282990,
+      "zipCrc32": "68ff07ac",
+      "crcVerified": true,
+      "sha256": "e53cf7b200681ad079c0ce5ccdaf26eb91291ce7b108fd6ae068b588ea47c462"
+    },
+    {
+      "symbol": "OCEANEUR",
+      "entry": "OCEANEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/OCEANEUR_240.csv",
+      "bytes": 647080,
+      "zipCrc32": "f1f1afea",
+      "crcVerified": true,
+      "sha256": "ba2f51e08482d66b59f9f9b08c1f6b1fc8a3ab8f811d3e5141d5963d667c4bda"
+    },
+    {
+      "symbol": "OGNEUR",
+      "entry": "OGNEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/OGNEUR_240.csv",
+      "bytes": 532681,
+      "zipCrc32": "38127bf9",
+      "crcVerified": true,
+      "sha256": "7bd2addf3be4d6594062d2c2a3c7f051f98b0c903b61603840abdd4b5528f797"
+    },
+    {
+      "symbol": "OMGEUR",
+      "entry": "OMGEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/OMGEUR_240.csv",
+      "bytes": 844488,
+      "zipCrc32": "4f9fd5e3",
+      "crcVerified": true,
+      "sha256": "b973f6ccf10ea1f4ce869442d847712f2e6f4e6e23e251da44e9e03e679279b5"
+    },
+    {
+      "symbol": "ORCAEUR",
+      "entry": "ORCAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ORCAEUR_240.csv",
+      "bytes": 404032,
+      "zipCrc32": "d9612a78",
+      "crcVerified": true,
+      "sha256": "7c42f706fefdcd56a4f701e71aa4f09a93798ed7b25a9dfc8ec2b435dd7ab888"
+    },
+    {
+      "symbol": "OXTEUR",
+      "entry": "OXTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/OXTEUR_240.csv",
+      "bytes": 743319,
+      "zipCrc32": "d830901b",
+      "crcVerified": true,
+      "sha256": "25f6e948da735b5da96ae8f27655a80150d456df9c5f5239014e2140e5cc4d3a"
+    },
+    {
+      "symbol": "OXYEUR",
+      "entry": "OXYEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/OXYEUR_240.csv",
+      "bytes": 416752,
+      "zipCrc32": "0791b1b4",
+      "crcVerified": true,
+      "sha256": "1b6bd23f0f7277cc26dc908d36163e31039f3f3b1b03111673b5f70d43e78d03"
+    },
+    {
+      "symbol": "PAXGEUR",
+      "entry": "PAXGEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/PAXGEUR_240.csv",
+      "bytes": 888796,
+      "zipCrc32": "1a2d5bd0",
+      "crcVerified": true,
+      "sha256": "77bd048b24909b6c2167b262b386856baaabc0a63a6101a49f7dc955f5eb316d"
+    },
+    {
+      "symbol": "PERPEUR",
+      "entry": "PERPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/PERPEUR_240.csv",
+      "bytes": 515260,
+      "zipCrc32": "336c546a",
+      "crcVerified": true,
+      "sha256": "3437e08ed37d1cbf4b1853ad4f43109528f46191746d08e7e97697910235a161"
+    },
+    {
+      "symbol": "PHAEUR",
+      "entry": "PHAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/PHAEUR_240.csv",
+      "bytes": 519005,
+      "zipCrc32": "fed3f896",
+      "crcVerified": true,
+      "sha256": "5ec29b917cd561ad95e36f63ebece45c6222b4ad448cdab12f3694e31f949b04"
+    },
+    {
+      "symbol": "PLAEUR",
+      "entry": "PLAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/PLAEUR_240.csv",
+      "bytes": 103621,
+      "zipCrc32": "006252a8",
+      "crcVerified": true,
+      "sha256": "882204fd8a4d6c15cf666c35d3b51ad6e33dd27214dcc02caf8ab7547d76ef7e"
+    },
+    {
+      "symbol": "POLISEUR",
+      "entry": "POLISEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/POLISEUR_240.csv",
+      "bytes": 403340,
+      "zipCrc32": "7862c13b",
+      "crcVerified": true,
+      "sha256": "71a8354342dc1441c6084fe4e7ed263fd5a5c905da629f57f34b10ae3420cfa3"
+    },
+    {
+      "symbol": "POWREUR",
+      "entry": "POWREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/POWREUR_240.csv",
+      "bytes": 365701,
+      "zipCrc32": "6e4c1dd2",
+      "crcVerified": true,
+      "sha256": "7716f6de4ed55dd442340abbef05caaebe58b691c771ee60da054c0b651893e9"
+    },
+    {
+      "symbol": "PSTAKEEUR",
+      "entry": "PSTAKEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/PSTAKEEUR_240.csv",
+      "bytes": 300711,
+      "zipCrc32": "756a2c3a",
+      "crcVerified": true,
+      "sha256": "4fe03c05ef27e20be2b880c3656b706724eab572565452932b97992862b38945"
+    },
+    {
+      "symbol": "QNTEUR",
+      "entry": "QNTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/QNTEUR_240.csv",
+      "bytes": 509559,
+      "zipCrc32": "5980fab8",
+      "crcVerified": true,
+      "sha256": "576d2418c54056c99fe2217e5fd41429bd7e30df30a35fc75e120eb696fc91cc"
+    },
+    {
+      "symbol": "QTUMEUR",
+      "entry": "QTUMEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/QTUMEUR_240.csv",
+      "bytes": 958633,
+      "zipCrc32": "c20b63d4",
+      "crcVerified": true,
+      "sha256": "ea4c468526f9e17f6b739d8283012f72f184c736a08289845aa0d8bfa71dcdfd"
+    },
+    {
+      "symbol": "RADEUR",
+      "entry": "RADEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RADEUR_240.csv",
+      "bytes": 269736,
+      "zipCrc32": "163e5612",
+      "crcVerified": true,
+      "sha256": "5e7bfd0ff61dd768b2deb1fde01ddaa11040986ab7e9780db726f3bc20c76377"
+    },
+    {
+      "symbol": "RAREEUR",
+      "entry": "RAREEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RAREEUR_240.csv",
+      "bytes": 393994,
+      "zipCrc32": "74b36f47",
+      "crcVerified": true,
+      "sha256": "1653907c52d8ca4619289b828a514c73788c566775977f77213f4bf7aeb2ede2"
+    },
+    {
+      "symbol": "RARIEUR",
+      "entry": "RARIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RARIEUR_240.csv",
+      "bytes": 486347,
+      "zipCrc32": "f24efd55",
+      "crcVerified": true,
+      "sha256": "ec7328e51d144264b7b176b652cfd5c7895dde875be71787e30e9b807420b22e"
+    },
+    {
+      "symbol": "RAYEUR",
+      "entry": "RAYEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RAYEUR_240.csv",
+      "bytes": 488118,
+      "zipCrc32": "4379e5ed",
+      "crcVerified": true,
+      "sha256": "54ebddc3212fa4765e15536603f514194e25e6afb7dda8dbe1cfa78055310f3f"
+    },
+    {
+      "symbol": "RBCEUR",
+      "entry": "RBCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RBCEUR_240.csv",
+      "bytes": 367538,
+      "zipCrc32": "2130e016",
+      "crcVerified": true,
+      "sha256": "a073092d2997b2493f8c63c4d65fd0cd0bd5ca38f8883a15efc5f7a06cc426ea"
+    },
+    {
+      "symbol": "RENEUR",
+      "entry": "RENEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RENEUR_240.csv",
+      "bytes": 580530,
+      "zipCrc32": "0274ba7c",
+      "crcVerified": true,
+      "sha256": "9b19dfa26916e33712ae1b9290df9c859fa121e2966803d65f9145428f91327b"
+    },
+    {
+      "symbol": "REPEUR",
+      "entry": "REPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/REPEUR_240.csv",
+      "bytes": 967050,
+      "zipCrc32": "b6c28239",
+      "crcVerified": true,
+      "sha256": "1fe38e1cac96dc3ff9f5066244d3635ac2faf31a206a015150b69681cc8979b6"
+    },
+    {
+      "symbol": "REPV2EUR",
+      "entry": "REPV2EUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/REPV2EUR_240.csv",
+      "bytes": 570714,
+      "zipCrc32": "66e384b0",
+      "crcVerified": true,
+      "sha256": "0747d1e117e9f0a001d084b1cbb7a40b89f38f03d3f43ef29f601e7bf50e4fa6"
+    },
+    {
+      "symbol": "RLCEUR",
+      "entry": "RLCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RLCEUR_240.csv",
+      "bytes": 367518,
+      "zipCrc32": "50acc252",
+      "crcVerified": true,
+      "sha256": "4203c82f946bcb5ffb181ca03276ca6de0c403f04944874ec022334821dce972"
+    },
+    {
+      "symbol": "RNDREUR",
+      "entry": "RNDREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RNDREUR_240.csv",
+      "bytes": 281786,
+      "zipCrc32": "f6fb3fdf",
+      "crcVerified": true,
+      "sha256": "91334170fe18c35e2ccfc72e2feeee2fdf0cb2cbd69b04583d8f7d11e3c5a504"
+    },
+    {
+      "symbol": "ROOKEUR",
+      "entry": "ROOKEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ROOKEUR_240.csv",
+      "bytes": 212056,
+      "zipCrc32": "abc8bcbe",
+      "crcVerified": true,
+      "sha256": "e9159cba8dd68cbcd35caa04982f69ac8e36520818f18431342d1771d332ac8a"
+    },
+    {
+      "symbol": "RUNEEUR",
+      "entry": "RUNEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/RUNEEUR_240.csv",
+      "bytes": 465470,
+      "zipCrc32": "b1e3ed45",
+      "crcVerified": true,
+      "sha256": "1504b4d078063ba9c48dee39907b918f222280e6e53c6e38e4112d26781b7277"
+    },
+    {
+      "symbol": "SAMOEUR",
+      "entry": "SAMOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SAMOEUR_240.csv",
+      "bytes": 460017,
+      "zipCrc32": "8cdda2e0",
+      "crcVerified": true,
+      "sha256": "cedf4d5e5242f3d2a5d0f4d44024b4569f1d5fe754e1071aa28aa53811a5ae06"
+    },
+    {
+      "symbol": "SANDEUR",
+      "entry": "SANDEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SANDEUR_240.csv",
+      "bytes": 650695,
+      "zipCrc32": "00337072",
+      "crcVerified": true,
+      "sha256": "1f477c058990329e09545a1f26f05b7c6b1fe88176a800e46cf184e640d9aa77"
+    },
+    {
+      "symbol": "SBREUR",
+      "entry": "SBREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SBREUR_240.csv",
+      "bytes": 536463,
+      "zipCrc32": "e663358e",
+      "crcVerified": true,
+      "sha256": "efd039e21319350e2d015c0845c7daf9e1a26cf0a576b74a89cd2a810b54c007"
+    },
+    {
+      "symbol": "SCEUR",
+      "entry": "SCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SCEUR_240.csv",
+      "bytes": 933574,
+      "zipCrc32": "01568639",
+      "crcVerified": true,
+      "sha256": "36f37ff47458c9f6babb0a15a4065b3a079418b7334370ea912e551a7da38942"
+    },
+    {
+      "symbol": "SCRTEUR",
+      "entry": "SCRTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SCRTEUR_240.csv",
+      "bytes": 525581,
+      "zipCrc32": "6f817f88",
+      "crcVerified": true,
+      "sha256": "60f6586be6b101d1b8129d92d3ce83a88518c7c47a9c377f638fea6e3d1495e0"
+    },
+    {
+      "symbol": "SDNEUR",
+      "entry": "SDNEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SDNEUR_240.csv",
+      "bytes": 407007,
+      "zipCrc32": "4905d8db",
+      "crcVerified": true,
+      "sha256": "3af0a3794e2414398df36aeb1c73f42db3a583f7329e933ba03ecd6deadfef8c"
+    },
+    {
+      "symbol": "SGBEUR",
+      "entry": "SGBEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SGBEUR_240.csv",
+      "bytes": 569931,
+      "zipCrc32": "287e4c77",
+      "crcVerified": true,
+      "sha256": "4d531b3e0b18b947851d69fc391df88f41027d88699d4c5dd80501ad6e43b210"
+    },
+    {
+      "symbol": "SHIBEUR",
+      "entry": "SHIBEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SHIBEUR_240.csv",
+      "bytes": 704129,
+      "zipCrc32": "1ea64bec",
+      "crcVerified": true,
+      "sha256": "50655d28ab277ed23399bca6233208f1567351af1dbd1b95afbee7bd82ce28ec"
+    },
+    {
+      "symbol": "SNXEUR",
+      "entry": "SNXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SNXEUR_240.csv",
+      "bytes": 687231,
+      "zipCrc32": "1f0f9a5e",
+      "crcVerified": true,
+      "sha256": "bce8d7ecaa5b60cabc3b32ecd6076aa5b4fcc7142f683259efd61e5b793252c0"
+    },
+    {
+      "symbol": "SOLEUR",
+      "entry": "SOLEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SOLEUR_240.csv",
+      "bytes": 649754,
+      "zipCrc32": "efde270a",
+      "crcVerified": true,
+      "sha256": "945fe743e7d0ba2895e344e3f716be6b028e8c95ad19b47d0b4686d3da1da411"
+    },
+    {
+      "symbol": "SPELLEUR",
+      "entry": "SPELLEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SPELLEUR_240.csv",
+      "bytes": 471855,
+      "zipCrc32": "89e1e844",
+      "crcVerified": true,
+      "sha256": "1033c6cb4f22df5b0c35f965608d8b4d1381430e00077bb89d4bea15d188450f"
+    },
+    {
+      "symbol": "SRMEUR",
+      "entry": "SRMEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SRMEUR_240.csv",
+      "bytes": 541577,
+      "zipCrc32": "6c00776b",
+      "crcVerified": true,
+      "sha256": "460f1c138fdce787c04ba7caaae5ce80207acee2a1d76a36a22bc7e93716e875"
+    },
+    {
+      "symbol": "STEPEUR",
+      "entry": "STEPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/STEPEUR_240.csv",
+      "bytes": 382279,
+      "zipCrc32": "95080c3f",
+      "crcVerified": true,
+      "sha256": "622d8810497de1a2e1348a64e6ee1696a296779b4a10ab4198ad623bbc8ae7fc"
+    },
+    {
+      "symbol": "STORJEUR",
+      "entry": "STORJEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/STORJEUR_240.csv",
+      "bytes": 765831,
+      "zipCrc32": "aabd7d30",
+      "crcVerified": true,
+      "sha256": "c41416176509210707c8fa45b02eaf1de7e061e2125f1fe5ca07f502055d6c5e"
+    },
+    {
+      "symbol": "SUPEREUR",
+      "entry": "SUPEREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SUPEREUR_240.csv",
+      "bytes": 427554,
+      "zipCrc32": "9bbb3a68",
+      "crcVerified": true,
+      "sha256": "3018550fe7a639003ef5d3dc80ce7e3d481d4d4b0d90f00106c661010a95cc5b"
+    },
+    {
+      "symbol": "SUSHIEUR",
+      "entry": "SUSHIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/SUSHIEUR_240.csv",
+      "bytes": 572211,
+      "zipCrc32": "123213ed",
+      "crcVerified": true,
+      "sha256": "c064d9214397355c8b6fee70af293cf180dd4acaa9cebe4f187705dc50946bc1"
+    },
+    {
+      "symbol": "TBTCEUR",
+      "entry": "TBTCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/TBTCEUR_240.csv",
+      "bytes": 376273,
+      "zipCrc32": "6474de11",
+      "crcVerified": true,
+      "sha256": "d91709fe022cfa1094a4ad78df1ba2c6a844dc81e1d8150cd66b7204367116a1"
+    },
+    {
+      "symbol": "TEUR",
+      "entry": "TEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/TEUR_240.csv",
+      "bytes": 301928,
+      "zipCrc32": "5404b179",
+      "crcVerified": true,
+      "sha256": "957bf1ff5bdc278ebe52268a4765f10810a68adaa0f50e0bc6d6f7a6fd3467ce"
+    },
+    {
+      "symbol": "TOKEEUR",
+      "entry": "TOKEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/TOKEEUR_240.csv",
+      "bytes": 228180,
+      "zipCrc32": "6471ec3f",
+      "crcVerified": true,
+      "sha256": "985a7ab0d1b5899b7295a734e226b380933e887f13cb22cd0f5cd093dab8e518"
+    },
+    {
+      "symbol": "TRIBEEUR",
+      "entry": "TRIBEEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/TRIBEEUR_240.csv",
+      "bytes": 50910,
+      "zipCrc32": "2f3d460c",
+      "crcVerified": true,
+      "sha256": "9e20c1f27f29e93cf1778fb5c7faa0b17c4477a13d2cf2622d83b76fd2f3ac81"
+    },
+    {
+      "symbol": "TRXEUR",
+      "entry": "TRXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/TRXEUR_240.csv",
+      "bytes": 942977,
+      "zipCrc32": "7e634f39",
+      "crcVerified": true,
+      "sha256": "ef167b6c14425f57ef3281e7b4cde08aa89ffb383127ee45855e34257f1dea1b"
+    },
+    {
+      "symbol": "UMAEUR",
+      "entry": "UMAEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/UMAEUR_240.csv",
+      "bytes": 338689,
+      "zipCrc32": "57c918eb",
+      "crcVerified": true,
+      "sha256": "2e2035243a669fa7b5fa92bb44f4debce256691b6d61c44cdc5ac4535309fc02"
+    },
+    {
+      "symbol": "UNIEUR",
+      "entry": "UNIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/UNIEUR_240.csv",
+      "bytes": 705872,
+      "zipCrc32": "b14ceba8",
+      "crcVerified": true,
+      "sha256": "d04e04ea4e550b7317bba3383b97619edcdb3a90142ab80c2116e94cc91a1a5b"
+    },
+    {
+      "symbol": "WAVESEUR",
+      "entry": "WAVESEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/WAVESEUR_240.csv",
+      "bytes": 588679,
+      "zipCrc32": "a0b48ece",
+      "crcVerified": true,
+      "sha256": "1f7b3acebfed0b8a0a2fbc593850b603455af95d264fb6d45f8457759c93d92b"
+    },
+    {
+      "symbol": "WBTCEUR",
+      "entry": "WBTCEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/WBTCEUR_240.csv",
+      "bytes": 542197,
+      "zipCrc32": "81ddbfba",
+      "crcVerified": true,
+      "sha256": "2a7161581e9b7cd53672d94f138abf44ce57406fc4d8cdb344700aa13f6dd497"
+    },
+    {
+      "symbol": "WOOEUR",
+      "entry": "WOOEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/WOOEUR_240.csv",
+      "bytes": 453740,
+      "zipCrc32": "504c8ae2",
+      "crcVerified": true,
+      "sha256": "25e92ebcdb9783fb129cad4c5d66a2cf4ec48d63adbf0a210610b134b00d24a8"
+    },
+    {
+      "symbol": "XLMEUR",
+      "entry": "XLMEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/XLMEUR_240.csv",
+      "bytes": 1315103,
+      "zipCrc32": "93e71faf",
+      "crcVerified": true,
+      "sha256": "5d1da2950e6c7cfbff1158c58dea84da0279114e291d6afbe167e912231b2f86"
+    },
+    {
+      "symbol": "XMREUR",
+      "entry": "XMREUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/XMREUR_240.csv",
+      "bytes": 1213115,
+      "zipCrc32": "1ef9bf35",
+      "crcVerified": true,
+      "sha256": "7a471eca31495f3cc809764fa74a45dee68a25bb83bf1a81c01809918e973403"
+    },
+    {
+      "symbol": "XRPEUR",
+      "entry": "XRPEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/XRPEUR_240.csv",
+      "bytes": 1287870,
+      "zipCrc32": "2d2bed5b",
+      "crcVerified": true,
+      "sha256": "378d8712ce497c158db9be076b9699d5750a46a6c7d433b8be4d70e7f405ea92"
+    },
+    {
+      "symbol": "XRTEUR",
+      "entry": "XRTEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/XRTEUR_240.csv",
+      "bytes": 323099,
+      "zipCrc32": "be0dc977",
+      "crcVerified": true,
+      "sha256": "caa4f1565a6ae3f1b3d3fb5ec96a1bf6a231ade28c80aba79e42d2b1bb5b151d"
+    },
+    {
+      "symbol": "XTZEUR",
+      "entry": "XTZEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/XTZEUR_240.csv",
+      "bytes": 987694,
+      "zipCrc32": "006656f2",
+      "crcVerified": true,
+      "sha256": "299e8db74ea4c09bb8819f2ce87f424506efcd5aac5efc350536d69dfe1bb096"
+    },
+    {
+      "symbol": "YFIEUR",
+      "entry": "YFIEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/YFIEUR_240.csv",
+      "bytes": 705321,
+      "zipCrc32": "73ac2828",
+      "crcVerified": true,
+      "sha256": "6fe6693c25019c5844a08f2d214ad9c12514fed120a481e3a1793d1db0984f93"
+    },
+    {
+      "symbol": "YGGEUR",
+      "entry": "YGGEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/YGGEUR_240.csv",
+      "bytes": 363088,
+      "zipCrc32": "7c4d3bd0",
+      "crcVerified": true,
+      "sha256": "e08bb869c6b6b048fb535bb5ed25f1748074601dd87c3c5ef0c0d81ba9916e81"
+    },
+    {
+      "symbol": "ZECEUR",
+      "entry": "ZECEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ZECEUR_240.csv",
+      "bytes": 1257848,
+      "zipCrc32": "e9335819",
+      "crcVerified": true,
+      "sha256": "dcede9ec769bbc59387e7736ab97a966bb06aee557b1ea3241098418b5f0159f"
+    },
+    {
+      "symbol": "ZRXEUR",
+      "entry": "ZRXEUR_240.csv",
+      "path": "/Users/alitabatabaei/Documents/NextStep/new-trading/trading-assistant/test/research/artifacts/kraken-history-2026-10-06/eur-universe/ZRXEUR_240.csv",
+      "bytes": 572659,
+      "zipCrc32": "1bf70a79",
+      "crcVerified": true,
+      "sha256": "2ec1e3ca65ef17b06726986044b1b5c4eb0db5cd0536dcae8445c7514b8db784"
+    }
+  ],
+  "historicalCandidates": [
+    {
+      "symbol": "1INCHEUR",
+      "archiveBase": "1INCHEUR"
+    },
+    {
+      "symbol": "AAVEEUR",
+      "archiveBase": "AAVEEUR"
+    },
+    {
+      "symbol": "ACAEUR",
+      "archiveBase": "ACAEUR"
+    },
+    {
+      "symbol": "ADAEUR",
+      "archiveBase": "ADAEUR"
+    },
+    {
+      "symbol": "AGLDEUR",
+      "archiveBase": "AGLDEUR"
+    },
+    {
+      "symbol": "AIREUR",
+      "archiveBase": "AIREUR"
+    },
+    {
+      "symbol": "AKTEUR",
+      "archiveBase": "AKTEUR"
+    },
+    {
+      "symbol": "ALCXEUR",
+      "archiveBase": "ALCXEUR"
+    },
+    {
+      "symbol": "ALGOEUR",
+      "archiveBase": "ALGOEUR"
+    },
+    {
+      "symbol": "ALICEEUR",
+      "archiveBase": "ALICEEUR"
+    },
+    {
+      "symbol": "ANKREUR",
+      "archiveBase": "ANKREUR"
+    },
+    {
+      "symbol": "ANTEUR",
+      "archiveBase": "ANTEUR"
+    },
+    {
+      "symbol": "APEEUR",
+      "archiveBase": "APEEUR"
+    },
+    {
+      "symbol": "API3EUR",
+      "archiveBase": "API3EUR"
+    },
+    {
+      "symbol": "ASTREUR",
+      "archiveBase": "ASTREUR"
+    },
+    {
+      "symbol": "ATLASEUR",
+      "archiveBase": "ATLASEUR"
+    },
+    {
+      "symbol": "ATOMEUR",
+      "archiveBase": "ATOMEUR"
+    },
+    {
+      "symbol": "AUDIOEUR",
+      "archiveBase": "AUDIOEUR"
+    },
+    {
+      "symbol": "AVAXEUR",
+      "archiveBase": "AVAXEUR"
+    },
+    {
+      "symbol": "AXSEUR",
+      "archiveBase": "AXSEUR"
+    },
+    {
+      "symbol": "BADGEREUR",
+      "archiveBase": "BADGEREUR"
+    },
+    {
+      "symbol": "BALEUR",
+      "archiveBase": "BALEUR"
+    },
+    {
+      "symbol": "BANDEUR",
+      "archiveBase": "BANDEUR"
+    },
+    {
+      "symbol": "BATEUR",
+      "archiveBase": "BATEUR"
+    },
+    {
+      "symbol": "BCHEUR",
+      "archiveBase": "BCHEUR"
+    },
+    {
+      "symbol": "BICOEUR",
+      "archiveBase": "BICOEUR"
+    },
+    {
+      "symbol": "BNCEUR",
+      "archiveBase": "BNCEUR"
+    },
+    {
+      "symbol": "BNTEUR",
+      "archiveBase": "BNTEUR"
+    },
+    {
+      "symbol": "BONDEUR",
+      "archiveBase": "BONDEUR"
+    },
+    {
+      "symbol": "BTCEUR",
+      "archiveBase": "XBTEUR"
+    },
+    {
+      "symbol": "CFGEUR",
+      "archiveBase": "CFGEUR"
+    },
+    {
+      "symbol": "CHZEUR",
+      "archiveBase": "CHZEUR"
+    },
+    {
+      "symbol": "COMPEUR",
+      "archiveBase": "COMPEUR"
+    },
+    {
+      "symbol": "CQTEUR",
+      "archiveBase": "CQTEUR"
+    },
+    {
+      "symbol": "CRVEUR",
+      "archiveBase": "CRVEUR"
+    },
+    {
+      "symbol": "CTSIEUR",
+      "archiveBase": "CTSIEUR"
+    },
+    {
+      "symbol": "CVCEUR",
+      "archiveBase": "CVCEUR"
+    },
+    {
+      "symbol": "CVXEUR",
+      "archiveBase": "CVXEUR"
+    },
+    {
+      "symbol": "DASHEUR",
+      "archiveBase": "DASHEUR"
+    },
+    {
+      "symbol": "DOGEEUR",
+      "archiveBase": "XDGEUR"
+    },
+    {
+      "symbol": "DOTEUR",
+      "archiveBase": "DOTEUR"
+    },
+    {
+      "symbol": "DYDXEUR",
+      "archiveBase": "DYDXEUR"
+    },
+    {
+      "symbol": "ENJEUR",
+      "archiveBase": "ENJEUR"
+    },
+    {
+      "symbol": "ENSEUR",
+      "archiveBase": "ENSEUR"
+    },
+    {
+      "symbol": "EOSEUR",
+      "archiveBase": "EOSEUR"
+    },
+    {
+      "symbol": "ETCEUR",
+      "archiveBase": "ETCEUR"
+    },
+    {
+      "symbol": "ETHEUR",
+      "archiveBase": "ETHEUR"
+    },
+    {
+      "symbol": "EWTEUR",
+      "archiveBase": "EWTEUR"
+    },
+    {
+      "symbol": "FETEUR",
+      "archiveBase": "FETEUR"
+    },
+    {
+      "symbol": "FIDAEUR",
+      "archiveBase": "FIDAEUR"
+    },
+    {
+      "symbol": "FILEUR",
+      "archiveBase": "FILEUR"
+    },
+    {
+      "symbol": "FLOWEUR",
+      "archiveBase": "FLOWEUR"
+    },
+    {
+      "symbol": "FXSEUR",
+      "archiveBase": "FXSEUR"
+    },
+    {
+      "symbol": "GALAEUR",
+      "archiveBase": "GALAEUR"
+    },
+    {
+      "symbol": "GARIEUR",
+      "archiveBase": "GARIEUR"
+    },
+    {
+      "symbol": "GHSTEUR",
+      "archiveBase": "GHSTEUR"
+    },
+    {
+      "symbol": "GLMREUR",
+      "archiveBase": "GLMREUR"
+    },
+    {
+      "symbol": "GMTEUR",
+      "archiveBase": "GMTEUR"
+    },
+    {
+      "symbol": "GNOEUR",
+      "archiveBase": "GNOEUR"
+    },
+    {
+      "symbol": "GRTEUR",
+      "archiveBase": "GRTEUR"
+    },
+    {
+      "symbol": "GSTEUR",
+      "archiveBase": "GSTEUR"
+    },
+    {
+      "symbol": "ICPEUR",
+      "archiveBase": "ICPEUR"
+    },
+    {
+      "symbol": "ICXEUR",
+      "archiveBase": "ICXEUR"
+    },
+    {
+      "symbol": "IMXEUR",
+      "archiveBase": "IMXEUR"
+    },
+    {
+      "symbol": "INJEUR",
+      "archiveBase": "INJEUR"
+    },
+    {
+      "symbol": "JASMYEUR",
+      "archiveBase": "JASMYEUR"
+    },
+    {
+      "symbol": "KAREUR",
+      "archiveBase": "KAREUR"
+    },
+    {
+      "symbol": "KAVAEUR",
+      "archiveBase": "KAVAEUR"
+    },
+    {
+      "symbol": "KEEPEUR",
+      "archiveBase": "KEEPEUR"
+    },
+    {
+      "symbol": "KILTEUR",
+      "archiveBase": "KILTEUR"
+    },
+    {
+      "symbol": "KINEUR",
+      "archiveBase": "KINEUR"
+    },
+    {
+      "symbol": "KINTEUR",
+      "archiveBase": "KINTEUR"
+    },
+    {
+      "symbol": "KNCEUR",
+      "archiveBase": "KNCEUR"
+    },
+    {
+      "symbol": "KP3REUR",
+      "archiveBase": "KP3REUR"
+    },
+    {
+      "symbol": "KSMEUR",
+      "archiveBase": "KSMEUR"
+    },
+    {
+      "symbol": "LDOEUR",
+      "archiveBase": "LDOEUR"
+    },
+    {
+      "symbol": "LINKEUR",
+      "archiveBase": "LINKEUR"
+    },
+    {
+      "symbol": "LPTEUR",
+      "archiveBase": "LPTEUR"
+    },
+    {
+      "symbol": "LRCEUR",
+      "archiveBase": "LRCEUR"
+    },
+    {
+      "symbol": "LSKEUR",
+      "archiveBase": "LSKEUR"
+    },
+    {
+      "symbol": "LTCEUR",
+      "archiveBase": "LTCEUR"
+    },
+    {
+      "symbol": "LUNAEUR",
+      "archiveBase": "LUNAEUR"
+    },
+    {
+      "symbol": "MANAEUR",
+      "archiveBase": "MANAEUR"
+    },
+    {
+      "symbol": "MASKEUR",
+      "archiveBase": "MASKEUR"
+    },
+    {
+      "symbol": "MATICEUR",
+      "archiveBase": "MATICEUR"
+    },
+    {
+      "symbol": "MCEUR",
+      "archiveBase": "MCEUR"
+    },
+    {
+      "symbol": "MINAEUR",
+      "archiveBase": "MINAEUR"
+    },
+    {
+      "symbol": "MIREUR",
+      "archiveBase": "MIREUR"
+    },
+    {
+      "symbol": "MKREUR",
+      "archiveBase": "MKREUR"
+    },
+    {
+      "symbol": "MLNEUR",
+      "archiveBase": "MLNEUR"
+    },
+    {
+      "symbol": "MNGOEUR",
+      "archiveBase": "MNGOEUR"
+    },
+    {
+      "symbol": "MOVREUR",
+      "archiveBase": "MOVREUR"
+    },
+    {
+      "symbol": "MSOLEUR",
+      "archiveBase": "MSOLEUR"
+    },
+    {
+      "symbol": "MULTIEUR",
+      "archiveBase": "MULTIEUR"
+    },
+    {
+      "symbol": "NANOEUR",
+      "archiveBase": "NANOEUR"
+    },
+    {
+      "symbol": "NMREUR",
+      "archiveBase": "NMREUR"
+    },
+    {
+      "symbol": "NYMEUR",
+      "archiveBase": "NYMEUR"
+    },
+    {
+      "symbol": "OCEANEUR",
+      "archiveBase": "OCEANEUR"
+    },
+    {
+      "symbol": "OGNEUR",
+      "archiveBase": "OGNEUR"
+    },
+    {
+      "symbol": "OMGEUR",
+      "archiveBase": "OMGEUR"
+    },
+    {
+      "symbol": "ORCAEUR",
+      "archiveBase": "ORCAEUR"
+    },
+    {
+      "symbol": "OXTEUR",
+      "archiveBase": "OXTEUR"
+    },
+    {
+      "symbol": "OXYEUR",
+      "archiveBase": "OXYEUR"
+    },
+    {
+      "symbol": "PAXGEUR",
+      "archiveBase": "PAXGEUR"
+    },
+    {
+      "symbol": "PERPEUR",
+      "archiveBase": "PERPEUR"
+    },
+    {
+      "symbol": "PHAEUR",
+      "archiveBase": "PHAEUR"
+    },
+    {
+      "symbol": "PLAEUR",
+      "archiveBase": "PLAEUR"
+    },
+    {
+      "symbol": "POLISEUR",
+      "archiveBase": "POLISEUR"
+    },
+    {
+      "symbol": "POWREUR",
+      "archiveBase": "POWREUR"
+    },
+    {
+      "symbol": "PSTAKEEUR",
+      "archiveBase": "PSTAKEEUR"
+    },
+    {
+      "symbol": "QNTEUR",
+      "archiveBase": "QNTEUR"
+    },
+    {
+      "symbol": "QTUMEUR",
+      "archiveBase": "QTUMEUR"
+    },
+    {
+      "symbol": "RADEUR",
+      "archiveBase": "RADEUR"
+    },
+    {
+      "symbol": "RAREEUR",
+      "archiveBase": "RAREEUR"
+    },
+    {
+      "symbol": "RARIEUR",
+      "archiveBase": "RARIEUR"
+    },
+    {
+      "symbol": "RAYEUR",
+      "archiveBase": "RAYEUR"
+    },
+    {
+      "symbol": "RBCEUR",
+      "archiveBase": "RBCEUR"
+    },
+    {
+      "symbol": "RENEUR",
+      "archiveBase": "RENEUR"
+    },
+    {
+      "symbol": "REPEUR",
+      "archiveBase": "REPEUR"
+    },
+    {
+      "symbol": "REPV2EUR",
+      "archiveBase": "REPV2EUR"
+    },
+    {
+      "symbol": "RLCEUR",
+      "archiveBase": "RLCEUR"
+    },
+    {
+      "symbol": "RNDREUR",
+      "archiveBase": "RNDREUR"
+    },
+    {
+      "symbol": "ROOKEUR",
+      "archiveBase": "ROOKEUR"
+    },
+    {
+      "symbol": "RUNEEUR",
+      "archiveBase": "RUNEEUR"
+    },
+    {
+      "symbol": "SAMOEUR",
+      "archiveBase": "SAMOEUR"
+    },
+    {
+      "symbol": "SANDEUR",
+      "archiveBase": "SANDEUR"
+    },
+    {
+      "symbol": "SBREUR",
+      "archiveBase": "SBREUR"
+    },
+    {
+      "symbol": "SCEUR",
+      "archiveBase": "SCEUR"
+    },
+    {
+      "symbol": "SCRTEUR",
+      "archiveBase": "SCRTEUR"
+    },
+    {
+      "symbol": "SDNEUR",
+      "archiveBase": "SDNEUR"
+    },
+    {
+      "symbol": "SGBEUR",
+      "archiveBase": "SGBEUR"
+    },
+    {
+      "symbol": "SHIBEUR",
+      "archiveBase": "SHIBEUR"
+    },
+    {
+      "symbol": "SNXEUR",
+      "archiveBase": "SNXEUR"
+    },
+    {
+      "symbol": "SOLEUR",
+      "archiveBase": "SOLEUR"
+    },
+    {
+      "symbol": "SPELLEUR",
+      "archiveBase": "SPELLEUR"
+    },
+    {
+      "symbol": "SRMEUR",
+      "archiveBase": "SRMEUR"
+    },
+    {
+      "symbol": "STEPEUR",
+      "archiveBase": "STEPEUR"
+    },
+    {
+      "symbol": "STORJEUR",
+      "archiveBase": "STORJEUR"
+    },
+    {
+      "symbol": "SUPEREUR",
+      "archiveBase": "SUPEREUR"
+    },
+    {
+      "symbol": "SUSHIEUR",
+      "archiveBase": "SUSHIEUR"
+    },
+    {
+      "symbol": "TBTCEUR",
+      "archiveBase": "TBTCEUR"
+    },
+    {
+      "symbol": "TEUR",
+      "archiveBase": "TEUR"
+    },
+    {
+      "symbol": "TOKEEUR",
+      "archiveBase": "TOKEEUR"
+    },
+    {
+      "symbol": "TRIBEEUR",
+      "archiveBase": "TRIBEEUR"
+    },
+    {
+      "symbol": "TRXEUR",
+      "archiveBase": "TRXEUR"
+    },
+    {
+      "symbol": "UMAEUR",
+      "archiveBase": "UMAEUR"
+    },
+    {
+      "symbol": "UNIEUR",
+      "archiveBase": "UNIEUR"
+    },
+    {
+      "symbol": "WAVESEUR",
+      "archiveBase": "WAVESEUR"
+    },
+    {
+      "symbol": "WBTCEUR",
+      "archiveBase": "WBTCEUR"
+    },
+    {
+      "symbol": "WOOEUR",
+      "archiveBase": "WOOEUR"
+    },
+    {
+      "symbol": "XLMEUR",
+      "archiveBase": "XLMEUR"
+    },
+    {
+      "symbol": "XMREUR",
+      "archiveBase": "XMREUR"
+    },
+    {
+      "symbol": "XRPEUR",
+      "archiveBase": "XRPEUR"
+    },
+    {
+      "symbol": "XRTEUR",
+      "archiveBase": "XRTEUR"
+    },
+    {
+      "symbol": "XTZEUR",
+      "archiveBase": "XTZEUR"
+    },
+    {
+      "symbol": "YFIEUR",
+      "archiveBase": "YFIEUR"
+    },
+    {
+      "symbol": "YGGEUR",
+      "archiveBase": "YGGEUR"
+    },
+    {
+      "symbol": "ZECEUR",
+      "archiveBase": "ZECEUR"
+    },
+    {
+      "symbol": "ZRXEUR",
+      "archiveBase": "ZRXEUR"
+    }
+  ],
+  "historicalThrough": "2022-05-26T20:00:00Z"
+}

@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { normalizeTradingSymbol } from "../../market-data/trading-symbol";
 import { analyzeMarket, MarketAnalysis } from "./analyze-market";
 
-const unifiedSymbols = { BTCEUR: "BTC/EUR", ETHEUR: "ETH/EUR" } as const;
 export function toCcxtSymbol(symbol: string): string {
-  return unifiedSymbols[normalizeTradingSymbol(symbol.replace("/", ""))];
+  const normalized = normalizeTradingSymbol(symbol.replace("/", ""));
+  return `${normalized.slice(0, -3)}/EUR`;
 }
 
 /** One coalesced live snapshot for API and execution; bounded allowlisted keys. */
@@ -18,7 +18,7 @@ export class MarketAnalysisService {
 
   async analyze(symbol: string, timeframe: string): Promise<MarketAnalysis> {
     const unified = toCcxtSymbol(symbol);
-    if (timeframe !== "1h")
+    if (timeframe !== "4h")
       return {
         symbol: unified,
         timeframe,
@@ -26,11 +26,11 @@ export class MarketAnalysisService {
         reason: "UNSUPPORTED_TIMEFRAME",
       };
     const now = Date.now(),
-      bucket = Math.floor(now / 3_600_000),
+      bucket = Math.floor(now / 14_400_000),
       key = `${unified}:${timeframe}:${bucket}`;
     // Fail closed during finalization. The execution loop waits until second10;
     // an API read at second0 must not cache or execute an older candle.
-    if (now % 3_600_000 < 10000)
+    if (now % 14_400_000 < 10000)
       return {
         symbol: unified,
         timeframe,

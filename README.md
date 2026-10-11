@@ -8,10 +8,9 @@ The application does not place real exchange orders.
 ```text
 src/production/       Active application only
 test/checks/          Structural and regression checks
-test/research/        Historical backtesting, candidate strategies, CSVs and reports
+test/research/        Current-strategy replay, CSVs and the latest report
 operations/          Maintenance commands and database migrations
 docs/                Current strategy, protocol and file map
-docs/archive/        Historical notes; not the current specification
 dist/production/     Generated production build (ignored by Git)
 dist-test/           Generated research/check build (ignored by Git)
 ```
@@ -42,28 +41,30 @@ pnpm start:prod
 is `dist/production/main.js`. Use one service instance and keep
 `DB_SYNCHRONIZE=false` for the existing database.
 
-The sole live strategy is `ccxt-ema50-rsi14-v1`. API and Demo consume
-the same closed-candle EMA50/RSI14 core. `RunTradingAssistant` is the only
-automated entry owner; Demo's scheduler reconciles data and exits every minute.
+The sole strategy is `spot-4h-pullback-daily-ema200-basket-v4`: closed Daily EMA200 macro
+trend, a bullish 4h pullback candle touching 4h EMA20 or EMA50, structural/2ATR SL,
+2R TP from the actual passive entry and cost-aware protection after +1.5R. RSI is not an entry condition.
+The watchlist refreshes the top30 online Kraken crypto/EUR pairs by 24h EUR turnover.
+Stablecoins/fiat are excluded; stored positions survive watchlist rotation.
 
-Position, committed signal marker and pending notification are stored together.
-Telegram delivery remains at-least-once. Historical indicator APIs and the duplicate scanner were removed. Legacy position exits are preserved by
-`position-exit-policy.ts`; historical entry strategies are not loaded in production.
-Approved entry mode reads previously persisted evidence through
-`StrategyApprovalService`; it does not execute backtests. Approved admission
-requires evidence of 1m execution, so hourly backtests cannot approve the new
-minute exit timing. Demo uses closed minute candles during the current hour;
-this remains simulated execution. See [the Spot risk review](docs/SPOT_RISK_REVIEW.md).
+New entry/TP intentions use Maker limits; new stops use a Market-stop Demo
+proxy with 0.40% fees and 0.10% adverse stop slippage. Pending orders reserve cash for at most24 hours; only filled open positions count
+toward the global cap of six. Fill admission rechecks capacity. A stop sell may remain unfilled;
+a fee cushion does not guarantee a Maker stop fill. The application still
+submits no exchange orders. See [the strategy](docs/STRATEGY.md).
+
+Durable orders reuse the existing alert_delivery payload/actions. No new schema
+or database writes were required by the refactor. Previously stored positions
+keep cost basis and initial SL/TP; exit monitoring follows Maker-only rules at the recorded execution timeframe. OHLC fill proxies cannot enable APPROVED Demo.
 
 Active API examples:
 
 - `GET /trading-assistant/status`
 - `GET /technical-analysis/BTCEUR`
-- `GET /signals/BTCEUR/1h`
-- `GET /demo-trading/open` and `/demo-trading/summary`
-- Asset administration and closed-candle inspection/sync/repair endpoints
+- `GET /signals/BTCEUR/4h`
+- `GET /demo-trading/orders`, `/demo-trading/open`, `/demo-trading/summary`
 
-See [the current API inventory and retired routes](docs/API.md).
+See [the API inventory](docs/API.md).
 
 ## Checks and historical research
 
@@ -71,21 +72,23 @@ See [the current API inventory and retired routes](docs/API.md).
 pnpm typecheck:test
 pnpm test
 pnpm build:test
-pnpm backtest:kraken-csv --btc test/research/artifacts/kraken-history-2026-10-06/BTCEUR_60.csv --eth test/research/artifacts/kraken-history-2026-10-06/ETHEUR_60.csv --output /private/tmp/kraken-backtest.json
+pnpm backtest:spot-basket --data-dir test/research/artifacts/kraken-history-2026-10-06/eur-universe --start 2021-12-21T16:00:00Z --end 2022-05-26T20:00:00Z --output /private/tmp/spot-basket.json
 ```
 
-The detached CSV backtest does not connect to PostgreSQL, send messages or
-place orders. Its date-dependent protected holdout remains excluded by default.
-See [the saved replay](test/research/artifacts/kraken-history-2026-10-06/README.md).
+The detached command reads official 4h and daily sources, ranks a causal daily
+30-asset watchlist across the historical EUR universe, and runs one shared wallet.
+Daily EMA200 uses pre-period warmup. Historical ranking uses the previous
+completed day's close×volume, a proxy for current rolling24h VWAP×volume.
+It records pending/expired limits, open stop sells, realized P/L, marked equity,
+drawdown and monthly targets. Verified no-trade intervals create no candles or
+fills; unknown gaps freeze exposure. The protected latest year is excluded.
+No DB connection, messages or real orders are used, and profit is not guaranteed.
+See [the current saved replay](test/research/artifacts/kraken-history-2026-10-06/README.md).
 
-`pnpm start:research` after `pnpm build:test` serves the existing `/backtesting/*`
-routes on `127.0.0.1:3001`. These routes are no longer registered in production.
-The research process disables automated entries, scheduled jobs and Telegram.
-`POST /research-data/build-4h/:symbol` prepares historical higher-timeframe data;
-production no longer rebuilds 4h on every Demo reconciliation cycle.
-Explicit database-backed backtest endpoints still save evidence in the configured
-database; they are distinct from the detached CSV command. Do not run research
-against a database you do not intend to write evidence to.
+`pnpm start:research` serves read-only portfolio/readiness endpoints on
+127.0.0.1:3001 after build:test, with runtime jobs and notifications disabled.
+Retired next-open, walk-forward, comparison and variant research implementations
+were removed. The maintained archive downloader extracts CRC-verified EUR daily/4h data.
 
 ## Operations
 

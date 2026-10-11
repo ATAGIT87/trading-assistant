@@ -14,10 +14,14 @@ export type SpotCandle = {
 /** The application's single live provider: Kraken Spot public OHLC data. */
 @Injectable()
 export class MarketDataProviderService {
-  private readonly krakenPairs: Record<string, string> = {
-    BTCEUR: "XBTEUR",
-    ETHEUR: "ETHEUR",
-  };
+  private krakenPair(symbol: string): string {
+    const normalized = normalizeTradingSymbol(symbol);
+    return normalized === "BTCEUR"
+      ? "XBTEUR"
+      : normalized === "DOGEEUR"
+        ? "XDGEUR"
+        : normalized;
+  }
 
   async getSpotCandles(
     symbol: string,
@@ -31,7 +35,7 @@ export class MarketDataProviderService {
         "Kraken Spot OHLC supports a recent window of 1 to 720 candles.",
       );
     }
-    const pair = this.krakenPairs[normalizedSymbol];
+    const pair = this.krakenPair(normalizedSymbol);
     if (!pair)
       throw new Error(`No Kraken Spot pair mapping for ${normalizedSymbol}.`);
 
@@ -57,6 +61,28 @@ export class MarketDataProviderService {
       .map((row) => this.parseKrakenOhlc(row))
       .slice(-limit)
       .sort((left, right) => left.time.getTime() - right.time.getTime());
+  }
+
+  async getBestBidAsk(symbol: string): Promise<{ bid: number; ask: number }> {
+    const pair = this.krakenPair(symbol);
+    const response = await this.fetchKraken(
+      `https://api.kraken.com/0/public/Depth?pair=${pair}&count=1`,
+    );
+    if (!response.ok) throw new Error("MAKER_ORDER_BOOK_UNAVAILABLE");
+    const body = (await response.json()) as {
+      error?: string[];
+      result?: Record<string, { bids?: unknown[][]; asks?: unknown[][] }>;
+    };
+    const book = Object.values(body.result ?? {})[0];
+    const bid = Number(book?.bids?.[0]?.[0]),
+      ask = Number(book?.asks?.[0]?.[0]);
+    if (
+      body.error?.length ||
+      ![bid, ask].every((v) => Number.isFinite(v) && v > 0) ||
+      bid >= ask
+    )
+      throw new Error("INVALID_MAKER_ORDER_BOOK");
+    return { bid, ask };
   }
 
   /** Retries only transient transport and service failures; invalid responses fail fast. */
@@ -98,11 +124,12 @@ export class MarketDataProviderService {
     const close = Number(row[4]);
     const volume = Number(row[6]);
     if (
-      !Number.isFinite(time.getTime()) ||
+      !Number.isSafeInteger(time.getTime()) ||
+      time.getTime() <= 0 ||
       ![open, high, low, close, volume].every(Number.isFinite) ||
       low > Math.min(open, close) ||
       high < Math.max(open, close) ||
-      low < 0 ||
+      Math.min(open, high, low, close) <= 0 ||
       volume < 0
     ) {
       throw new Error(
@@ -113,16 +140,11 @@ export class MarketDataProviderService {
   }
 
   private toKrakenInterval(timeframe: string): number {
-    return { "1m": 1, "15m": 15, "1h": 60, "4h": 240, "1d": 1440 }[timeframe]!;
+    return { "15m": 15, "1h": 60, "4h": 240, "1d": 1440 }[timeframe]!;
   }
 
   private validateTimeframe(timeframe: string): void {
-    if (
-      !(
-        timeframe in
-        { "1m": true, "15m": true, "1h": true, "4h": true, "1d": true }
-      )
-    )
+    if (!(timeframe in { "15m": true, "1h": true, "4h": true, "1d": true }))
       throw new Error(`Unsupported timeframe: ${timeframe}`);
   }
 }

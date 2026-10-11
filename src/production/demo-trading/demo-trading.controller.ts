@@ -3,6 +3,7 @@ import { Controller, Get, Param, ParseEnumPipe, Post } from "@nestjs/common";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { ParseTradingSymbolPipe } from "../market-data/trading-symbol";
 import { DemoTradingService } from "./demo-trading.service";
+import { MAKER_FEE_RATE } from "../trading/maker-execution";
 import { getDemoPositionResult } from "./demo-position-result";
 
 @Controller("demo-trading")
@@ -21,6 +22,37 @@ export class DemoTradingController {
   async getOpenPositions() {
     return {
       openPositions: await this.demoTradingService.getOpenPositions(),
+    };
+  }
+
+  @Get("orders")
+  async getPendingOrders() {
+    return {
+      orders: (await this.demoTradingService.getPendingMakerOrders()).map(
+        (order) => ({
+          symbol: order.symbol,
+          orderType: "limit",
+          postOnly: true,
+          status: "PENDING",
+          stopOrderType:
+            order.payload?.makerEntry?.signal.stopExecutionPolicy ===
+            "MARKET_STOP"
+              ? "market"
+              : "limit",
+          signalTimeframe: order.timeframe,
+          executionTimeframe:
+            this.demoTradingService.getMakerExecutionTimeframe(order),
+          feePerSide: MAKER_FEE_RATE,
+          limitPrice: order.payload?.makerEntry?.signal.entryPrice,
+          quantity: order.payload?.makerEntry?.quantity,
+          reservedEUR:
+            (order.payload?.makerEntry?.investedAmount ?? 0) *
+            (1 + MAKER_FEE_RATE),
+          signalAt: order.candleTime,
+          submittedAt: new Date(order.payload?.makerEntry?.postedAt ?? 0),
+          expiresAt: new Date(order.payload?.makerEntry?.expiresAt ?? 0),
+        }),
+      ),
     };
   }
 
@@ -58,6 +90,8 @@ export class DemoTradingController {
           closedAt: position.closedAt,
           symbol: position.symbol,
           timeframe: position.timeframe,
+          executionTimeframe: position.executionTimeframe ?? position.timeframe,
+          stopExecutionPolicy: position.stopExecutionPolicy ?? "MAKER_ONLY",
           side: position.side,
           mode: position.mode,
           strategyVersion: position.strategyVersion,

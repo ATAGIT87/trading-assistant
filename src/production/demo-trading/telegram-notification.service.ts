@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 import { classifyNetResult } from "../trading/net-trade-result";
+import { AlertDelivery } from "../alerts/entities/alert-delivery.entity";
 
 @Injectable()
 export class TelegramNotificationService {
@@ -50,6 +51,7 @@ export class TelegramNotificationService {
       takeProfit: number;
       riskReward: number | null;
       mode?: "APPROVED" | "EXPERIMENTAL";
+      stopExecutionPolicy?: "MARKET_STOP" | "MAKER_ONLY" | null;
     } | null,
     action: string,
     context?: { reason: string; currentPrice?: number } | null,
@@ -73,6 +75,7 @@ export class TelegramNotificationService {
       `Entry: ${Number(position.entry).toFixed(2)}`,
       `SL: ${Number(position.stopLoss).toFixed(2)}`,
       `TP: ${Number(position.takeProfit).toFixed(2)}`,
+      `SL exit: ${position.stopExecutionPolicy === "MARKET_STOP" ? "MARKET" : "LIMIT"}`,
       `R:R: ${position.riskReward ?? 0}:${1}`,
       "",
       ...(context
@@ -85,6 +88,27 @@ export class TelegramNotificationService {
     ].join("\n");
 
     return this.sendMessage(message);
+  }
+
+  async sendMakerEntryNotification(event: AlertDelivery): Promise<boolean> {
+    const order = event.payload?.makerEntry;
+    if (!order) return false;
+    return this.sendMessage(
+      [
+        "🚨 SPOT DEMO BUY — LIMIT ORDER",
+        "",
+        `${event.symbol} ${event.timeframe}`,
+        `Strategy: ${order.signal.strategyVersion}`,
+        `Limit entry: ${order.signal.entryPrice}`,
+        `SL: ${order.signal.stopLoss}`,
+        `TP: ${order.signal.takeProfit}`,
+        `SL exit: ${order.signal.stopExecutionPolicy === "MARKET_STOP" ? "MARKET" : "LIMIT"}`,
+        `Quantity: ${order.quantity}`,
+        `Reason: ${event.payload!.reason}`,
+        `Expires: ${new Date(order.expiresAt).toISOString()}`,
+        "Status: PENDING — awaiting fill; no open position yet",
+      ].join("\n"),
+    );
   }
 
   async sendCloseNotification(position: {

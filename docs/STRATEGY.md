@@ -1,65 +1,99 @@
-# Unified runtime strategy
+# Active 4h spot strategy
 
-`ccxt-ema50-rsi14-v1` is the sole live entry strategy. The same implementation
-serves CCXT analysis, Signals API, technical-analysis API, Demo and
-stored-candle backtests. Legacy versions remain available only for explicit
-historical backtests and the exit policies of existing positions.
+`spot-4h-pullback-daily-ema200-basket-v4` is the sole entry implementation.
+The application implements engineering Demo execution, not real exchange orders.
 
-## Entry rule
+## Trend and entry
 
-Fetch 200 Kraken CCXT OHLCV rows, require the forming bucket and evaluate the
-newest fully closed candle at raw index -2. Numeric close arrays exclude the
-forming row. The equivalent historical evaluator uses the latest199 closed bars.
+The mandatory macro filter uses at least 200 completed **daily** candles.
+Daily close and the latest closed 4h price must be strictly above Daily EMA200.
+Daily EMA200 is deliberately different from the previous 4h EMA200 proxy.
+The 4h bullish reversal must touch/dip below its EMA20 or EMA50 and close above
+that EMA. RSI is not an entry requirement. Closed 4h ATR14 and the lowest low
+of the last 10 4h bars produce SL=min(structural low,entry−2ATR). New orders
+keep this structural SL and calculate TP at 2R from the actual passive entry.
+A lower quote must not leave the signal-close TP stretched beyond 2R. The
+net-target fee gate runs after rebasing; persisted orders/positions retain
+their accepted levels.
 
-BUY requires closed close strictly above EMA50 and a new upward RSI14 hook:
-previous RSI <35, current RSI >previous, previous <=beforePrevious, and an
-observed prior crossing from >=35 into the current oversold episode. The hook
-may remain below35. No 4H trend, volume breakout or v7 entry filter is applied.
-The forming candle's close is notification metadata only.
+CCXT fetches separate 4h and daily series, rejects malformed/gapped/stale data
+and excludes forming candles. The latest 4h bucket must be present before its
+predecessor can generate a signal. At most 719 closed bars seed each series.
+Replay calls the same production evaluator with independent official daily
+history; future daily bars never affect an earlier decision.
 
-## Execution and risk
+## Dynamic watchlist and capacity
 
-One Nest runner analyzes all active1h assets through a coalesced CCXT snapshot
-service. It polls every minute and excludes the first ten seconds of an hour.
-Only this runner opens automated Demo positions. The Demo
-scheduler synchronizes data and reconciles exits every minute, without an entry loop.
+Live selection ranks online Kraken crypto/EUR spot pairs by 24h base volume
+multiplied by 24h VWAP, selects the top 30, and refreshes every 24 hours.
+Fiat and listed fiat stablecoins are excluded. XBT/XDG aliases normalize to
+BTC/DOGE. The bootstrap snapshot is informational: automated new entries need
+a successful refresh. Refresh failure cannot stop accepted-order/exit monitoring.
+Volume turnover is a liquidity proxy; order-book depth and spread are not ranked.
+Current market availability determines membership; historical MATIC is not
+silently substituted with POL. Pair normalization supports EUR symbols beyond
+the watchlist so stored positions remain manageable after rotation.
 
-RiskManagerService supplies a structural stop from recent lows/1.5ATR and a2R
-planned target. Demo applies next-open fill/rebasing, minimum gross1R and net0.5R,
-configured fee/slippage, at most two positions, EUR100 spend cap and at most1%
-account risk. Pattern match and executable entry are separate decisions; rejected
-entries do not become alerts. CCXT remains experimental until separately approved.
-Static SL/TP apply to new positions; no v7 profit protection or24-bar time exit
-is silently inherited. Existing legacy positions keep their recorded exit policy.
+Six **filled OPEN positions** is the shared portfolio cap. Pending BUYs do not
+consume slots but reserve capital including entry fees, and one commitment per
+asset is allowed. A fill rechecks capacity under the portfolio lock. Demo retains
+its <=1% available-cash risk and <=EUR100 invested per order. Historical fills
+use only slots available at bar start, never capital or slots from later exits.
 
-## Exit observation
+Pending order expiry is exactly 24 hours after submission. Signal candles stay
+4h; current Demo execution uses independent closed 1h candles. The partial
+placement hour is excluded; submission at second10 permits 23 full subsequent
+hourly observations. Existing positions retain their stored execution timeframe. Confirmed macro reversal cancels
+an unfilled entry. Unknown fill history remains quarantined rather than assuming
+an order expired safely. Accepted old entries preserve their original deadline
+and macro/timeframe compatibility. Rotation never liquidates open positions.
 
-Hourly entries keep their hourly closed-candle indicators. Demo reconciles closed
-hourly history, then checks fresh, contiguous closed 1m candles in the current
-hour, including the first hour after entry. Minute bars are execution telemetry;
-they never enter signal inputs or hourly storage. Missing hourly/minute history
-blocks advancing the exit cursor. Same-minute SL/TP ambiguity chooses the stop;
-gaps below the stop can produce a worse simulated fill.
+## Maker execution and protection
 
-Polling is every minute, with completed candles and network latency; it is not
-tick-level execution or a native Kraken stop. Historical hourly backtests do not
-validate minute exit timing. APPROVED admission now requires evidence labelled
-with 1m execution resolution; legacy/hourly evidence cannot grant approval.
-Experimental Demo still uses its explicit entry switches and the same risk limits.
+New BUY and TP intentions remain limit/post-only. New signal snapshots carry
+`stopExecutionPolicy=MARKET_STOP`, persisted on the filled position. Null/absent
+policy preserves legacy Maker stop-limit exits; prior accepted snapshots keep
+initial risk levels and cost basis. Apply the stop-policy column migration before
+running v4. The strategy and evidence-engine versions changed so v3 evidence
+cannot approve the new execution rules.
 
-See [the reviewed Spot risk suggestions](SPOT_RISK_REVIEW.md).
+Demo models Maker fees at 0.40%, stop taker fees at 0.40%, and adverse stop
+slippage at 0.10%. These are explicit assumptions, not measured execution costs.
+A stop crosses at min(bar open, effective stop), then applies adverse slippage;
+price gaps do not receive an unavailable stop price. TP stays a passive fill.
+For ambiguous OHLC bars, stop takes precedence over TP. Slippage is included in
+the exit price and recorded separately without subtracting it twice from P/L.
+Position sizing includes stop slippage; a gap may still exceed planned risk.
 
-## Durability
+Protection arms after a completed bar reaches +1.5 initial R, for later bars
+only. The new cushion is derived from entry fee, stop fee and stop slippage,
+plus 0.01% buffer (about 0.914%). Legacy Maker positions retain +0.85% protection
+and their delayed passive stop behavior. No guaranteed break-even is asserted.
 
-Signal timestamp marker, Demo position and pending Telegram payload commit in
-one PostgreSQL transaction. All entry admission reads share a portfolio advisory
-lock. Apply `operations/migrations/20261005-ccxt-alert-payload.sql` before startup.
-Transport retries use the existing outbox. Telegram is at-least-once, so an
-acknowledgement crash can repeat delivery despite unique signal-event creation.
+Execution remains a closed-candle Demo proxy: even market-stop results are
+observed after the hour closes. No real exchange order or native stop is placed;
+this is not a live tick-level immediate exit. Maker queue position, spreads,
+partial fills and actual stop slippage cannot be established from OHLC alone.
 
-No confidence probability is fitted and no profitability is claimed. The saved
-2026-10-06 historical replay produced 9 BTC/EUR trades with -0.6102 net R and
-6 ETH/EUR trades with -3.3495 net R. These independent market results are not
-a shared-capital portfolio return. The protected holdout was excluded.
-See [the replay report](../test/research/artifacts/kraken-history-2026-10-06/README.md).
-Structural cleanup preserved all signals, trades and sequential results.
+## Historical evaluation and evidence
+
+The saved detached replay covers 2021-12-21 16:00UTC–2022-05-26 20:00UTC.
+Its daily watchlist ranks only the previous completed UTC day's close×volume
+across markets already trading at that time. This is a causal historical volume
+proxy, not exact rolling-24h VWAP or historical order-book depth. Daily source
+history before the period warms EMA200; trades/returns begin within the requested
+period after 50 closed 4h bars. Newly listed assets cannot buy before Daily EMA200
+is available. The latest protected year is excluded.
+
+Official complete CRC/SHA-verified OHLCVT files omit no-trade intervals. Such
+verified intervals cannot fill orders or update stops; no artificial candles
+are inserted. Unverified gaps still freeze exposed positions. Indicators require
+continuous actual candles; a no-trade gap resets primary history. Marks use the
+latest actual close, and no forced liquidation is performed at the period end.
+See [Kraken's data definition](https://support.kraken.com/articles/360047124832-downloadable-historical-ohlcvt-open-high-low-close-volume-trades-data).
+
+Only one current full report is kept. Engine `spot-maker-daily-4h-basket-v3`
+reports makerFillsValidated=false and does not write DB evidence, messages or
+orders. APPROVED requires current validated 4h Maker evidence, fixed fees,
+separate protected holdout and sufficient trades/contributing markets. The
+monthly frequency/profit targets are measured, not guaranteed.

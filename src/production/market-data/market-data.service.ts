@@ -54,7 +54,7 @@ export class MarketDataService {
 
   async repairSpotGaps(
     symbol: string,
-    timeframe: Exclude<Timeframe, Timeframe.FOUR_HOURS>,
+    timeframe: Timeframe,
   ): Promise<{ gapsFound: number; received: number; saved: number }> {
     const durationMs = timeframeDurationMs[timeframe];
     const candles = await this.getHistoricalCandles(symbol, timeframe);
@@ -108,82 +108,8 @@ export class MarketDataService {
     return this.saveCandles(symbol, timeframe, closedCandles);
   }
 
-  /** Execution telemetry only: minute candles never enter the hourly signal or its storage. */
-  async getClosedMinuteCandles(
-    symbol: string,
-    start: Date,
-    expectedEntry?: number,
-  ): Promise<SpotCandle[]> {
-    const now = Date.now();
-    const minute = 60_000;
-    const end = Math.floor(now / minute) * minute;
-    if (
-      !Number.isSafeInteger(+start) ||
-      +start <= 0 ||
-      +start % minute !== 0 ||
-      +start > now
-    )
-      throw new Error("INVALID_MINUTE_EXIT_START");
-    const expectedCount = (end - +start) / minute;
-    if (expectedCount === 0) return [];
-    if (expectedCount > 719) throw new Error("MINUTE_EXIT_WINDOW_UNAVAILABLE");
-    const rows = await this.marketDataProviderService.getSpotCandles(
-      symbol,
-      "1m",
-      expectedCount + 1,
-    );
-    const closed = rows
-      .filter(
-        (candle) => +candle.time >= +start && +candle.time + minute <= now,
-      )
-      .sort((a, b) => +a.time - +b.time);
-    if (
-      closed.length !== expectedCount ||
-      closed.some((candle, index) => {
-        const values = [
-          candle.open,
-          candle.high,
-          candle.low,
-          candle.close,
-          candle.volume,
-        ];
-        return (
-          +candle.time !== +start + index * minute ||
-          !values.every(Number.isFinite) ||
-          Math.min(candle.open, candle.high, candle.low, candle.close) <= 0 ||
-          candle.volume < 0 ||
-          candle.low > Math.min(candle.open, candle.close) ||
-          candle.high < Math.max(candle.open, candle.close)
-        );
-      }) ||
-      (expectedEntry !== undefined &&
-        (!Number.isFinite(expectedEntry) ||
-          Math.abs(closed[0].open - expectedEntry) > 1e-7))
-    )
-      throw new Error("MINUTE_EXIT_DATA_GAP_INVALID_OR_STALE");
-    return closed;
-  }
-
-  async getLiveCandleOpen(
-    symbol: string,
-    timeframe: Timeframe,
-    expectedOpenTime: Date,
-  ): Promise<number | null> {
-    const candles = await this.marketDataProviderService.getSpotCandles(
-      symbol,
-      timeframe,
-      2,
-    );
-    const candle = candles.find(
-      (candidate) => +candidate.time === +expectedOpenTime,
-    );
-    if (
-      !candle ||
-      +candle.time + timeframeDurationMs[timeframe] <= Date.now() ||
-      !Number.isFinite(candle.open)
-    )
-      return null;
-    return candle.open;
+  getBestBidAsk(symbol: string) {
+    return this.marketDataProviderService.getBestBidAsk(symbol);
   }
 
   private async saveCandles(

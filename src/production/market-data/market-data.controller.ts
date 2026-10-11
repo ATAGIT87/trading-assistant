@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Param,
-  ParseEnumPipe,
-  Post,
-} from "@nestjs/common";
+import { Controller, Get, Param, ParseEnumPipe, Post } from "@nestjs/common";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import { ParseTradingSymbolPipe } from "./trading-symbol";
 import { MarketDataService } from "./market-data.service";
@@ -56,10 +49,6 @@ export class MarketDataController {
     @Param("symbol", ParseTradingSymbolPipe) symbol: string,
     @Param("timeframe", new ParseEnumPipe(Timeframe)) timeframe: Timeframe,
   ) {
-    if (timeframe === Timeframe.FOUR_HOURS)
-      throw new BadRequestException(
-        "Derived historical 4h data is rebuilt through the research-data API; repair 1h first.",
-      );
     return this.data.repairSpotGaps(symbol, timeframe);
   }
 }

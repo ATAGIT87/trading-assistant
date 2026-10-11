@@ -20,31 +20,6 @@ export interface MarketDataQualityReport {
   reason: string;
 }
 
-/**
- * Public exchange history can contain market-wide outages. Backtests must not
- * bridge those intervals: use only the newest continuous suffix and retain its
- * start time in the quality report.
- */
-export function getLatestContinuousCandleSegment(
-  candles: MarketCandle[],
-  timeframe: Timeframe,
-): MarketCandle[] {
-  const duration = timeframeDurationMs[timeframe];
-  const sorted = [...candles].sort(
-    (left, right) => left.time.getTime() - right.time.getTime(),
-  );
-  let startIndex = 0;
-  for (let index = 1; index < sorted.length; index++) {
-    if (
-      sorted[index].time.getTime() - sorted[index - 1].time.getTime() >
-      duration
-    ) {
-      startIndex = index;
-    }
-  }
-  return sorted.slice(startIndex);
-}
-
 /** Pure data-quality gate: it deliberately does not infer that a clean series is profitable. */
 export function assessMarketDataQuality(
   symbol: string,

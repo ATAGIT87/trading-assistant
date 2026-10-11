@@ -1,6 +1,6 @@
 # نقشهٔ ساختار پروژه
 
-این سند وضعیت فعلی کد را توضیح می‌دهد. `production` یعنی کدی که برنامهٔ فعال اجرا می‌کند؛ به معنی معاملهٔ واقعی یا اثبات سودآوری نیست. دمو بخشی از محصول فعال است و در production می‌ماند. شبیه‌سازی روی تاریخچه و استراتژی‌های تحقیقاتی در `test` قرار دارند.
+این سند وضعیت فعلی کد را توضیح می‌دهد. `production` یعنی کدی که برنامهٔ فعال اجرا می‌کند؛ به معنی معاملهٔ واقعی یا اثبات سودآوری نیست. دمو بخشی از محصول فعال است و در production می‌ماند. شبیه‌سازی روی تاریخچهٔ همان نسخهٔ فعلی در `test` قرار دارد؛ نسخه‌های ورود بازنشسته حذف شده‌اند.
 
 رابطهٔ پوشه‌ها و مسیر اجرای آن‌ها در [نقشهٔ چرخهٔ production](PRODUCTION_CYCLE.md) آمده است. بررسی فعلی فایل جداافتاده یا پوشهٔ خالی پیدا نکرد؛ اتصال ماژول‌ها و exportهای بدون مصرف پاک‌سازی شدند.
 
@@ -10,29 +10,18 @@ test/checks/             کنترل ساختار و تست‌های سازگار
 test/research/           بک‌تست، تحقیق و داده‌های تاریخی
 operations/              نگهداری سرویس، ورود تاریخچه و migration
 docs/                    تعریف جاری و نقشهٔ فایل‌ها
-docs/archive/            یادداشت‌های تاریخی
 ```
 
 ## مسیر اجرای فعال
 
-```mermaid
-flowchart TD
-  Main[main.ts → AppModule] --> Runner[RunTradingAssistant]
-  Runner --> Analysis[MarketAnalysisService → analyze-market.ts]
-  API[Signals / TechnicalAnalysis API] --> Analysis
-  Analysis --> Strategy[EmaRsiSpotStrategy]
-  Runner --> Demo[DemoTradingService: پذیرش و ثبت ورود]
-  Strategy --> Demo
-  Approval[StrategyApprovalService: خواندن شواهد ذخیره‌شده] --> Demo
-  Demo --> Ledger[پوزیشن + نشانگر سیگنال + اعلان معوق]
-  Ledger --> Delivery[DemoNotificationDeliveryService → Telegram]
-  Scheduler[DemoTradingScheduler] --> MarketData[همگام‌سازی کندل‌های بسته]
-  Scheduler --> Exits[بررسی خروج پوزیشن‌های باز]
-  Exits --> Policy[position-exit-policy.ts]
-  Exits --> Ledger
-```
-
-Production هیچ importی از `test` یا `operations` ندارد. تحقیق مجاز است هستهٔ production را بخواند تا همان قاعده را ارزیابی کند. `tsconfig.json` و `tsconfig.build.json` فقط production را می‌سازند؛ `test/tsconfig.json` تنظیم مستقل تحقیق و تست است. خروجی‌ها هم جدا هستند: `dist/production` و `dist-test`.
+رتبه‌بندی۳۰بازار آنلاین crypto/EUR در `trading-symbol.ts` تعریف شده و هر۲۴ساعت تازه می‌شود. API تحلیل، runner،
+دمو و replay همان هستهٔ ماکروی بستهٔDaily EMA200 و پولبک4h EMA20/50 را مصرف
+می‌کنند. صف پایدار Maker قبل از fill سرمایه و نقد رزرو می‌کند؛ ظرفیت فقط برای پوزیشن پرشده است؛ خروج‌ها
+و Break-even هم از قواعد مشترک Maker می‌آیند. سیگنال4h و اجرای دمو1h
+جدا هستند؛ `demo_position.executionTimeframe` اجرای جدید را حفظ می‌کند و null
+قواعد خروج قبلی را نگه می‌دارد. Scheduler دادهٔ بازارهای دارای تعهد را در
+مرز کندل تازه می‌کند؛ اسکن۳۰بازار مسئولیت runner است. فهرست assets فقط metadata
+است و رتبه‌بندی سبد را تغییر نمی‌دهد. [نقشهٔ چرخه](PRODUCTION_CYCLE.md) را ببینید.
 
 ## فایل‌های production
 
@@ -53,10 +42,10 @@ Production هیچ importی از `test` یا `operations` ندارد. تحقیق 
 | `assets/timeframe.utils.ts` | مدت هر تایم‌فریم برای بسته‌شدن کندل |
 | `market-data/market-data.module.ts` | اتصال دریافت و ذخیرهٔ داده |
 | `market-data/market-data.controller.ts` | API کندل بسته، کیفیت، sync و ترمیم داده |
-| `market-data/market-data.service.ts` | ذخیرهٔ کندل بسته، sync، ترمیم، open برای fill و کندل بستهٔ دقیقه‌ای برای خروج |
+| `market-data/market-data.service.ts` | ذخیرهٔ کندل بسته، sync، ترمیم و quote برای پذیرش post-only |
 | `market-data/market-data-provider.service.ts` | دریافت Kraken REST و تبدیل قالب آن |
 | `market-data/market-candle-storage.service.ts` | خواندن و نوشتن کندل در دیتابیس |
-| `market-data/market-data-quality.ts` | اعتبار OHLCV، پیوستگی، تازگی و انتخاب بخش پیوسته |
+| `market-data/market-data-quality.ts` | اعتبار OHLCV، پیوستگی و تازگی |
 | `market-data/trading-symbol.ts` | نمادهای مجاز و pipe اعتبارسنجی نماد |
 | `market-data/entities/market-candle.entity.ts` | مدل جدول `market_candle` |
 | `risk/risk.module.ts` | ارائهٔ سرویس ریسک |
@@ -68,15 +57,14 @@ Production هیچ importی از `test` یا `operations` ندارد. تحقیق 
 | `signals/signal.types.ts` | قرارداد دادهٔ سیگنال و تحلیل |
 | `signals/technical-analysis.controller.ts` | API توضیح تحلیل بازار |
 | `signals/technical-analysis.service.ts` | پاسخ تشخیصی از همان snapshot فعال |
-| `trading/ema-rsi-spot.strategy.ts` | تبدیل نتیجهٔ EMA50/RSI14 به سیگنال با سطوح ریسک |
+| `trading/ema-rsi-spot.strategy.ts` | تبدیل پولبک4h با ماکرویDaily به سیگنال BUY با سطوح ریسک |
 | `trading/ccxt/analyze-market.ts` | دریافت/اعتبارسنجی CCXT و هستهٔ تصمیم فقط روی کندل بسته |
 | `trading/ccxt/market-analysis.service.ts` | cache کوتاه و ادغام درخواست‌های هم‌زمان تحلیل |
 | `trading/ccxt/run-trading-assistant.ts` | حلقهٔ فعال؛ تنها مسئول ورود خودکار دمو |
 | `trading/ccxt/trading-assistant.module.ts` | اتصال runner و API وضعیت |
+| `trading/maker-execution.ts` | کارمزد ثابت، سقف شش پوزیشن پرشده، TTL24ساعت، fill لیمیت، توقف پرنشده و BE مشترک |
 | `trading/trade-execution.ts` | تطبیق سطوح با قیمت ورود و پذیرش هدف پس از هزینه |
-| `trading/trade-outcome.ts` | موتور مشترک خروج؛ در دمو برای حفاظت سود قدیمی و در تحقیق برای replay |
-| `trading/position-exit-policy.ts` | جدول کوچک سیاست خروج پوزیشن‌های ذخیره‌شدهٔ قدیمی |
-| `trading/profit-protection.ts` | بالا بردن استاپ قدیمی با لحاظ سربه‌سر خالص |
+| `trading/trade-outcome.ts` | بازسازی علّی خروج Maker و Break-even از تاریخچهٔ پیوسته |
 | `trading/spot-position-sizing.ts` | مقدار معامله با بودجهٔ ریسک و سقف سرمایه |
 | `trading/spot-trading-policy.ts` | محدودیت ورود اسپات به BUY |
 | `trading/net-trade-result.ts` | WIN/LOSS/BREAKEVEN بر اساس نتیجهٔ خالص |
@@ -98,7 +86,7 @@ Production هیچ importی از `test` یا `operations` ندارد. تحقیق 
 | `strategy-approval/evidence-capacity.ts` | بررسی ظرفیت هم‌زمان در شواهد پرتفوی |
 | `strategy-approval/evidence-engine.ts` | شناسهٔ موتور سازگار برای قبول شواهد |
 
-`strategy-approval` کد تست نیست: دمو برای تصمیم ورود به خواندن شواهد نیاز دارد. فقط قرارداد ذخیره و بررسی مجوز در production است؛ تولید آن شواهد در تحقیق انجام می‌شود. شناسه‌های نسخهٔ قدیمی در جدول سیاست خروج هم برای سازگاری با پوزیشن موجود هستند، نه برای فعال‌کردن استراتژی‌های قدیمی.
+`strategy-approval` کد تست نیست: دمو برای تصمیم ورود به خواندن شواهد نیاز دارد. فقط قرارداد ذخیره و بررسی مجوز در production است؛ تولید آن شواهد در تحقیق انجام می‌شود. پوزیشن‌های قبلی مبنای هزینه و SL/TP خود را نگه می‌دارند؛ خروج‌ها Maker هستند و تایم‌فریم ثبت‌شدهٔ هر پوزیشن حفظ می‌شود.
 
 ## فایل‌های تست و تحقیق
 
@@ -106,56 +94,44 @@ Production هیچ importی از `test` یا `operations` ندارد. تحقیق 
 | --- | --- |
 | `tsconfig.json` | typecheck/build مستقل تست، تحقیق و ابزارهای عملیاتی |
 | `checks/check-structure.cjs` | رد import خارج از production و فایل production بدون مسیر استفاده |
-| `checks/runtime-compatibility.test.ts` | سازگاری خروج قدیمی، fill محافظه‌کارانه، جدول شواهد و شروط مجوز |
-| `checks/current-api.test.ts` | جلوگیری از ذخیرهٔ کندل باز در sync و کنترل فعال‌بودن دارایی |
-| `checks/spot-exit-monitor.test.ts` | خروج دقیقه‌ای، gap/هزینه، اعتبار داده و ATR، فیلتر EMA و حفاظت سود |
-| `checks/module-bootstrap.test.ts` | راه‌اندازی واقعی Nest با دیتابیس آفلاین؛ تطبیق ۱۹ route فعال و نبود سرویس تحقیق در محصول |
+| `checks/runtime-compatibility.test.ts` | سازگاری جدول شواهد و رد مجوز برای fillهای تأییدنشده |
+| `checks/current-api.test.ts` | جلوگیری از ذخیرهٔ کندل باز در sync و اعتبار ورودی metadata دارایی |
+| `checks/maker-execution.test.ts` | سفارش passive، trade-through، BE، شکاف، نقد مشترک و ظرفیت |
+| `checks/maker-demo.test.ts` | صف پایدار، restart، انقضا، هزینه و خروج Maker پوزیشن قدیمی |
+| `checks/module-bootstrap.test.ts` | راه‌اندازی واقعی Nest با دیتابیس آفلاین؛ تطبیق۲۰ route فعال و نبود سرویس تحقیق در محصول |
+| `checks/mtf-analysis.test.ts` | قانون پولبک4h، EMA200، منع look-ahead، برابری live/replay و رتبه‌بندی پویای۳۰بازار |
 | `checks/verify-live-service.cjs` | بررسی خواندنی API و Telegram bot/chat؛ پیام نمی‌فرستد |
 | `research/main.ts` | شروع سرور تحقیق محلی روی پورت 3001، بدون job و اعلان خودکار |
 | `research/research.module.ts` | افزودن APIهای بک‌تست فقط به فرایند تحقیق |
-| `research/backtesting/backtesting.module.ts` | اتصال موتور و استراتژی‌های تحقیقاتی |
-| `research/backtesting/backtesting.controller.ts` | APIهای اجرای بک‌تست، تاریخچه، مقایسه و readiness |
-| `research/backtesting/backtesting.service.ts` | replay تاریخی، تقسیم دوره‌ها، پرتفوی و walk-forward |
-| `research/backtesting/backtest-response.schema.ts` | بررسی پاسخ بک‌تست |
-| `research/backtesting/helpers/historical-entry.helper.ts` | ورود تاریخی در open کندل بعد با قاعدهٔ اجرای production |
-| `research/backtesting/helpers/backtest-periods.helper.ts` | تقسیم training/validation/test/holdout |
-| `research/backtesting/helpers/backtest-statistics.helper.ts` | آمار معاملات |
-| `research/backtesting/helpers/backtest-summary.helper.ts` | خلاصهٔ هر دوره |
-| `research/backtesting/helpers/portfolio-capacity.helper.ts` | خلاصه‌سازی معاملات پذیرفته‌شده با ظرفیت مشترک |
-| `research/backtesting/helpers/portfolio-backtest.helper.ts` | جمع‌بندی بک‌تست بازارها |
-| `research/backtesting/helpers/walk-forward.helper.ts` | ساخت پنجره‌های walk-forward |
-| `research/backtesting/interfaces/*.ts` | قرارداد پاسخ پرتفوی و walk-forward |
-| `research/strategies/trading-strategy.port.ts` | قرارداد ارزیابی تاریخی استراتژی |
-| `research/strategies/ema-rsi-replay.strategy.ts` | adapter کندل تاریخی به هستهٔ فعلی EMA50/RSI14 |
-| `research/strategies/research-strategy-registry.service.ts` | انتخاب صریح نسخه‌های تاریخی فقط برای تحقیق |
-| `research/strategies/hourly-*.strategy.ts` | پنج استراتژی قدیمی و زنجیرهٔ لازم برای replay تاریخی |
-| `research/strategies/technical-trend-engine.ts` | تحلیل روند مورد استفادهٔ نسخهٔ تاریخی v7 |
-| `research/strategies/market-structure.ts` | pivot و مقاومت مورد استفادهٔ تحقیق |
-| `research/data/kraken-hourly-csv.ts` | خواندن و اعتبارسنجی CSV رسمی و جداسازی فاصله‌ها |
-| `research/indicators/indicators.module.ts` | اتصال اندیکاتورهای مورد استفادهٔ استراتژی‌های تاریخی |
-| `research/indicators/indicators.service.ts` | محاسبات باقی‌ماندهٔ تاریخی EMA/RSI/ATR/ADX؛ در محصول بارگذاری نمی‌شود |
-| `research/data/research-market-data.controller.ts` | درخواست صریح آماده‌سازی 4h فقط در سرور تحقیق |
-| `research/data/research-market-data.service.ts` | ساخت و جایگزینی اتمیک 4h برای بک‌تست تاریخی |
-| `research/data/higher-timeframe.ts` | نگاشت تایم‌فریم بالاتر برای استراتژی‌های تاریخی |
-| `research/scripts/download-kraken-hourly-archive.py` | دریافت گزینشی CSVهای ساعتی BTC/EUR و ETH/EUR |
-| `research/scripts/backtest-kraken-hourly-csv.ts` | اجرای detached بدون اتصال دیتابیس یا اعلان |
-| `research/artifacts/kraken-history-2026-10-06/` | CSVها، رسید دانلود و نتیجهٔ مرجع بک‌تست |
+| `research/backtesting/backtesting.module.ts` | اتصال موتور و replay همان استراتژی جاری |
+| `research/backtesting/backtesting.controller.ts` | API فقط خواندنی پرتفوی و readiness |
+| `research/backtesting/spot-basket-simulation.ts` | شبیه‌سازی ترتیبی نقد مشترک، رزرو سفارش، ماه‌ها و پوشش داده |
+| `research/backtesting/backtesting.service.ts` | آداپتور خواندن داده و اجرای سبد پویای۳۰دارایی |
+| `research/strategies/ema-rsi-replay.strategy.ts` | adapter کندل تاریخی به هستهٔ فعلی EMA50/RSI14 با فیلتر روند چهارساعته |
+| `research/data/kraken-csv.ts` | خواندن و اعتبارسنجی CSV رسمی1h/4h/Daily بدون ساخت کندل مصنوعی |
+| `research/scripts/backtest-spot-basket.ts` | اجرای detached سبد پویای۳۰دارایی با CSV رسمی، بدون DB و سفارش |
+| `research/scripts/download-kraken-archive.py` | دریافت گزینشی CSV رسمی بازارهای EUR موجود در دوره |
+| `research/artifacts/kraken-history-2026-10-06/` | CSVها، رسید دانلود و فقط نتیجهٔ جاری بک‌تست |
 
 ## نگهداری و مستندات
 
-`operations/scripts/import-kraken-hourly-csv.ts` تاریخچهٔ واقعی را با درخواست صریح وارد دیتابیس می‌کند. `inspect-project-service.py` پردازش‌های همین پروژه را پیدا می‌کند و `restart-audited-service.py` همان پردازش‌ها را جایگزین می‌کند. migration موجود در `operations/migrations` است. این ابزارها جزو build یا bootstrap محصول نیستند.
+`operations/scripts/import-kraken-csv.ts` تاریخچهٔ واقعی را با درخواست صریح وارد دیتابیس می‌کند. `inspect-project-service.py` پردازش‌های همین پروژه را پیدا می‌کند و `restart-audited-service.py` همان پردازش‌ها را جایگزین می‌کند. migration موجود در `operations/migrations` است. این ابزارها جزو build یا bootstrap محصول نیستند.
 
-تعریف قاعدهٔ جاری در [STRATEGY.md](STRATEGY.md)، جزئیات تحلیل در [CCXT.md](CCXT.md) و قواعد نگهداری در [پروتکل](TRADING_ASSISTANT_PROJECT_PROTOCOL.md) است. فایل‌های `docs/archive` صرفاً سابقه‌اند.
+تعریف قاعدهٔ جاری در [STRATEGY.md](STRATEGY.md)، جزئیات تحلیل در [CCXT.md](CCXT.md) و قواعد نگهداری در [پروتکل](TRADING_ASSISTANT_PROJECT_PROTOCOL.md) است. نسخه‌های قدیمی و اسناد آرشیوی منسوخ حذف شده‌اند.
 
-## پاک‌سازی انجام‌شده
+## پاک‌سازی و بررسی
 
-کد Hello World، seed مصنوعی، entity سیگنال ثبت‌نشده، ماژول اعلان قدیمی بدون اتصال به برنامه، متد تولید سیگنال قدیمی بدون فراخوان و port/token مربوط به آن حذف شدند. هشت متد اندیکاتور/امتیازدهی بدون استفاده، متدهای ذخیره‌سازی بدون فراخوان و helperهای متروک هم حذف شدند. endpoint بک‌فیل که همیشه خطا برمی‌گرداند کنار گذاشته شد؛ دانلود آرشیو و import صریح جای عملیات تاریخچه را مشخص می‌کنند.
+مسیرهای تحقیق نسخه‌های قبلی، موتور next-open، walk-forward، registry اضافی،
+helper/schemaهای منسوخ و خروج دقیقه‌ای/Market و حفاظت سود قدیمی حذف شدند.
+تنها یک نسخهٔ ورود، یک موتور تحقیق سبد و یک گزارش جاری باقی است؛ دادهٔ خام
+داده‌های خام و قرارداد جدول‌های موجود حفظ شده‌اند. ردیف دیتابیس حذف نشده.
 
-بک‌تست از برنامهٔ فعال خارج شد. هیچ ردیف دیتابیس، پوزیشن یا اعلان معوق در این پاک‌سازی حذف نشد. کانسپت ورود و خروج معامله در این مرحله تغییر نکرد.
+`pnpm typecheck`، `pnpm typecheck:test`، `pnpm build` و `pnpm test` بررسی‌های
+اصلی‌اند. کنترل ساختار فایل جداافتاده، import تحقیق در محصول و پوشهٔ خالی
+را رد می‌کند. مستندات [API](API.md)، [قاعده](STRATEGY.md) و
+[ارزیابی](CURRENT_EVALUATION.md) مسئولیت و محدودیت‌ها را توضیح می‌دهند.
 
-برای بررسی تغییر بعدی: `pnpm typecheck`، `pnpm typecheck:test`، `pnpm build` و `pnpm test`. CI همین بررسی‌ها را انجام می‌دهد.
-
-در پاک‌سازی کنترلرها، اسکنر تکراری، APIهای تحلیل قدیمی، درج دستی کندل و
-فهرست‌های کلی CRUD حذف شدند. محاسبات تاریخی و ساخت 4h فقط در تحقیق
-ماندند. سرویس مجوز فقط شاخهٔ پرتفوی فعلی را دارد و query دارایی فعال
-یکپارچه است. [فهرست کامل API و دلیل حفظ/حذف هر بخش](API.md) را ببینید.
+سیاست stop نسخهٔ v4 در signal و پوزیشن ذخیره می‌شود. `maker-execution.ts`
+خروج Market stop جدید و سازگاری stopهای Maker قبلی را مدیریت می‌کند؛
+`trade-outcome.ts` لغزش خروج را بازمی‌گرداند و ledger آن را بدون دوباره‌کاهی
+حساب می‌کند. موتور سبد موجود، دادهٔ اجرای مستقل1h را کنار سیگنال4h می‌پذیرد.

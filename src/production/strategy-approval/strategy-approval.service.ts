@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Timeframe } from "../assets/enums/timeframe.enum";
@@ -7,6 +6,7 @@ import { supportedTradingSymbols } from "../market-data/trading-symbol";
 import { StrategyRegistryService } from "../signals/strategy-registry.service";
 import { StrategyEvidence } from "./entities/strategy-evidence.entity";
 import { applyPortfolioCapacity } from "./evidence-capacity";
+import { MAX_SPOT_POSITIONS, MAKER_FEE_RATE } from "../trading/maker-execution";
 import { EVIDENCE_ENGINE_VERSION } from "./evidence-engine";
 
 /** Reads existing evidence for entry admission; never runs research or writes evidence. */
@@ -16,12 +16,17 @@ export class StrategyApprovalService {
 
   constructor(
     private readonly strategyRegistry: StrategyRegistryService,
-    private readonly configService: ConfigService,
     @InjectRepository(StrategyEvidence)
     private readonly evidenceRepository: Repository<StrategyEvidence>,
   ) {}
 
   async getReadiness(timeframe: Timeframe) {
+    if (timeframe !== Timeframe.FOUR_HOURS)
+      return {
+        isReady: false,
+        strategyVersion: null,
+        reason: "Only 4h Maker execution is supported.",
+      };
     const activeStrategy = this.strategyRegistry.getActive();
     if (!activeStrategy)
       return {
@@ -70,8 +75,7 @@ export class StrategyApprovalService {
       (run) =>
         run.result.researchContext?.engineVersion !== this.engineVersion ||
         !run.result.dataQuality?.primary?.isUsableForResearch ||
-        (run.result.dataQuality?.higherTimeframe !== null &&
-          !run.result.dataQuality?.higherTimeframe?.isUsableForResearch) ||
+        !run.result.dataQuality?.higherTimeframe?.isUsableForResearch ||
         !run.result.includesProtectedHoldout ||
         !run.result.protectedHoldout,
     );
@@ -86,14 +90,18 @@ export class StrategyApprovalService {
 
     if (
       completeRuns.some(
-        (run) => run.result.researchContext.executionResolution !== "1m",
+        (run) =>
+          run.result.researchContext.executionResolution !== "4h" ||
+          run.result.researchContext.executionPolicy !== "MAKER_ONLY" ||
+          run.result.researchContext.makerFillsValidated !== true ||
+          run.result.researchContext.feeRate !== MAKER_FEE_RATE,
       )
     ) {
       return {
         isReady: false,
         strategyVersion,
         reason:
-          "Portfolio approval blocked: minute-monitored Demo requires validated 1m execution evidence; hourly or unlabelled fills are insufficient.",
+          "Portfolio approval blocked: Maker-only Demo requires validated 4h post-only execution evidence with 0.40% Maker fees; OHLC fill proxies cannot approve real fill feasibility.",
       };
     }
 
@@ -149,9 +157,6 @@ export class StrategyApprovalService {
   }
 
   private getMaxPortfolioPositions(): number {
-    const configured = Number(
-      this.configService.get("MAX_DEMO_OPEN_POSITIONS", 1),
-    );
-    return Number.isInteger(configured) && configured > 0 ? configured : 1;
+    return MAX_SPOT_POSITIONS;
   }
 }

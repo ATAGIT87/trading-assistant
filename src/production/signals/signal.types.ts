@@ -1,4 +1,5 @@
 export type SignalAction = "BUY" | "SELL" | "WAIT" | "NO_TRADE";
+export type StopExecutionPolicy = "MAKER_ONLY" | "MARKET_STOP";
 
 export interface TradingSignal {
   strategyVersion?: string;
@@ -6,7 +7,7 @@ export interface TradingSignal {
     modelVersion: string;
     strategyVersion: string;
     decisionAt: Date;
-    hourlyDirection: "BULLISH" | "BEARISH" | "NEUTRAL";
+    entryDirection: "BULLISH" | "BEARISH" | "NEUTRAL";
     higherDirection: "BULLISH" | "BEARISH" | "NEUTRAL" | null;
     phase: string;
     strength: string;
@@ -26,18 +27,17 @@ export interface TradingSignal {
   takeProfit: number | null;
   /** Immutable structural ceiling (BUY) / floor (SELL), known at signal close. */
   takeProfitLimit?: number;
-  /** Recheck setup economics after filling at a different next-open price. */
+  /** Recheck setup economics after filling at a different passive-limit price. */
   minimumRewardRisk?: number;
   minimumNetRewardRisk?: number;
   preserveTakeProfit?: boolean;
-  profitProtection?: boolean;
+  /** Entry/TP policy; stop execution is defined separately. */
+  executionPolicy?: "MAKER_ONLY";
+  stopExecutionPolicy?: StopExecutionPolicy;
   /** Maximum structural stop distance as a fraction of the actual fill. */
   maximumStopDistanceFraction?: number;
   isStrongSetup: boolean;
   trend: "BULLISH" | "BEARISH" | "NEUTRAL";
-  rsi: number;
-  adx: number;
-  rsiStatus: "OVERSOLD" | "OVERBOUGHT" | "NEUTRAL";
   marketCondition:
     | "POSSIBLE_REVERSAL"
     | "BEARISH_CONTINUATION"

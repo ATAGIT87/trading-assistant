@@ -14,6 +14,8 @@ export interface StrategyEvidenceContext {
   engineVersion: string;
   /** Absent on legacy evidence; hourly fills cannot approve minute-monitored execution. */
   executionResolution?: "1m" | "15m" | "1h" | "4h" | "1d";
+  executionPolicy?: "MAKER_ONLY";
+  makerFillsValidated?: boolean;
   codeRevision: string;
   feeRate: number;
   slippageRate: number;

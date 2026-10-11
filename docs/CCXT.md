@@ -1,66 +1,30 @@
-# Closed-candle CCXT analyzer
+# CCXT and closed 4h analysis
 
 ```ts
-// From the project root:
 import { analyzeMarket } from './src/production/trading/ccxt/analyze-market';
-const result = await analyzeMarket('BTC/EUR', '1h');
-if (result.shouldBuy) {
-  // Deduplicate alert delivery using symbol + timeframe + result.candle.timestamp.
-}
+const result = await analyzeMarket('BTC/EUR', '4h');
 ```
 
-One cached Kraken CCXT client, rate limiting enabled, 15-second request timeout,
-public market data only. Fetch requests 200 candles; if the last candle is forming,
-199 closed candles normally remain. No historical .some() match can create a BUY
-without the latest closed candle's own qualifying RSI turn.
+One cached Kraken CCXT client uses public OHLCV, rate limiting and a 15-second
+request timeout. Entry is 4h with a separate mandatory daily EMA200 macro. Request720 rows for each, require the current4h
+forming bucket, evaluate the newest closed row, and exclude forming data before
+4h EMA20/50/ATR14 and daily EMA200. Invalid, duplicate, unaligned, gapped or stale data blocks
+entry. `evaluateClosedMarket` is the common live/replay implementation.
 
-Inputs map `[timestampMilliseconds, open, high, low, close, volume]`. EMA50 and
-RSI14 consume chronological numeric CLOSE values; high/low/open are mapped and
-validated but are not their indicator inputs. Warmup-truncated outputs align by
-their final values. Gap, duplicate, invalid, insufficient and stale series fail closed.
+`MarketAnalysisService` maps normalized crypto/EUR symbols and the dynamic top30 watchlist, coalesces simultaneous reads
+and caches valid snapshots for 15 seconds. `RunTradingAssistant` polls every
+minute, waits until second 10 of a new 4h bucket, and owns automated submission.
+Repeated qualifying reads are deduplicated through committed database markers.
+There is no RSI condition or second active strategy.
 
-BUY: newest fully closed close > EMA50, preceding RSI <35, current RSI rising,
-and preceding RSI <= the RSI before it. An actual crossing from >=35 into the
-preceding bar's below-35 episode must be observable in available RSI history.
-The hook may still be below35 or recover above35. Continued RSI ascent is not a
-new hook. This is an explicit interpretation of the requested rule; it is not a
-claim that every oversold pullback or the next candle will be profitable.
+The snapshot is converted to a risk-bearing Maker-only signal. Demo reads the
+public Kraken best bid/ask separately to reject crossed post-only entry limits.
+This quote is execution admission, not an alternative signal engine. The data
+scheduler syncs closed4h execution and daily macro bars and reconciles pending fills/exits every minute,
+even when entry switches are off but a commitment remains.
 
-Repeated polling of the same qualifying candle returns the same boolean; alert
-idempotency belongs to the caller. The function does not send messages or orders.
-The analyzer supplies closed history and ATR14 to the Demo risk manager.
-
-`RunTradingAssistant` is a Nest injectable lifecycle service. It polls every
-minute after each completed run and waits until second10 at an hour boundary.
-It requires the newest row to be in the forming bucket, evaluates index -2,
-and excludes the forming candle from every indicator. A cached closed-only
-response fails closed instead of accidentally evaluating the wrong index.
-
-BUYs enter the existing Demo manager in experimental mode, honoring entry
-pause/start flags and portfolio limits. RiskManagerService defines structural
-SL and a 2R target; v7 is retained only as a historical policy, not a second live entry rule.
-Actual next-open fill rebasing and net-cost checks remain in the Demo manager.
-There is one live entry strategy and one automated entry owner: the runner.
-Signals API and technical-analysis API share MarketAnalysisService,
-including15-second snapshot caching and concurrent-request coalescing. The runner
-covers all active1h assets. The Demo scheduler synchronizes data and exits every minute; intrahour 1m
-telemetry never changes the hourly indicator window.
-Historical evaluation calls evaluateClosedMarket using the same199-bar window.
-CCXT positions use version `ccxt-ema50-rsi14-v1` and static SL/TP exits; v7's
-profit protection/time-exit policy is not silently applied to them.
-
-The ledger's `CCXT_SIGNAL_COMMITTED` marker is unique for symbol/timeframe/
-closed-candle timestamp. It is committed with the position and pending Telegram
-notification; rolled-back or rejected entries are not marked. No memory Set or
-empty Telegram stub remains. All entry producers share a PostgreSQL portfolio
-advisory lock during capacity/balance checks and commit.
-
-Apply `operations/migrations/20261005-ccxt-alert-payload.sql` before startup. Notification
-payload stores the exact reason and forming-price snapshot durably. That price
-is OHLCV's latest available close, not a guaranteed live tick, and never affects
-signal conditions. Telegram transport remains at-least-once, not exactly-once.
-
-`GET /trading-assistant/status` exposes live database check health, lastReason,
-lastDemoReason and the persistent queue transport. Shutdown clears timers and
-awaits the in-flight demo transaction. This implementation does not place orders
-or establish profitability.
+No private Kraken API or exchange-order submission exists. Post-only semantics
+are described in [Kraken's Add Order documentation](https://docs-legacy.kraken.com/api/docs/websocket-v2/add_order/).
+Candle trade-through remains a fill proxy, not proof of queue priority or actual
+Maker execution. See [the strategy](STRATEGY.md) for 24h limit expiry, stop non-fill,
+fixed 0.40% fees and the +1.5R entry+0.85% protective stop.

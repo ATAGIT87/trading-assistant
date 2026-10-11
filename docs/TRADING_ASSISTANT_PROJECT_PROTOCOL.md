@@ -1,37 +1,31 @@
 # Operating protocol
 
-Kraken spot alerts and simulated trading; no real exchange orders.
-`ACTIVE_STRATEGY_VERSION=ccxt-ema50-rsi14-v1` selects the only live entry strategy.
-Legacy versions are restricted to historical backtests and prior-position exits.
+One active entry strategy: `spot-4h-pullback-daily-ema200-basket-v4`, a dynamic top30 crypto/EUR watchlist and closed4h analysis and closed1h execution with mandatory closed Daily EMA200 macro. Production imports neither research
+nor operations. Current replay, checks and raw datasets belong under test;
+maintenance/import commands belong under operations.
 
-The unified EMA50/RSI14 core must be shared by CCXT, API, Demo and replay.
-CCXT tuple: timestamp-ms/open/high/low/close/volume. Kraken raw volume is index6,
-not CCXT's index5. Forming-candle data never enters condition/indicator inputs.
-Historical evaluation uses the same199-closed-bar window as a200-row live fetch.
+Use one service instance, secrets in .env and DB_SYNCHRONIZE=false. The pending
+Maker queue reuses existing alert_delivery varchar actions and JSON payload;
+apply the existing payload migration if the database lacks that column. Apply the executionTimeframe and stopExecutionPolicy migrations for v4. Source cleanup never deletes rows.
 
-RunTradingAssistant is the only automated entry owner and serves active1h assets.
-Demo scheduler performs data/exit reconciliation. Existing
-positions continue to be monitored even when entry modes are disabled.
+RunTradingAssistant owns automated submissions. Demo scheduler syncs/reconciles
+pending orders and existing positions, independent of entry enable switches.
+Pause new admission with DEMO_ENTRIES_PAUSED. Asset catalogue CRUD is metadata;
+changing the fixed basket requires changing trading-symbol.ts.
 
-Use one service instance, store secrets in.env and keep DB_SYNCHRONIZE=false.
-Apply reviewed migrations. Do not delete candle, position or outbox rows during
-filesystem housekeeping. Persistent signal markers commit atomically with
-positions and pending messages; Telegram transport remains at-least-once.
+New entry/TP intentions are limit/post-only. User-selected new stops use MARKET_STOP
+with fee 0.004 and adverse slippage 0.001; old accepted snapshots retain Maker exits. Cash is reserved before simulated fill for at most24h; capacity counts filled open positions only. Missing
+history does not prove expiry or exit. SL/TP, initial risk and entry costs remain
+immutable on existing positions; effective entry+0.85% protective-stop state is reconstructed causally.
+Telegram outbox remains at-least-once; real exchange orders are not implemented.
 
-A BUY pattern still needs cost/risk/capital admission. Confirm actual account
-fees and execution assumptions before interpreting net economics. Current trend
-and pattern labels are not calibrated forecasts or proof of profitability.
+The monthly goal is >=10 profitable BUYs, measured by the replay report, never
+promised by indicators. OHLC reports are not verified Maker fill evidence and do
+not enable APPROVED entries. The protected latest year stays excluded by default.
+The read-only research portfolio API can explicitly include it with
+?includeHoldout=true; such evaluation is separate from ordinary selection work.
 
-Production sources live only in src/production; historical research, candidate
-strategies, checks and datasets live in test. Production imports neither test
-nor operations. Build outputs are dist/production and dist-test respectively.
-Legacy position compatibility uses a small exit-policy table, not research DI.
-Production reads saved strategy evidence; backtest execution is research-only.
-Run pnpm check:structure, pnpm typecheck, pnpm typecheck:test, pnpm build and
-pnpm test after structural changes. Consult docs/STRUCTURE.md for file roles.
-
-Demo checks fresh closed 1m execution bars during the current hour, after
-reconciling contiguous hourly history. Minute bars never enter entry indicators
-or hourly candle storage. Missing data must not fabricate exits. Entry analysis
-remains 1h. APPROVED mode requires 1m execution evidence; hourly replay is
-insufficient. ATR factor and version-specific trailing policies remain unchanged.
+After changes, run appropriate typechecks, build, tests and check:structure.
+Keep one current entry implementation, one current report and meaningful tests.
+Remove failed candidate scripts/reports and unused methods/imports/empty folders;
+retain raw datasets and a concise diagnostic history in CURRENT_EVALUATION.md.

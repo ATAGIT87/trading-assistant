@@ -13,8 +13,13 @@ export function calculateSpotPositionSize(
   riskPerTradePercent: number,
   maximumInvestedAmount: number,
   costRate = 0,
+  stopSlippageRate = 0,
 ): SpotPositionSize | null {
-  const riskPerUnit = entry - stopLoss + (entry + stopLoss) * costRate;
+  const riskPerUnit =
+    entry -
+    stopLoss +
+    (entry + stopLoss) * costRate +
+    stopLoss * stopSlippageRate;
   if (
     ![
       entry,
@@ -23,11 +28,14 @@ export function calculateSpotPositionSize(
       riskPerTradePercent,
       maximumInvestedAmount,
       costRate,
+      stopSlippageRate,
     ].every(Number.isFinite) ||
     entry <= 0 ||
     stopLoss <= 0 ||
     stopLoss >= entry ||
     costRate < 0 ||
+    stopSlippageRate < 0 ||
+    stopSlippageRate >= 1 ||
     riskPerUnit <= 0 ||
     availableQuoteBalance <= 0 ||
     riskPerTradePercent <= 0 ||

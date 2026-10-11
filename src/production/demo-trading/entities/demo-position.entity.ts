@@ -1,5 +1,6 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 import { Timeframe } from "../../assets/enums/timeframe.enum";
+import { StopExecutionPolicy } from "../../signals/signal.types";
 
 export type DemoPositionSide = "BUY";
 export type DemoPositionStatus = "OPEN" | "WIN" | "LOSS";
@@ -33,6 +34,13 @@ export class DemoPosition {
     enum: Timeframe,
   })
   timeframe!: Timeframe;
+
+  /** Signal timeframe stays unchanged; null preserves persisted legacy execution. */
+  @Column({ type: "varchar", nullable: true })
+  executionTimeframe!: Timeframe.ONE_HOUR | null;
+
+  @Column({ type: "varchar", nullable: true })
+  stopExecutionPolicy!: StopExecutionPolicy | null;
 
   @Column({
     type: "enum",

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Timeframe } from "../assets/enums/timeframe.enum";
 import {
-  EMA_RSI_STRATEGY_VERSION,
+  SPOT_STRATEGY_VERSION,
   MarketAnalysis,
 } from "../trading/ccxt/analyze-market";
 import { MarketAnalysisService } from "../trading/ccxt/market-analysis.service";
@@ -18,7 +18,7 @@ export class SignalsService {
   ) {}
 
   isUnifiedStrategyActive(): boolean {
-    return this.registry.getActiveVersion() === EMA_RSI_STRATEGY_VERSION;
+    return this.registry.getActiveVersion() === SPOT_STRATEGY_VERSION;
   }
 
   getMarketAnalysis(

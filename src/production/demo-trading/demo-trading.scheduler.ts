@@ -1,8 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { MarketDataService } from "../market-data/market-data.service";
-import { AssetsService } from "../assets/assets.service";
+import { timeframeDurationMs } from "../assets/timeframe.utils";
 import { DemoTradingService } from "./demo-trading.service";
 
 /** Exit/data reconciliation only. RunTradingAssistant owns all automated entries. */
@@ -10,12 +9,11 @@ import { DemoTradingService } from "./demo-trading.service";
 export class DemoTradingScheduler {
   private readonly logger = new Logger(DemoTradingScheduler.name);
   private running = false;
+  private readonly syncedThrough = new Map<string, number>();
 
   constructor(
     private readonly demo: DemoTradingService,
     private readonly marketData: MarketDataService,
-    private readonly assets: AssetsService,
-    private readonly config: ConfigService,
   ) {}
 
   @Cron("10 * * * * *")
@@ -35,28 +33,48 @@ export class DemoTradingScheduler {
 
   private async runCycle() {
     const existing = await this.demo.getOpenPositions();
-    const approved =
-      this.config.get("DEMO_TRADING_ENABLED", "false") === "true";
-    const start = new Date(
-      this.config.get<string>("EXPLORATORY_DEMO_START_AT", ""),
-    );
-    const experimental =
-      this.config.get("EXPLORATORY_DEMO_ENABLED", "false") === "true" &&
-      Number.isFinite(+start) &&
-      Date.now() >= +start;
-    if (!approved && !experimental && !existing.length) return;
-
-    // Entry switches never disable monitoring already-open positions.
-    const active =
-      approved || experimental ? await this.assets.findActive() : [];
+    const pending = await this.demo.getPendingMakerOrders();
+    // The analysis runner owns the 30-market scan. Reconciliation fetches only
+    // data required by persisted orders/positions, even when entries are paused.
     const markets = [
       ...new Map(
-        [...active, ...existing].map((m) => [`${m.symbol}:${m.timeframe}`, m]),
+        [
+          ...existing.map((p) => ({
+            symbol: p.symbol,
+            timeframe: p.executionTimeframe ?? p.timeframe,
+          })),
+          ...pending.map((p) => ({
+            symbol: p.symbol,
+            timeframe: this.demo.getMakerExecutionTimeframe(p),
+          })),
+          ...pending.map((p) => ({
+            ...p,
+            timeframe: this.demo.getMakerMacroTimeframe(p),
+          })),
+        ].map((m) => [`${m.symbol}:${m.timeframe}`, m]),
       ).values(),
     ];
+    const requiredKeys = new Set(
+      markets.map((m) => `${m.symbol}:${m.timeframe}`),
+    );
+    for (const key of this.syncedThrough.keys()) {
+      if (!requiredKeys.has(key)) this.syncedThrough.delete(key);
+    }
+    if (!markets.length) return;
     for (const market of markets) {
+      const key = `${market.symbol}:${market.timeframe}`;
+      const duration = timeframeDurationMs[market.timeframe];
+      const closedThrough = Math.floor(Date.now() / duration) * duration;
+      if (this.syncedThrough.get(key) === closedThrough) continue;
       try {
         await this.marketData.syncSpotCandles(market.symbol, market.timeframe);
+        const latest = await this.marketData.getLatestClosedCandle(
+          market.symbol,
+          market.timeframe,
+        );
+        // Missing/not-yet-finalized candles remain retryable within this hour.
+        if (latest && +latest.time >= closedThrough - duration)
+          this.syncedThrough.set(key, closedThrough);
       } catch {
         this.logger.warn(
           `Sync failed for ${market.symbol}; continuing exit reconciliation.`,
